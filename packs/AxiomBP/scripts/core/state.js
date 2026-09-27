@@ -1,0 +1,144 @@
+// Spieler-Sitzungen: gespeicherte Einstellungen (dynamische Eigenschaften) + Laufzeitdaten.
+import { world } from "@minecraft/server";
+
+const SETTINGS_KEY = "axiom:settings";
+
+export function defaultSettings() {
+  return {
+    /** Aktives Muster (gewichtete Blockliste) */
+    pattern: [{ id: "minecraft:stone", w: 1 }],
+    /** Zweites Muster (z.B. für Rauschen-Maler) */
+    pattern2: [{ id: "minecraft:andesite", w: 1 }],
+    /** Maske: welche Blöcke Werkzeuge verändern dürfen */
+    mask: { mode: "none", ids: /** @type {string[]} */ ([]) },
+    reach: 160,
+    airDist: 6,
+    liquids: false,
+    caps: { angel: false, replace: false, farPlace: false, nightVision: false },
+    symmetry: { x: false, z: false, center: /** @type {{x:number,y:number,z:number}|null} */ (null) },
+    selMode: "set",
+    showSel: true,
+    magic: { mode: "same", limit: 20000, diagonal: false },
+    brushSel: { radius: 2 },
+    shape: { type: "sphere", rx: 5, ry: 5, rz: 5, hollow: false, thick: 1, anchor: "center" },
+    sculpt: { mode: "add", radius: 4, noise: false },
+    painter: { mode: "surface", radius: 4, depth: 1, scale: 8, threshold: 0 },
+    terrain: { mode: "raise", radius: 6, strength: 2, falloff: true },
+    extrude: { mode: "push", sameType: true, limit: 4096 },
+    path: { radius: 1, smooth: true, hollow: false },
+    text: { text: "AXIOM", scale: 1, orient: "wall", spacing: 1 },
+    paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
+    bulldozer: { radius: 0 },
+    stack: { count: 2, gap: 0 },
+    move: { distance: 1 },
+  };
+}
+
+/**
+ * @typedef {ReturnType<typeof defaultSettings>} Settings
+ * @typedef {{
+ *   player: import("@minecraft/server").Player,
+ *   s: Settings,
+ *   sel: import("./selection.js").Selection | null,
+ *   nextCorner: 1|2,
+ *   corner1?: {x:number,y:number,z:number},
+ *   selBase?: import("./selection.js").Selection | null,
+ *   brushSelLast?: number,
+ *   strokeId?: string,
+ *   strokeLast?: number,
+ *   pathPoints: {x:number,y:number,z:number}[],
+ *   rulerA: {x:number,y:number,z:number} | null,
+ *   rulerB?: {x:number,y:number,z:number},
+ *   lastAction: number,
+ *   lastHit?: number,
+ *   using: boolean,
+ *   usingUntil: number,
+ *   busy: boolean,
+ *   dirty: boolean,
+ * }} Session
+ */
+
+/** @type {Map<string, Session>} */
+const sessions = new Map();
+
+/**
+ * Tiefes Zusammenführen: gespeicherte Werte über Standardwerte legen (neue Felder bleiben erhalten).
+ * @param {any} base @param {any} saved
+ */
+function merge(base, saved) {
+  if (saved === null || typeof saved !== "object" || Array.isArray(saved)) return saved ?? base;
+  if (base === null || typeof base !== "object" || Array.isArray(base)) return saved;
+  const out = { ...base };
+  for (const k of Object.keys(saved)) out[k] = k in base ? merge(base[k], saved[k]) : saved[k];
+  return out;
+}
+
+/** @param {import("@minecraft/server").Player} player @returns {Session} */
+export function getSession(player) {
+  let ses = sessions.get(player.id);
+  if (ses) {
+    ses.player = player;
+    return ses;
+  }
+  let s = defaultSettings();
+  try {
+    const raw = player.getDynamicProperty(SETTINGS_KEY);
+    if (typeof raw === "string") s = merge(s, JSON.parse(raw));
+  } catch (e) {
+    console.warn("[Axiom] Einstellungen konnten nicht geladen werden: " + e);
+  }
+  ses = {
+    player,
+    s,
+    sel: null,
+    nextCorner: 1,
+    pathPoints: [],
+    rulerA: null,
+    lastAction: -100,
+    using: false,
+    usingUntil: 0,
+    busy: false,
+    dirty: false,
+  };
+  sessions.set(player.id, ses);
+  return ses;
+}
+
+/** Einstellungen speichern (wird verzögert/gebündelt aufgerufen). @param {Session} ses */
+export function saveSettings(ses) {
+  try {
+    ses.player.setDynamicProperty(SETTINGS_KEY, JSON.stringify(ses.s));
+    ses.dirty = false;
+  } catch (e) {
+    console.warn("[Axiom] Einstellungen konnten nicht gespeichert werden: " + e);
+  }
+}
+
+/** @param {Session} ses */
+export function markDirty(ses) {
+  ses.dirty = true;
+}
+
+export function flushAll() {
+  for (const ses of sessions.values()) {
+    if (ses.dirty && ses.player.isValid) saveSettings(ses);
+  }
+}
+
+/** @param {string} id */
+export function dropSession(id) {
+  sessions.delete(id);
+}
+
+export function allSessions() {
+  return sessions.values();
+}
+
+/** Welt-Einstellungen (für alle Spieler) */
+export function worldFlag(/** @type {string} */ name, /** @type {boolean} */ def = false) {
+  const v = world.getDynamicProperty("axiom:flag_" + name);
+  return typeof v === "boolean" ? v : def;
+}
+export function setWorldFlag(/** @type {string} */ name, /** @type {boolean} */ value) {
+  world.setDynamicProperty("axiom:flag_" + name, value);
+}

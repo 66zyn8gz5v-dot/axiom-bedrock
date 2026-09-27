@@ -1,0 +1,54 @@
+{
+  "resource_pack_name": "axiom",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "axiom_menu": {
+      "textures": "textures/items/axiom_menu"
+    },
+    "axiom_box_select": {
+      "textures": "textures/items/axiom_box_select"
+    },
+    "axiom_magic_select": {
+      "textures": "textures/items/axiom_magic_select"
+    },
+    "axiom_brush_select": {
+      "textures": "textures/items/axiom_brush_select"
+    },
+    "axiom_builder": {
+      "textures": "textures/items/axiom_builder"
+    },
+    "axiom_shape": {
+      "textures": "textures/items/axiom_shape"
+    },
+    "axiom_sculpt": {
+      "textures": "textures/items/axiom_sculpt"
+    },
+    "axiom_painter": {
+      "textures": "textures/items/axiom_painter"
+    },
+    "axiom_terrain": {
+      "textures": "textures/items/axiom_terrain"
+    },
+    "axiom_extrude": {
+      "textures": "textures/items/axiom_extrude"
+    },
+    "axiom_path": {
+      "textures": "textures/items/axiom_path"
+    },
+    "axiom_text": {
+      "textures": "textures/items/axiom_text"
+    },
+    "axiom_ruler": {
+      "textures": "textures/items/axiom_ruler"
+    },
+    "axiom_tinker": {
+      "textures": "textures/items/axiom_tinker"
+    },
+    "axiom_bulldozer": {
+      "textures": "textures/items/axiom_bulldozer"
+    },
+    "axiom_undo": {
+      "textures": "textures/items/axiom_undo"
+    }
+  }
+}

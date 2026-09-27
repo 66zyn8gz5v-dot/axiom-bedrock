@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "axiom:sculpt",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "axiom_sculpt"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.axiom:sculpt.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:use_modifiers": {
+        "use_duration": 3600,
+        "movement_modifier": 1.0
+      }
+    }
+  }
+}

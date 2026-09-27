@@ -1,0 +1,17 @@
+{
+  "name": "axiom-bedrock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Axiom-ähnliche Bauwerkzeuge als Minecraft-Bedrock-Add-on",
+  "scripts": {
+    "check": "tsc -p jsconfig.json",
+    "test": "node --import ./tests/register.mjs tests/run.mjs",
+    "build": "python3 tools/build.py"
+  },
+  "devDependencies": {
+    "@minecraft/server": "2.4.0",
+    "@minecraft/server-ui": "2.0.0",
+    "typescript": "^5.6.0"
+  }
+}

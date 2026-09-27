@@ -1,0 +1,24 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "axiom:shape",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "axiom_shape"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.axiom:shape.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:can_destroy_in_creative": false
+    }
+  }
+}

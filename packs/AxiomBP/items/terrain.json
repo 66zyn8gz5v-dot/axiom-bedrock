@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:item": {
+    "description": {
+      "identifier": "axiom:terrain",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "axiom_terrain"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.axiom:terrain.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:use_modifiers": {
+        "use_duration": 3600,
+        "movement_modifier": 1.0
+      }
+    }
+  }
+}

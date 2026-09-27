@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["es2022"],
+    "types": []
+  },
+  "include": ["packs/AxiomBP/scripts/**/*.js", "types/*.d.ts"]
+}
