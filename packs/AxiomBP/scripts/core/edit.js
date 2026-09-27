@@ -136,14 +136,6 @@ export function runEdit(player, opts, body) {
   }
   // Große Bereiche vorab als Struktur sichern, statt jeden Block einzeln zu protokollieren.
   const useRegion = !!region && (!!opts.forceRegion || (volume(region.min, region.max) > REGION_THRESHOLD && !(ses.s.symmetry.center && opts.symmetry)));
-  if (useRegion && region) {
-    try {
-      recordRegion(player.id, opts.label, dim, region.min, region.max);
-    } catch (e) {
-      err(player, "Bereich konnte nicht gesichert werden (nicht geladen?): " + e);
-      return Promise.resolve(0);
-    }
-  }
   const es = new EditSession(ses, dim, { useMask: opts.useMask, symmetry: opts.symmetry, record: !useRegion });
 
   // Pinselstriche zusammenfassen: gleicher Strich -> gleicher Verlaufseintrag
@@ -161,6 +153,16 @@ export function runEdit(player, opts, body) {
     system.runJob(
       (function* () {
         let result;
+        if (useRegion && region) {
+          try {
+            yield* recordRegion(player.id, opts.label, dim, region.min, region.max);
+          } catch (e) {
+            err(player, "Bereich konnte nicht gesichert werden (nicht geladen oder außerhalb der Welt?): " + e);
+            ses.busy = false;
+            resolve(0);
+            return;
+          }
+        }
         try {
           result = yield* body(es);
         } catch (e) {

@@ -275,7 +275,7 @@ export function opArray(ses, off, count, rotStep) {
   runEdit(player, { label: `Array ×${count}`, region: { min, max }, forceRegion: true, useMask: false }, function* (es) {
     const clip = yield* copySelection(player, sel, false, true);
     try {
-      for (const c of copies) es.count += yield* pasteClip(player, clip, es.dim, c.min, { rotation: c.rot, mirror: "None", air: false, entities: false }, false);
+      for (const c of copies) es.count += yield* pasteClip(player, clip, es.dim, c.min, { rotation: c.rot, mirror: "None", air: sel.kind === "box", entities: false }, false);
     } finally {
       freeClip(clip);
     }
@@ -337,7 +337,7 @@ export function opTransform(ses, rotation, mirror) {
         es.set(p.x, p.y, p.z, A);
         if (++n % 512 === 0) yield;
       }
-      es.count += yield* pasteClip(player, clip, es.dim, nmin, { rotation, mirror, air: false, entities: false }, false);
+      es.count += yield* pasteClip(player, clip, es.dim, nmin, { rotation, mirror, air: sel.kind === "box", entities: false }, false);
     } finally {
       freeClip(clip);
     }

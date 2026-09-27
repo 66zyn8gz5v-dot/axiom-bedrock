@@ -327,6 +327,10 @@ saveBlueprint(player, "Mein Häuschen");
 check(listBlueprints().some((b) => b.name === "mein_haeuschen"), "Blaupause gespeichert");
 loadBlueprint(player, "mein_haeuschen");
 await roundTrip("Blaupause einfügen", () => use("axiom:builder", { x: 40, y: 64, z: 40 }));
+saveBlueprint(player, "mein_haeuschen");
+await roundTrip("Blaupause nach erneutem Speichern unter gleichem Namen", () => use("axiom:builder", { x: 40, y: 64, z: 40 }));
+loadBlueprint(player, "mein_haeuschen");
+await roundTrip("Blaupause neu geladen", () => use("axiom:builder", { x: 40, y: 64, z: 40 }));
 
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };

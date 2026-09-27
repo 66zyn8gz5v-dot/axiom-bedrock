@@ -358,7 +358,8 @@ async function historyMenu(ses) {
     {
       text: "Mehrere Schritte rückgängig …",
       run: async () => {
-        const r = await new Modal("Mehrere Schritte").slider("n", "Anzahl", 1, Math.max(1, h.undo.length), 1, 1).show(p);
+        if (h.undo.length < 2) return doUndo(p, false);
+        const r = await new Modal("Mehrere Schritte").slider("n", "Anzahl", 1, h.undo.length, 1, 1).show(p);
         if (!r) return;
         for (let i = 0; i < r.n; i++) {
           doUndo(p, false);

@@ -23,6 +23,12 @@ Neue Ideen unten anhängen.
 - [x] Automatischer Test aller Werkzeuge gegen eine API-Attrappe
 - [x] Ansichten (Standpunkte speichern & hinspringen), Maler „Streuen“, Array-Stapeln, Hohlräume füllen
 
+## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
+- [ ] Spiegeln „Ost-West“ spiegelt wirklich Ost↔West (sonst `mirEnum` in core/clipboard.js tauschen)
+- [ ] Schlagen mit Werkzeug im Kreativmodus löst Pipette/Zusatzaktion aus (sonst Alternative über Menü nötig –
+      die Pipette gibt es zusätzlich im Muster-Menü)
+- [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
+
 ## Als Nächstes
 - [ ] **Neigung/Rampe (Slope)**: Rampe zwischen zwei Pfadpunkten / Böschung am Hang
 - [ ] **Verzerren (Distort) & Zerbrechen (Shatter)** als weitere Modellier-Modi

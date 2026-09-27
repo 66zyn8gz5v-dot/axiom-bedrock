@@ -18,7 +18,14 @@ const tag = (id) => id.replace(/[^a-zA-Z0-9]/g, "").slice(-12).toLowerCase() || 
 
 /** @param {import("@minecraft/server").Player} player @returns {Clip|null} */
 export function getClip(player) {
-  if (clips.has(player.id)) return clips.get(player.id) ?? null;
+  if (clips.has(player.id)) {
+    const c = clips.get(player.id) ?? null;
+    if (c && !world.structureManager.get(c.tiles[0]?.id ?? "")) {
+      clips.set(player.id, null);
+      return null;
+    }
+    return c;
+  }
   let c = null;
   try {
     const raw = player.getDynamicProperty(CLIP_KEY);
@@ -158,7 +165,9 @@ export function rotatedSize(size, rot) {
 export function* pasteClip(player, clip, dim, origin, o, record = true) {
   const rs = rotatedSize(clip.size, o.rotation);
   const max = v(origin.x + rs.x - 1, origin.y + rs.y - 1, origin.z + rs.z - 1);
-  if (record) recordRegion(player.id, "Einfügen", dim, origin, max);
+  if (origin.y < dim.heightRange.min || max.y > dim.heightRange.max - 1) throw new Error("Einfügen würde über den Rand der Welt (Höhe) hinausragen.");
+  for (const t of clip.tiles) if (!world.structureManager.get(t.id)) throw new Error("Zwischenablage ist nicht mehr vorhanden (Blaupause gelöscht?).");
+  if (record) yield* recordRegion(player.id, "Einfügen", dim, origin, max);
   let placed = 0;
   for (const t of clip.tiles) {
     let id = t.id;
@@ -243,18 +252,29 @@ export function saveBlueprint(player, rawName) {
   if (!clip) throw new Error("Zwischenablage ist leer.");
   const name = sanitizeName(rawName);
   if (!name) throw new Error("Ungültiger Name.");
-  deleteBlueprint(name);
+  // Erst unter neuen (eindeutigen) IDs kopieren, dann alte Blaupause löschen – so geht beim
+  // erneuten Speichern einer geladenen Blaupause nichts verloren.
+  const stamp = system.currentTick % 1000000;
   /** @type {ClipTile[]} */
   const tiles = clip.tiles.map((t, i) => {
     const src = world.structureManager.get(t.id);
     if (!src) throw new Error("Zwischenablage beschädigt.");
-    const id = `axiom:bp_${name}_${i}`;
+    const id = `axiom:bp_${name}_${stamp}_${i}`;
     try {
       world.structureManager.delete(id);
     } catch {}
     src.saveAs(id, StructureSaveMode.World);
     return { id, off: t.off, size: t.size };
   });
+  const keep = new Set(tiles.map((t) => t.id));
+  const oldRaw = world.getDynamicProperty(BP_PREFIX + name);
+  if (typeof oldRaw === "string") {
+    try {
+      for (const t of JSON.parse(oldRaw).tiles) if (!keep.has(t.id)) world.structureManager.delete(t.id);
+    } catch {}
+  }
+  // Die eigene Zwischenablage zeigt ab jetzt auf die neue Kopie
+  if (clip.shared && clip.name === name) setClip(player, { size: clip.size, tiles, shared: true, name });
   world.setDynamicProperty(BP_PREFIX + name, JSON.stringify({ size: clip.size, tiles, author: player.name }));
   return name;
 }

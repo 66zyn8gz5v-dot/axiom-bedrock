@@ -1,8 +1,8 @@
 // Gemeinsame Menüs: Muster (aktiver Block) und Maske.
 import { BlockPermutation } from "@minecraft/server";
 import { markDirty } from "../core/state.js";
-import { describeMask, formatPattern, normId, parsePattern, shortId } from "../core/pattern.js";
-import { err, msg } from "../core/util.js";
+import { describeMask, entryFromPermutation, formatPattern, normId, parsePattern, shortId } from "../core/pattern.js";
+import { err, msg, target } from "../core/util.js";
 import { Modal, menu } from "./forms.js";
 
 /**
@@ -40,6 +40,16 @@ export async function patternMenu(ses, which = "pattern") {
     which === "pattern" ? "Aktiver Block / Muster" : "Zweites Muster",
     `Aktuell: §e${cur}\n\n§7Tipp: Mit einem Axiom-Werkzeug einen Block §fschlagen§7 = Pipette (Block übernehmen).`,
     [
+      {
+        text: "Pipette: Block im Blick übernehmen",
+        run: () => {
+          const t = target(p, ses.s);
+          if (!t) return err(p, "Kein Block im Blick.");
+          ses.s[which] = [entryFromPermutation(t.block.permutation)];
+          markDirty(ses);
+          msg(p, `Muster: §e${formatPattern(ses.s[which])}`);
+        },
+      },
       {
         text: "Aus Inventar wählen",
         run: async () => {

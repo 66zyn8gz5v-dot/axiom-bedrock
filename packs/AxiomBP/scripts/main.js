@@ -20,6 +20,9 @@ import { k3 } from "./core/vec.js";
 import { mainMenu } from "./ui/main.js";
 import { doUndo, renderSymmetry } from "./tools/misc.js";
 
+/** Blöcke, die man im Ersetzen-Modus weiterhin normal benutzen kann (Schleichen = trotzdem ersetzen). */
+const INTERACTIVE = /(chest|barrel|door|gate|button|lever|crafting|furnace|smoker|anvil|table|shulker|hopper|dispenser|dropper|bed|bell|repeater|comparator|note|jukebox|lectern|loom|stonecutter|grindstone|beacon|brewing|cartography|smithing|campfire|sign)/;
+
 /** @param {import("@minecraft/server").Player} player */
 function allowed(player) {
   if (!worldFlag("ops_only")) return true;
@@ -73,6 +76,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
   if (id && ev.isFirstEvent) {
     const ses = getSession(player);
     if (!ses.s.caps.replace || player.getGameMode() !== GameMode.Creative) return;
+    if (INTERACTIVE.test(ev.block.typeId) && !player.isSneaking) return;
     const loc = ev.block.location;
     let perm;
     try {
@@ -230,34 +234,43 @@ let tick = 0;
 system.runInterval(() => {
   tick++;
   for (const player of world.getAllPlayers()) {
-    const tool = heldTool(player);
-    const ses = getSession(player);
-    // Pinsel gedrückt halten
-    if (ses.using) {
-      if (!tool || !tool.brush) ses.using = false;
-      else if (!ses.busy) handleUse(player, true);
-    }
-    if (tick % 5 === 0) {
-      if (tool) {
-        try {
-          bar(player, `§d${tool.name}§r · ${tool.hud ? tool.hud(ses) : ""}`);
-        } catch {}
-        try {
-          tool.preview?.(ses);
-        } catch {}
-        if (ses.nextCorner === 2 && ses.corner1) markBlock(player, "axiom:pos1", ses.corner1);
-      }
-      if (ses.sel && (tool || ses.s.showSel)) renderSelection(player, ses.sel);
-      if (tool) renderSymmetry(ses);
-    }
-    if (tick % 100 === 0 && ses.s.caps.nightVision) {
-      try {
-        player.addEffect("night_vision", 20 * 30, { showParticles: false, amplifier: 0 });
-      } catch {}
+    try {
+      tickPlayer(player);
+    } catch (e) {
+      console.warn("[Axiom] Tick: " + e);
     }
   }
   if (tick % 50 === 0) flushAll();
 }, 2);
+
+/** @param {import("@minecraft/server").Player} player */
+function tickPlayer(player) {
+  const tool = heldTool(player);
+  const ses = getSession(player);
+  // Pinsel gedrückt halten
+  if (ses.using) {
+    if (!tool || !tool.brush) ses.using = false;
+    else if (!ses.busy) handleUse(player, true);
+  }
+  if (tick % 5 === 0) {
+    if (tool) {
+      try {
+        bar(player, `§d${tool.name}§r · ${tool.hud ? tool.hud(ses) : ""}`);
+      } catch {}
+      try {
+        tool.preview?.(ses);
+      } catch {}
+      if (ses.nextCorner === 2 && ses.corner1) markBlock(player, "axiom:pos1", ses.corner1);
+    }
+    if (ses.sel && (tool || ses.s.showSel)) renderSelection(player, ses.sel);
+    if (tool) renderSymmetry(ses);
+  }
+  if (tick % 100 === 0 && ses.s.caps.nightVision) {
+    try {
+      player.addEffect("night_vision", 20 * 30, { showParticles: false, amplifier: 0 });
+    } catch {}
+  }
+}
 
 // ---------- Beitreten ----------
 world.afterEvents.playerSpawn.subscribe((ev) => {

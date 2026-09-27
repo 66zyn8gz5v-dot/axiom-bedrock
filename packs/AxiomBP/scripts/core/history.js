@@ -7,6 +7,7 @@ import { unkey, volume } from "./vec.js";
 
 export const TILE = 64;
 const MAX_ENTRIES = 40;
+const MAX_REGION_VOLUME = 12000000;
 let counter = 0;
 
 /**
@@ -48,6 +49,13 @@ export function pushEntry(playerId, entry) {
   for (const e of h.redo) freeEntry(e);
   h.redo = [];
   while (h.undo.length > MAX_ENTRIES) freeEntry(/** @type {Entry} */ (h.undo.shift()));
+  // Speicher begrenzen: gesicherte Bereiche insgesamt höchstens MAX_REGION_VOLUME Blöcke
+  let total = h.undo.reduce((a, x) => a + (x.kind === "region" ? volume(x.min, x.max) : 0), 0);
+  while (total > MAX_REGION_VOLUME && h.undo.length > 1) {
+    const old = /** @type {Entry} */ (h.undo.shift());
+    if (old.kind === "region") total -= volume(old.min, old.max);
+    freeEntry(old);
+  }
 }
 
 /** @param {string} playerId */
@@ -66,9 +74,9 @@ export function clearHistory(playerId) {
  * @param {{x:number,y:number,z:number}} max
  * @param {string} [prefix]
  * @param {boolean} [entities]
- * @returns {Tile[]}
+ * @returns {Generator<void, Tile[], void>}
  */
-export function snapshotTiles(dim, min, max, prefix = "axiom:h", entities = false) {
+export function* snapshotTiles(dim, min, max, prefix = "axiom:h", entities = false) {
   /** @type {Tile[]} */
   const tiles = [];
   const id = ++counter;
@@ -86,12 +94,23 @@ export function snapshotTiles(dim, min, max, prefix = "axiom:h", entities = fals
         try {
           world.structureManager.delete(sid);
         } catch {}
-        world.structureManager.createFromWorld(sid, dim, from, to, {
-          includeEntities: entities,
-          includeBlocks: true,
-          saveMode: StructureSaveMode.Memory,
-        });
+        try {
+          world.structureManager.createFromWorld(sid, dim, from, to, {
+            includeEntities: entities,
+            includeBlocks: true,
+            saveMode: StructureSaveMode.Memory,
+          });
+        } catch (e) {
+          // Bereits angelegte Kacheln wieder freigeben
+          for (const t of tiles) {
+            try {
+              world.structureManager.delete(t.id);
+            } catch {}
+          }
+          throw e;
+        }
         tiles.push({ id: sid, loc: from });
+        yield;
       }
     }
   }
@@ -105,9 +124,10 @@ export function snapshotTiles(dim, min, max, prefix = "axiom:h", entities = fals
  * @param {import("@minecraft/server").Dimension} dim
  * @param {{x:number,y:number,z:number}} min
  * @param {{x:number,y:number,z:number}} max
+ * @returns {Generator<void, void, void>}
  */
-export function recordRegion(playerId, label, dim, min, max) {
-  const tiles = snapshotTiles(dim, min, max);
+export function* recordRegion(playerId, label, dim, min, max) {
+  const tiles = yield* snapshotTiles(dim, min, max);
   pushEntry(playerId, { kind: "region", label, dim: dim.id, min, max, tiles, time: system.currentTick });
 }
 
@@ -119,7 +139,7 @@ export function recordRegion(playerId, label, dim, min, max) {
 function* applyEntry(entry) {
   const dim = world.getDimension(entry.dim);
   if (entry.kind === "region") {
-    const back = snapshotTiles(dim, entry.min, entry.max);
+    const back = yield* snapshotTiles(dim, entry.min, entry.max);
     for (const t of entry.tiles) {
       world.structureManager.place(t.id, dim, t.loc, { includeEntities: false });
       yield;
@@ -153,9 +173,11 @@ export function* undoRedo(playerId, redo) {
   const h = getHistory(playerId);
   const from = redo ? h.redo : h.undo;
   const to = redo ? h.undo : h.redo;
-  const e = from.pop();
+  const e = from[from.length - 1];
   if (!e) return null;
+  // Erst anwenden, dann umbuchen – schlägt es fehl, bleibt der Eintrag erhalten
   const counter = yield* applyEntry(e);
+  from.pop();
   to.push(counter);
   return e.label;
 }

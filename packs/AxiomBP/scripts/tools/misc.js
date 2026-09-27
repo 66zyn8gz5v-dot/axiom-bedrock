@@ -3,7 +3,7 @@ import { BlockStates, system } from "@minecraft/server";
 import { runEdit } from "../core/edit.js";
 import { air, shortId } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
-import { markBlock } from "../core/selection.js";
+import { markBlock, spawn } from "../core/selection.js";
 import { undoRedo, getHistory } from "../core/history.js";
 import { err, fmtNum, msg, target, targetOrAir } from "../core/util.js";
 import { fmt, v } from "../core/vec.js";
@@ -202,8 +202,8 @@ export function renderSymmetry(ses) {
   if (Math.abs(c.x - ses.player.location.x) > 80 || Math.abs(c.z - ses.player.location.z) > 80) return;
   const y = Math.floor(ses.player.location.y);
   for (let d = -12; d <= 12; d++) {
-    if (ses.s.symmetry.x) ses.player.spawnParticle("axiom:sym", v(c.x + 0.5, y + 0.2, c.z + d + 0.5));
-    if (ses.s.symmetry.z) ses.player.spawnParticle("axiom:sym", v(c.x + d + 0.5, y + 0.2, c.z + 0.5));
+    if (ses.s.symmetry.x) spawn(ses.player, "axiom:sym", v(c.x + 0.5, y + 0.2, c.z + d + 0.5));
+    if (ses.s.symmetry.z) spawn(ses.player, "axiom:sym", v(c.x + d + 0.5, y + 0.2, c.z + 0.5));
   }
 }
 
