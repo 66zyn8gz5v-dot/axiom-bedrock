@@ -289,6 +289,13 @@ export class Player {
   getViewDirection() {
     return this.view;
   }
+  getRotation() {
+    return this.rotation ?? { x: 10, y: 90 };
+  }
+  teleport(loc, o = {}) {
+    this.location = { ...loc };
+    if (o.rotation) this.rotation = o.rotation;
+  }
   getHeadLocation() {
     return { x: this.location.x, y: this.location.y + 1.6, z: this.location.z };
   }

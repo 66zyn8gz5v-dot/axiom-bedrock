@@ -164,6 +164,10 @@ for (const mode of ["surface", "top", "replace", "noise", "gradient"]) {
   ses.s.pattern = parsePattern("stone, cobblestone");
   await roundTrip("Maler " + mode, () => use("axiom:painter", G));
 }
+ses.s.painter.mode = "scatter";
+ses.s.painter.density = 50;
+ses.s.pattern = parsePattern("short_grass, poppy");
+await roundTrip("Maler scatter", () => use("axiom:painter", G));
 // Säubern: erst Gras setzen
 dim._set(1, 65, 1, BlockPermutation.resolve("minecraft:short_grass"));
 ses.s.painter.mode = "clean";
@@ -224,11 +228,28 @@ await roundTrip("Ersetzen", () => ops.opReplace(ses, ["minecraft:dirt"]));
 await roundTrip("Leeren", () => ops.opClear(ses));
 for (const k of ["walls", "outline", "hollow"]) await roundTrip("Hülle " + k, () => ops.opShell(ses, k));
 await roundTrip("Überziehen", () => ops.opOverlay(ses, 2));
+// Hohlraum: hohle Kugel bauen und innen füllen
+{
+  const s0 = ses.sel;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, hollow: true, thick: 1, anchor: "center" });
+  ses.s.pattern = parsePattern("stone");
+  await use("axiom:shape", { x: 0, y: 80, z: 0 });
+  ses.sel = boxSel(dim.id, { x: -6, y: 74, z: -6 }, { x: 6, y: 86, z: 6 });
+  ses.s.pattern = parsePattern("sponge");
+  await roundTrip("Hohlräume füllen", () => ops.opFillEnclosed(ses));
+  ops.opFillEnclosed(ses);
+  await drain();
+  check(dim._get(0, 80, 0).type.id === "minecraft:sponge" && dim._get(0, 86, 0).type.id === "minecraft:air", "Hohlraum innen gefüllt, außen frei");
+  await undo();
+  await undo();
+  ses.sel = s0;
+}
 await roundTrip("Natürlich machen", () => ops.opNaturalize(ses));
 ses.s.shape = { ...ses.s.shape, type: "cuboid", rx: 1, ry: 3, rz: 1, anchor: "base", hollow: false };
 await use("axiom:shape", G);
 await roundTrip("Glätten", () => ops.opSmooth(ses, 3));
 await roundTrip("Stapeln", () => ops.opStack(ses, { x: 1, y: 0, z: 0 }, 3, 1));
+await roundTrip("Array", () => ops.opArray(ses, { x: 2, y: 3, z: 0 }, 4, 90));
 await roundTrip("Verschieben", async () => {
   const s0 = ses.sel;
   await ops.opMove(ses, { x: 0, y: 0, z: -1 }, 5);
@@ -347,6 +368,7 @@ for (const [label, extra] of [
   ["Hotbar-Sätze", [{ selectText: "Satz 1" }, { selectText: "speichern" }]],
   ["Verlauf", [{ selectText: "Rückgängig" }]],
   ["Hilfe", [{ selectText: "Formen" }, { selectText: "OK" }]],
+  ["Ansichten", [{ selectText: "speichern" }, { set: { Name: "Turm" } }]],
   ["Block / Muster", [{ selectText: "Als Text" }, { set: { Blöcke: "2*stone, dirt" } }]],
   ["Zwischenablage", [{ selectText: "Blaupause laden" }, { selectText: "mein_haeuschen" }]],
 ]) {
@@ -362,6 +384,10 @@ for (const [label, extra] of [
   answers.length = 0;
 }
 check(ses.s.reach === 200, "Fähigkeiten übernommen");
+player.location = { x: 99, y: 80, z: 99 };
+answers.push({ selectText: "Ansichten" }, { selectText: "Turm" }, { selectText: "Hinspringen" });
+await use("axiom:menu", G);
+check(player.location.x === 0.5 && player.location.y === 65, "Ansicht: zurückgesprungen " + JSON.stringify(player.location));
 check(formatPattern(ses.s.pattern) === "2*stone, dirt", "Muster per Menü");
 ses.s.mask = { mode: "none", ids: [] };
 ses.s.symmetry = { x: false, z: false, center: null };

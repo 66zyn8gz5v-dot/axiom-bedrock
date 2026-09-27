@@ -22,7 +22,7 @@ export function defaultSettings() {
     brushSel: { radius: 2 },
     shape: { type: "sphere", rx: 5, ry: 5, rz: 5, hollow: false, thick: 1, anchor: "center" },
     sculpt: { mode: "add", radius: 4, noise: false },
-    painter: { mode: "surface", radius: 4, depth: 1, scale: 8, threshold: 0 },
+    painter: { mode: "surface", radius: 4, depth: 1, scale: 8, threshold: 0, density: 8 },
     terrain: { mode: "raise", radius: 6, strength: 2, falloff: true },
     extrude: { mode: "push", sameType: true, limit: 4096 },
     path: { radius: 1, smooth: true, hollow: false },

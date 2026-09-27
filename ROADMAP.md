@@ -21,14 +21,13 @@ Neue Ideen unten anhängen.
 - [x] Symmetrie (X/Z) für Werkzeuge und normales Bauen/Abbauen
 - [x] Welt-Menü, Hotbar-Sätze, Hilfe, Chat-Befehle
 - [x] Automatischer Test aller Werkzeuge gegen eine API-Attrappe
+- [x] Ansichten (Standpunkte speichern & hinspringen), Maler „Streuen“, Array-Stapeln, Hohlräume füllen
 
 ## Als Nächstes
-- [ ] **Ansichten / Lesezeichen**: Positionen + Blickrichtung speichern und hinteleportieren (Axiom „Views“)
 - [ ] **Neigung/Rampe (Slope)**: Rampe zwischen zwei Pfadpunkten / Böschung am Hang
 - [ ] **Verzerren (Distort) & Zerbrechen (Shatter)** als weitere Modellier-Modi
-- [ ] **Streuen (Scatter)**: Blöcke/Pflanzen/Blaupausen zufällig auf Oberflächen verteilen (z.B. Bäume)
-- [ ] **Array-Stapeln**: Stapeln mit Versatz und Drehung pro Kopie (Treppen, Spiralen)
-- [ ] **Füllen per Flutfüllung** (Hohlräume/Innenräume bis zu Wänden füllen) und Wasser ablassen/füllen
+- [ ] **Blaupausen streuen**: Blaupausen (z.B. Bäume) zufällig auf Oberflächen verteilen
+- [ ] **Wasser ablassen/füllen** in der Auswahl bzw. per Flutfüllung ab Blickziel
 - [ ] **Muster-Paletten** speichern (mehrere benannte Muster, schnell wechseln)
 - [ ] **Auswahl-Operationen**: Auswahl um N Blöcke aufblasen/schrumpfen (3D), Auswahl auf Oberfläche begrenzen
 - [ ] **Verlaufs-Liste**: gezielt zu einem Schritt zurückspringen

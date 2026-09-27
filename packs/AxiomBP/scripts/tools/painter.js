@@ -14,6 +14,7 @@ export const PAINT_MODES = /** @type {[string,string][]} */ ([
   ["replace", "Alles im Pinsel ersetzen"],
   ["noise", "Rauschen-Maler (2 Muster gemischt)"],
   ["gradient", "Höhenverlauf (unten Muster 1 → oben Muster 2)"],
+  ["scatter", "Streuen (Muster verstreut auf die Oberfläche setzen)"],
   ["clean", "Säubern (Pflanzen & Flüssigkeiten entfernen)"],
 ]);
 
@@ -53,7 +54,13 @@ export const painterTool = {
         const z = ctr.z + dz;
         const id = es.id(x, y, z);
         if (!id) continue;
-        if (mode === "clean") {
+        if (mode === "scatter") {
+          // Oberster fester Block mit Luft darüber -> mit Wahrscheinlichkeit „Dichte" etwas daraufsetzen
+          if (isSolidId(id) && Math.random() * 100 < c.density) {
+            const above = es.id(x, y + 1, z);
+            if (above && isAirId(above)) es.set(x, y + 1, z, p1());
+          }
+        } else if (mode === "clean") {
           if (!isAirId(id) && (isSoftId(id) || isLiquidId(id))) es.set(x, y, z, A);
         } else if (isSolidId(id)) {
           if (mode === "replace") es.set(x, y, z, p1());
@@ -76,7 +83,7 @@ export const painterTool = {
   hud(ses) {
     const c = ses.s.painter;
     const two = c.mode === "noise" || c.mode === "gradient";
-    return `${PAINT_MODES.find((m) => m[0] === c.mode)?.[1]} · R${c.radius}` + (c.mode === "clean" ? "" : ` · §e${formatPattern(ses.s.pattern)}` + (two ? `§r / §e${formatPattern(ses.s.pattern2)}` : ""));
+    return `${PAINT_MODES.find((m) => m[0] === c.mode)?.[1]} · R${c.radius}` + (c.mode === "scatter" ? ` · ${c.density}%` : "") + (c.mode === "clean" ? "" : ` · §e${formatPattern(ses.s.pattern)}` + (two ? `§r / §e${formatPattern(ses.s.pattern2)}` : ""));
   },
   async menu(ses) {
     const c = ses.s.painter;
@@ -86,11 +93,12 @@ export const painterTool = {
       .slider("depth", "Tiefe (Schichten unter der Oberfläche)", 1, 6, 1, c.depth)
       .slider("scale", "Rauschen: Größe der Flecken", 2, 40, 1, c.scale)
       .slider("threshold", "Rauschen: Anteil Muster 2 (-100 viel … 100 wenig)", -100, 100, 5, c.threshold)
+      .slider("density", "Streuen: Dichte in %", 1, 100, 1, c.density)
       .toggle("pat", "Danach Muster 1 wählen", false)
       .toggle("pat2", "Danach Muster 2 wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { mode: r.mode, radius: r.radius, depth: r.depth, scale: r.scale, threshold: r.threshold });
+    Object.assign(c, { mode: r.mode, radius: r.radius, depth: r.depth, scale: r.scale, threshold: r.threshold, density: r.density });
     markDirty(ses);
     if (r.pat) await patternMenu(ses, "pattern");
     if (r.pat2) await patternMenu(ses, "pattern2");

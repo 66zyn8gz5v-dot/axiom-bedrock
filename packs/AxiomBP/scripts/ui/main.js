@@ -10,6 +10,7 @@ import { getHistory, clearHistory } from "../core/history.js";
 import * as ops from "../core/selops.js";
 import { Modal, confirm, menu } from "./forms.js";
 import { maskMenu, patternMenu } from "./common.js";
+import { viewsMenu } from "./views.js";
 import { selInfo } from "../tools/select.js";
 import { doUndo } from "../tools/misc.js";
 import { TOOL_LIST } from "../tools/index.js";
@@ -32,6 +33,7 @@ export async function mainMenu(ses) {
       { text: "Verlauf (Rückgängig)", icon: "textures/items/axiom_undo", run: () => historyMenu(ses) },
       { text: "Fähigkeiten", run: () => capsMenu(ses) },
       { text: "Symmetrie", run: () => symmetryMenu(ses) },
+      { text: "Ansichten (Standpunkte)", run: () => viewsMenu(ses) },
       { text: "Welt (Zeit, Wetter, Regeln)", run: () => worldMenu(ses) },
       { text: "Hotbar-Sätze", run: () => hotbarMenu(ses) },
       { text: "Hilfe", run: () => helpMenu(ses) },
@@ -99,6 +101,7 @@ export async function selectionMenu(ses) {
       },
     },
     { text: "Leeren (Luft)", run: () => ops.opClear(ses) },
+    { text: "Hohlräume füllen (Innenräume)", run: () => ops.opFillEnclosed(ses) },
     { text: "Wände", run: () => ops.opShell(ses, "walls") },
     { text: "Umriss (Hülle)", run: () => ops.opShell(ses, "outline") },
     { text: "Aushöhlen", run: () => ops.opShell(ses, "hollow") },
@@ -131,6 +134,30 @@ export async function selectionMenu(ses) {
         ses.s.stack = { count: r.count, gap: r.gap };
         markDirty(ses);
         ops.opStack(ses, d, r.count, r.gap);
+      },
+    },
+    {
+      text: "Array (Versatz + Drehung pro Kopie)",
+      run: async () => {
+        const r = await new Modal("Array")
+          .slider("count", "Anzahl Kopien", 1, 64, 1, 4)
+          .slider("dx", "Versatz X (Ost +)", -64, 64, 1, 0)
+          .slider("dy", "Versatz Y (hoch +)", -64, 64, 1, 1)
+          .slider("dz", "Versatz Z (Süd +)", -64, 64, 1, 0)
+          .dropdown(
+            "rot",
+            "Drehung pro Kopie",
+            [
+              [0, "keine"],
+              [90, "90°"],
+              [180, "180°"],
+              [270, "270°"],
+            ],
+            0
+          )
+          .show(p);
+        if (!r) return;
+        ops.opArray(ses, v(r.dx, r.dy, r.dz), r.count, r.rot);
       },
     },
     {

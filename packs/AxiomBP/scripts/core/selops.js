@@ -247,6 +247,42 @@ export function opStack(ses, dir, count, gap) {
 }
 
 /**
+ * Array: Kopien mit frei wählbarem Versatz und optionaler Drehung pro Kopie (z.B. Wendeltreppen, Säulenreihen).
+ * @param {import("./state.js").Session} ses
+ * @param {{x:number,y:number,z:number}} off Versatz pro Kopie
+ * @param {number} count
+ * @param {number} rotStep Drehung pro Kopie in Grad (0/90/180/270)
+ */
+export function opArray(ses, off, count, rotStep) {
+  const sel = need(ses);
+  if (!sel) return;
+  const size = selDims(sel);
+  const cx = sel.min.x + (size.x - 1) / 2;
+  const cz = sel.min.z + (size.z - 1) / 2;
+  /** @type {{rot:number, min:{x:number,y:number,z:number}}[]} */
+  const copies = [];
+  let min = { ...sel.min };
+  let max = { ...sel.max };
+  for (let i = 1; i <= count; i++) {
+    const rot = (rotStep * i) % 360;
+    const rs = rotatedSize(size, rot);
+    const m = v(Math.round(cx + off.x * i - (rs.x - 1) / 2), sel.min.y + off.y * i, Math.round(cz + off.z * i - (rs.z - 1) / 2));
+    copies.push({ rot, min: m });
+    min = vmin(min, m);
+    max = vmax(max, v(m.x + rs.x - 1, m.y + rs.y - 1, m.z + rs.z - 1));
+  }
+  const player = ses.player;
+  runEdit(player, { label: `Array ×${count}`, region: { min, max }, forceRegion: true, useMask: false }, function* (es) {
+    const clip = yield* copySelection(player, sel, false, true);
+    try {
+      for (const c of copies) es.count += yield* pasteClip(player, clip, es.dim, c.min, { rotation: c.rot, mirror: "None", air: false, entities: false }, false);
+    } finally {
+      freeClip(clip);
+    }
+  });
+}
+
+/**
  * Auswahl verschieben (Inhalt + Auswahl).
  * @param {import("./state.js").Session} ses
  * @param {{x:number,y:number,z:number}} dir Einheitsvektor
@@ -330,6 +366,62 @@ export function opAnalyze(ses) {
     for (const [id, c] of rows.slice(0, 15)) text += `  §e${shortId(id)}§r: ${fmtNum(c)} (${((c / total) * 100).toFixed(1)}%)\n`;
     if (rows.length > 15) text += `  §7… und ${rows.length - 15} weitere`;
     player.sendMessage(text);
+  });
+}
+
+/**
+ * Eingeschlossene Hohlräume füllen: Luft, die nicht mit dem Rand der Auswahl verbunden ist.
+ * @param {import("./state.js").Session} ses
+ */
+export function opFillEnclosed(ses) {
+  const sel = need(ses);
+  if (!sel) return;
+  const pick = picker(ses.s.pattern);
+  const { min, max } = sel;
+  runEdit(ses.player, { label: "Hohlräume füllen", region: { min, max } }, function* (es) {
+    /** @param {number} x @param {number} y @param {number} z */
+    const open = (x, y, z) => {
+      if (!selContains(sel, x, y, z)) return false;
+      const id = es.id(x, y, z);
+      return !!id && !isSolidId(id);
+    };
+    const outside = new Set();
+    /** @type {[number,number,number][]} */
+    const queue = [];
+    // Startpunkte: offene Positionen am Rand der Auswahl
+    for (const p of selPositions(sel)) {
+      const edge =
+        !selContains(sel, p.x + 1, p.y, p.z) || !selContains(sel, p.x - 1, p.y, p.z) || !selContains(sel, p.x, p.y + 1, p.z) ||
+        !selContains(sel, p.x, p.y - 1, p.z) || !selContains(sel, p.x, p.y, p.z + 1) || !selContains(sel, p.x, p.y, p.z - 1);
+      if (edge && open(p.x, p.y, p.z)) {
+        const k = p.x + "," + p.y + "," + p.z;
+        if (!outside.has(k)) {
+          outside.add(k);
+          queue.push([p.x, p.y, p.z]);
+        }
+      }
+    }
+    yield;
+    let qi = 0;
+    const D = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+    while (qi < queue.length) {
+      const [x, y, z] = queue[qi++];
+      for (const [dx, dy, dz] of D) {
+        const nx = x + dx;
+        const ny = y + dy;
+        const nz = z + dz;
+        const k = nx + "," + ny + "," + nz;
+        if (outside.has(k) || !open(nx, ny, nz)) continue;
+        outside.add(k);
+        queue.push([nx, ny, nz]);
+      }
+      if (qi % 512 === 0) yield;
+    }
+    let n = 0;
+    for (const p of selPositions(sel)) {
+      if (!outside.has(p.x + "," + p.y + "," + p.z) && open(p.x, p.y, p.z)) es.set(p.x, p.y, p.z, pick());
+      if (++n % 512 === 0) yield;
+    }
   });
 }
 
