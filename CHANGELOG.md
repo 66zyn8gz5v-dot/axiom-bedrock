@@ -1,5 +1,9 @@
 # Änderungen
 
+## 0.2.1 – 27.09.2026
+- Alle Werkzeug-Icons überarbeitet: durchgehende dunkle Umrandung (wird beim Bauen automatisch gezogen),
+  Licht und Schatten, neue Details (Kristallkugel mit Sockel, Stern-Zauberstab, Farbtropfen, Pfeil-Block …)
+
 ## 0.2.0 – 27.09.2026
 - Neu: **Ansichten** (Standpunkte speichern und hinspringen), **Maler „Streuen“**, **Array** (Kopien mit Versatz
   und Drehung), **Hohlräume füllen**, Pipette zusätzlich im Muster-Menü

@@ -56,12 +56,29 @@ def write_json(path, data):
         f.write("\n")
 
 
+def outline(rows):
+    """Zieht eine dunkle Umrandung um alle gefüllten Pixel (4er-Nachbarschaft)."""
+    grid = [list(r) for r in rows]
+    out = [r[:] for r in grid]
+    for y in range(16):
+        for x in range(16):
+            if grid[y][x] != ".":
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < 16 and 0 <= ny < 16 and grid[ny][nx] not in (".", "k"):
+                    out[y][x] = "k"
+                    break
+    return ["".join(r) for r in out]
+
+
 def icon_image(name):
     rows = ICONS[name]
     assert len(rows) == 16, f"{name}: {len(rows)} Zeilen"
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     for y, row in enumerate(rows):
         assert len(row) == 16, f"{name} Zeile {y}: {len(row)} Zeichen"
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, row in enumerate(outline(rows)):
         for x, ch in enumerate(row):
             col = PALETTE[ch]
             if col:
