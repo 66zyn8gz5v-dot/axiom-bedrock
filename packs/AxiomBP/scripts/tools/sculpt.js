@@ -17,7 +17,9 @@ export const SCULPT_MODES = /** @type {[string,string][]} */ ([
   ["melt", "Schmelzen / Erodieren"],
   ["fill", "Auffüllen (Löcher schließen)"],
   ["rock", "Felsen (unregelmäßiger Brocken)"],
-  ["roughen", "Aufrauen / Verzerren"],
+  ["roughen", "Aufrauen"],
+  ["distort", "Verzerren (Blöcke wellenförmig verschieben)"],
+  ["shatter", "Zerbrechen (Risse und Spalten)"],
 ]);
 
 /**
@@ -111,7 +113,7 @@ export const sculptTool = {
         return;
       }
       // Zellbasierte Modi: Umgebung einlesen, dann neue Werte berechnen
-      const ids = readArea(es, ctr, r + 2);
+      const ids = readArea(es, ctr, r + (mode === "distort" ? 4 : 2));
       yield;
       /** @type {[number,number,number,string][]} */
       const changes = [];
@@ -152,6 +154,17 @@ export const sculptTool = {
           if (solidAt(x, y, z + 1)) cnt++;
           if (solidAt(x, y, z - 1)) cnt++;
           if (cnt >= 4) changes.push([x, y, z, commonNeighbor(ids, x, y, z) || "minecraft:stone"]);
+        } else if (mode === "distort") {
+          // Quellblock an verschobener Position holen (Rauschfeld) -> Gelände wirkt verbogen
+          const f = 1 / Math.max(3, r * 0.8);
+          const ox = Math.round(fbm(x * f + seed, y * f, z * f, 2) * 3);
+          const oy = Math.round(fbm(x * f, y * f + seed, z * f, 2) * 3);
+          const oz = Math.round(fbm(x * f, y * f, z * f + seed, 2) * 3);
+          const src = ids.get(k3(x + ox, y + oy, z + oz));
+          if (src && src !== id && (isSolidId(src) || isSolidId(id))) changes.push([x, y, z, isSolidId(src) ? src : AIR_ID]);
+        } else if (mode === "shatter") {
+          // Risse: dünne Zonen, in denen das Rauschen nahe 0 ist
+          if (solid && Math.abs(fbm(x / 5 + seed, y / 5, z / 5, 2)) < 0.06) changes.push([x, y, z, AIR_ID]);
         } else if (mode === "roughen") {
           const nz = fbm(x / 4 + seed, y / 4, z / 4, 2);
           if (solid && nz > 0.25) {

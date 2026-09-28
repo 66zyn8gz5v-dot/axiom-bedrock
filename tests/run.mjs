@@ -125,7 +125,7 @@ for (const rot of [0, 90, 180, 270])
   }
 
 console.log("Formen");
-for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch"]) {
+for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral"]) {
   Object.assign(ses.s.shape, { type, rx: 4, ry: 3, rz: 4, hollow: type === "sphere", thick: 1, anchor: "center" });
   await roundTrip("Form " + type, () => use("axiom:shape", G));
 }
@@ -135,7 +135,7 @@ Object.assign(ses.s.shape, { type: "sphere", rx: 3, ry: 3, rz: 3, anchor: "base"
 await roundTrip("Form in der Luft", () => use("axiom:shape", G, { air: true }));
 
 console.log("Modellieren");
-for (const mode of ["add", "remove", "smooth", "melt", "fill", "rock", "roughen"]) {
+for (const mode of ["add", "remove", "smooth", "melt", "fill", "rock", "roughen", "distort", "shatter"]) {
   ses.s.sculpt.mode = mode;
   ses.s.sculpt.radius = 4;
   // Für Glätten/Schmelzen/Auffüllen erst eine Kante bauen
@@ -159,7 +159,7 @@ ses.s.sculpt.noise = false;
 
 console.log("Maler");
 ses.s.pattern2 = parsePattern("andesite");
-for (const mode of ["surface", "top", "replace", "noise", "gradient"]) {
+for (const mode of ["surface", "top", "replace", "noise", "gradient", "slope"]) {
   ses.s.painter.mode = mode;
   ses.s.pattern = parsePattern("stone, cobblestone");
   await roundTrip("Maler " + mode, () => use("axiom:painter", G));
@@ -202,6 +202,18 @@ await roundTrip("Pfad", async () => {
   answers.push({ selectText: "Pfad bauen" });
   await use("axiom:path", G, { sneak: true });
 });
+await roundTrip("Pfad flach mit Unterbau (Rampe)", async () => {
+  ses.pathPoints = [];
+  ses.s.path.flat = true;
+  ses.s.path.support = true;
+  await use("axiom:path", { x: 0, y: 64, z: 0 });
+  await use("axiom:path", { x: 12, y: 72, z: 0 });
+  answers.push({ selectText: "Pfad bauen" });
+  await use("axiom:path", G, { sneak: true });
+  ses.s.path.flat = false;
+  ses.s.path.support = false;
+});
+check(true, "");
 for (const orient of ["wall", "floor"]) {
   ses.s.text.orient = orient;
   ses.s.text.text = "Hallo Welt!";
@@ -228,6 +240,25 @@ await roundTrip("Ersetzen", () => ops.opReplace(ses, ["minecraft:dirt"]));
 await roundTrip("Leeren", () => ops.opClear(ses));
 for (const k of ["walls", "outline", "hollow"]) await roundTrip("Hülle " + k, () => ops.opShell(ses, k));
 await roundTrip("Überziehen", () => ops.opOverlay(ses, 2));
+await roundTrip("Mit Wasser füllen", () => ops.opFlood(ses));
+ops.opFlood(ses);
+await drain();
+await roundTrip("Wasser ablassen", () => ops.opDrain(ses));
+await undo();
+{
+  const s0 = ses.sel;
+  ops.selGrow(ses, 2);
+  check(ses.sel.min.x === s0.min.x - 2 && ses.sel.max.y === s0.max.y + 2, "Box aufblasen");
+  ses.sel = s0;
+  ops.selSurface(ses);
+  check(ses.sel.kind === "set" && [...ses.sel.keys].every((k) => k.split(",")[1] === "64"), "Auf Oberfläche begrenzen");
+  const n0 = ses.sel.keys.size;
+  ops.selGrow(ses, 1);
+  const n1 = ses.sel.keys.size;
+  ops.selGrow(ses, -1);
+  check(n1 > n0 && ses.sel.keys.size <= n1, "Freie Auswahl aufblasen/schrumpfen");
+  ses.sel = s0;
+}
 // Hohlraum: hohle Kugel bauen und innen füllen
 {
   const s0 = ses.sel;
@@ -393,6 +424,24 @@ answers.push({ selectText: "Ansichten" }, { selectText: "Turm" }, { selectText: 
 await use("axiom:menu", G);
 check(player.location.x === 0.5 && player.location.y === 65, "Ansicht: zurückgesprungen " + JSON.stringify(player.location));
 check(formatPattern(ses.s.pattern) === "2*stone, dirt", "Muster per Menü");
+answers.push({ selectText: "Block / Muster" }, { selectText: "Paletten" }, { selectText: "speichern" }, { set: { Name: "Mauer" } });
+await use("axiom:menu", G);
+ses.s.pattern = parsePattern("glass");
+answers.push({ selectText: "Block / Muster" }, { selectText: "Paletten" }, { selectText: "Mauer" }, { selectText: "Laden" });
+await use("axiom:menu", G);
+check(formatPattern(ses.s.pattern) === "2*stone, dirt", "Palette speichern & laden");
+// Zu einem Schritt zurückspringen
+{
+  const snap0 = dim.snapshot();
+  ses.s.pattern = parsePattern("gold_block");
+  Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center", hollow: false });
+  ses.s.symmetry = { x: false, z: false, center: null };
+  ses.s.mask = { mode: "none", ids: [] };
+  for (let i = 0; i < 3; i++) await use("axiom:shape", { x: 30 + i, y: 70, z: 30 });
+  answers.push({ selectText: "Verlauf" }, { selectText: "zurückspringen" }, { selectText: "3." });
+  await use("axiom:menu", G);
+  check(eqSnap(snap0, dim.snapshot()), "Verlauf: zu Schritt 3 zurückgesprungen");
+}
 ses.s.mask = { mode: "none", ids: [] };
 ses.s.symmetry = { x: false, z: false, center: null };
 

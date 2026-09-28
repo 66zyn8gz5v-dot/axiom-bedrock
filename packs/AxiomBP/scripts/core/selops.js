@@ -3,7 +3,7 @@
 import { BlockPermutation } from "@minecraft/server";
 import { fillBox, runEdit } from "./edit.js";
 import { air, isSolidId, picker, shortId, isAirId } from "./pattern.js";
-import { selContains, selPositions, selSize, shiftSel, selDims } from "./selection.js";
+import { selContains, selPositions, selSize, shiftSel, selDims, recomputeBounds, SET_LIMIT } from "./selection.js";
 import { copySelection, freeClip, pasteClip, rotatedSize } from "./clipboard.js";
 import { err, fmtNum, msg } from "./util.js";
 import { v, vmax, vmin } from "./vec.js";
@@ -423,6 +423,95 @@ export function opFillEnclosed(ses) {
       if (++n % 512 === 0) yield;
     }
   });
+}
+
+const WATERISH = /^minecraft:(water|flowing_water|seagrass|tall_seagrass|kelp|kelp_plant|bubble_column)$/;
+
+/** Wasser (inkl. Seegras/Seetang) in der Auswahl entfernen. @param {import("./state.js").Session} ses */
+export function opDrain(ses) {
+  const A = air();
+  perBlock(
+    ses,
+    "Wasser ablassen",
+    (es, x, y, z) => {
+      if (WATERISH.test(es.id(x, y, z))) es.set(x, y, z, A);
+    },
+    { useMask: false }
+  );
+}
+
+/** Luft in der Auswahl mit Wasser füllen. @param {import("./state.js").Session} ses */
+export function opFlood(ses) {
+  const W = BlockPermutation.resolve("minecraft:water");
+  perBlock(
+    ses,
+    "Mit Wasser füllen",
+    (es, x, y, z) => {
+      const id = es.id(x, y, z);
+      if (id && !isSolidId(id) && !WATERISH.test(id)) es.set(x, y, z, W);
+    },
+    { useMask: false }
+  );
+}
+
+/**
+ * Auswahl in 3D vergrößern (+n) oder verkleinern (-n).
+ * @param {import("./state.js").Session} ses
+ * @param {number} n
+ */
+export function selGrow(ses, n) {
+  const sel = need(ses);
+  if (!sel) return;
+  if (sel.kind === "box") {
+    const d = selDims(sel);
+    if (n < 0 && (d.x <= -2 * n || d.y <= -2 * n || d.z <= -2 * n)) return err(ses.player, "Auswahl ist dafür zu klein.");
+    ses.sel = { kind: "box", dim: sel.dim, min: v(sel.min.x - n, sel.min.y - n, sel.min.z - n), max: v(sel.max.x + n, sel.max.y + n, sel.max.z + n) };
+    msg(ses.player, `Auswahl: ${fmtNum(selSize(ses.sel))} Blöcke`);
+    return;
+  }
+  let keys = new Set(sel.keys);
+  const D = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  for (let i = 0; i < Math.abs(n); i++) {
+    const next = new Set(n > 0 ? keys : []);
+    for (const k of keys) {
+      const [x, y, z] = k.split(",").map(Number);
+      if (n > 0) {
+        for (const [dx, dy, dz] of D) next.add(`${x + dx},${y + dy},${z + dz}`);
+      } else if (D.every(([dx, dy, dz]) => keys.has(`${x + dx},${y + dy},${z + dz}`))) next.add(k);
+    }
+    if (next.size > SET_LIMIT) return err(ses.player, "Auswahl würde zu groß.");
+    keys = next;
+  }
+  if (!keys.size) return err(ses.player, "Auswahl wäre danach leer.");
+  /** @type {import("./selection.js").SetSel} */
+  const out = { kind: "set", dim: sel.dim, keys, min: sel.min, max: sel.max };
+  recomputeBounds(out);
+  ses.sel = out;
+  msg(ses.player, `Auswahl: ${fmtNum(keys.size)} Blöcke`);
+}
+
+/** Auswahl auf die Oberfläche begrenzen (feste Blöcke mit Luft darüber). @param {import("./state.js").Session} ses */
+export function selSurface(ses) {
+  const sel = need(ses);
+  if (!sel) return;
+  const dim = ses.player.dimension;
+  const keys = new Set();
+  let n = 0;
+  for (const p of selPositions(sel)) {
+    if (++n > 4000000) break;
+    try {
+      const b = dim.getBlock(p);
+      const up = dim.getBlock({ x: p.x, y: p.y + 1, z: p.z });
+      if (b && up && isSolidId(b.typeId) && !isSolidId(up.typeId)) keys.add(`${p.x},${p.y},${p.z}`);
+    } catch {}
+    if (keys.size > SET_LIMIT) return err(ses.player, "Zu viele Oberflächenblöcke.");
+  }
+  if (!keys.size) return err(ses.player, "Keine Oberfläche in der Auswahl gefunden.");
+  /** @type {import("./selection.js").SetSel} */
+  const out = { kind: "set", dim: sel.dim, keys, min: sel.min, max: sel.max };
+  recomputeBounds(out);
+  ses.sel = out;
+  msg(ses.player, `Oberfläche: ${fmtNum(keys.size)} Blöcke ausgewählt`);
 }
 
 /** In Zwischenablage kopieren (optional ausschneiden). @param {import("./state.js").Session} ses @param {boolean} cut */

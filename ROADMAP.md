@@ -22,6 +22,9 @@ Neue Ideen unten anhängen.
 - [x] Welt-Menü, Hotbar-Sätze, Hilfe, Chat-Befehle
 - [x] Automatischer Test aller Werkzeuge gegen eine API-Attrappe
 - [x] Ansichten (Standpunkte speichern & hinspringen), Maler „Streuen“, Array-Stapeln, Hohlräume füllen
+- [x] v0.3: Pfad flach als Straße/Rampe mit Unterbau, Modellieren „Verzerren“ & „Zerbrechen“, Wasser ablassen/füllen,
+      Muster-Paletten, Auswahl aufblasen/schrumpfen/auf Oberfläche, Verlauf: zu Schritt springen,
+      Formen Prisma & Spirale, Maler „Nach Neigung“
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Spiegeln „Ost-West“ spiegelt wirklich Ost↔West (sonst `mirEnum` in core/clipboard.js tauschen)
@@ -30,17 +33,11 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Neigung/Rampe (Slope)**: Rampe zwischen zwei Pfadpunkten / Böschung am Hang
-- [ ] **Verzerren (Distort) & Zerbrechen (Shatter)** als weitere Modellier-Modi
 - [ ] **Blaupausen streuen**: Blaupausen (z.B. Bäume) zufällig auf Oberflächen verteilen
-- [ ] **Wasser ablassen/füllen** in der Auswahl bzw. per Flutfüllung ab Blickziel
-- [ ] **Muster-Paletten** speichern (mehrere benannte Muster, schnell wechseln)
-- [ ] **Auswahl-Operationen**: Auswahl um N Blöcke aufblasen/schrumpfen (3D), Auswahl auf Oberfläche begrenzen
-- [ ] **Verlaufs-Liste**: gezielt zu einem Schritt zurückspringen
+- [ ] **Wasser per Flutfüllung ab Blickziel** (See füllen, ohne Auswahl)
 - [ ] **Kreaturen-Werkzeug**: Kreaturen/Rüstungsständer auswählen, verschieben, drehen, löschen
 - [ ] **Anmerkungen**: schwebende Texte/Linien als Bau-Notizen (eigene Entität im Ressourcenpaket)
-- [ ] **Formen**: Spirale, Bogen in Blickrichtung drehen, Kuppel mit Wandstärke, Prisma
-- [ ] **Maler**: Neigungs-abhängig malen (steile Hänge Stein, flach Gras)
+- [ ] **Formen**: Bogen/Prisma in Blickrichtung drehen, Spirale mit einstellbarer Steigung
 - [ ] Mehr Tests: Masken-Kombinationen, Symmetrie + Struktur-Verlauf, Blaupausen über Neustart
 - [ ] Leistung: große Operationen in Teilstücken mit Fortschrittsanzeige in der Aktionsleiste
 

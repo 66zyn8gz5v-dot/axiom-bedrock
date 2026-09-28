@@ -17,6 +17,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["pyramid", "Pyramide"],
   ["torus", "Torus (Ring)"],
   ["arch", "Bogen"],
+  ["prism", "Prisma (Dach, entlang X)"],
+  ["spiral", "Spirale (Wendelrampe)"],
 ]);
 
 /**
@@ -80,6 +82,34 @@ export function shapeFn(c) {
         inside: (x, y, z) => y >= 0 && Math.abs(z) <= c.rz && (x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1,
         ext: v(c.rx, c.ry, c.rz),
         yMin: 0,
+      };
+    }
+    case "prism":
+      // Dreieckiger Querschnitt (Satteldach): unten breit (rz), oben spitz, Länge rx
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(x) > c.rx || y < 0 || y > 2 * c.ry) return false;
+          const f = 1 - y / (2 * c.ry + 1);
+          return Math.abs(z) <= c.rz * f + 0.5;
+        },
+        ext: v(c.rx, 2 * c.ry, c.rz),
+        yMin: 0,
+      };
+    case "spiral": {
+      // Wendelrampe: Radius rx, Breite rz, Höhe 2*ry+1, 12 Blöcke Steigung pro Umdrehung
+      const pitch = 12;
+      const w = Math.max(1, c.rz);
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const rho = Math.sqrt(x * x + z * z);
+          if (rho > c.rx + 0.5 || rho < c.rx - w + 0.5) return false;
+          const th = (Math.atan2(z, x) + Math.PI) / (2 * Math.PI);
+          const d = (((y + c.ry - th * pitch) % pitch) + pitch) % pitch;
+          return d < 1.2;
+        },
+        ext: v(c.rx, c.ry, c.rx),
+        yMin: -c.ry,
       };
     }
     default:

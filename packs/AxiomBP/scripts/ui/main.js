@@ -102,6 +102,8 @@ export async function selectionMenu(ses) {
     },
     { text: "Leeren (Luft)", run: () => ops.opClear(ses) },
     { text: "Hohlräume füllen (Innenräume)", run: () => ops.opFillEnclosed(ses) },
+    { text: "Wasser ablassen", run: () => ops.opDrain(ses) },
+    { text: "Mit Wasser füllen", run: () => ops.opFlood(ses) },
     { text: "Wände", run: () => ops.opShell(ses, "walls") },
     { text: "Umriss (Hülle)", run: () => ops.opShell(ses, "outline") },
     { text: "Aushöhlen", run: () => ops.opShell(ses, "hollow") },
@@ -218,6 +220,21 @@ async function adjustSelection(ses) {
         grow(ses, d, -r.n);
       },
     },
+    {
+      text: "In alle Richtungen vergrößern (3D)",
+      run: async () => {
+        const r = await new Modal("Aufblasen").slider("n", "Blöcke", 1, 16, 1, 1).show(p);
+        if (r) ops.selGrow(ses, r.n);
+      },
+    },
+    {
+      text: "In alle Richtungen verkleinern (3D)",
+      run: async () => {
+        const r = await new Modal("Schrumpfen").slider("n", "Blöcke", 1, 16, 1, 1).show(p);
+        if (r) ops.selGrow(ses, -r.n);
+      },
+    },
+    { text: "Auf Oberfläche begrenzen", run: () => ops.selSurface(ses) },
     {
       text: "Nach oben & unten bis zum Weltrand",
       run: () => {
@@ -355,6 +372,28 @@ async function historyMenu(ses) {
   await menu(p, "Verlauf", `Letzte Schritte:\n${list || "§7(leer)"}`, [
     { text: "Rückgängig", run: () => doUndo(p, false) },
     { text: "Wiederherstellen", run: () => doUndo(p, true) },
+    {
+      text: "Zu einem Schritt zurückspringen …",
+      run: async () => {
+        if (!h.undo.length) return err(p, "Verlauf ist leer.");
+        const entries = h.undo.slice(-20).reverse();
+        await menu(
+          p,
+          "Zurückspringen",
+          "Alles bis einschließlich des gewählten Schritts wird rückgängig gemacht.",
+          entries.map((e, i) => ({
+            text: `${i + 1}. ${e.label}`,
+            run: async () => {
+              for (let k = 0; k <= i; k++) {
+                doUndo(p, false);
+                await system.waitTicks(2);
+                while (getSession(p).busy) await system.waitTicks(2);
+              }
+            },
+          }))
+        );
+      },
+    },
     {
       text: "Mehrere Schritte rückgängig …",
       run: async () => {

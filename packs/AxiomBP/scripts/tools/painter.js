@@ -14,6 +14,7 @@ export const PAINT_MODES = /** @type {[string,string][]} */ ([
   ["replace", "Alles im Pinsel ersetzen"],
   ["noise", "Rauschen-Maler (2 Muster gemischt)"],
   ["gradient", "Höhenverlauf (unten Muster 1 → oben Muster 2)"],
+  ["slope", "Nach Neigung (flach Muster 1, steil Muster 2)"],
   ["scatter", "Streuen (Muster verstreut auf die Oberfläche setzen)"],
   ["clean", "Säubern (Pflanzen & Flüssigkeiten entfernen)"],
 ]);
@@ -70,7 +71,24 @@ export const painterTool = {
             if (ok) es.set(x, y, z, p1());
           } else if (exposed(x, y, z)) {
             if (mode === "noise") es.set(x, y, z, fbm(x / c.scale, y / c.scale, z / c.scale) > c.threshold / 100 ? p2() : p1());
-            else if (mode === "gradient") {
+            else if (mode === "slope") {
+              // Oberflächen-Normale grob aus den festen Nachbarn schätzen
+              let nx = 0;
+              let ny = 0;
+              let nz = 0;
+              for (let ax = -1; ax <= 1; ax++)
+                for (let ay = -1; ay <= 1; ay++)
+                  for (let az = -1; az <= 1; az++) {
+                    if (open(x + ax, y + ay, z + az)) {
+                      nx += ax;
+                      ny += ay;
+                      nz += az;
+                    }
+                  }
+              const len = Math.hypot(nx, ny, nz) || 1;
+              const deg = (Math.acos(Math.max(-1, Math.min(1, ny / len))) * 180) / Math.PI;
+              es.set(x, y, z, deg >= c.slopeDeg ? p2() : p1());
+            } else if (mode === "gradient") {
               const f = (dy + r) / (2 * r + 1) + (Math.random() - 0.5) * 0.35;
               es.set(x, y, z, f > 0.5 ? p2() : p1());
             } else es.set(x, y, z, p1());
@@ -82,7 +100,7 @@ export const painterTool = {
   },
   hud(ses) {
     const c = ses.s.painter;
-    const two = c.mode === "noise" || c.mode === "gradient";
+    const two = c.mode === "noise" || c.mode === "gradient" || c.mode === "slope";
     return `${PAINT_MODES.find((m) => m[0] === c.mode)?.[1]} · R${c.radius}` + (c.mode === "scatter" ? ` · ${c.density}%` : "") + (c.mode === "clean" ? "" : ` · §e${formatPattern(ses.s.pattern)}` + (two ? `§r / §e${formatPattern(ses.s.pattern2)}` : ""));
   },
   async menu(ses) {
@@ -94,11 +112,12 @@ export const painterTool = {
       .slider("scale", "Rauschen: Größe der Flecken", 2, 40, 1, c.scale)
       .slider("threshold", "Rauschen: Anteil Muster 2 (-100 viel … 100 wenig)", -100, 100, 5, c.threshold)
       .slider("density", "Streuen: Dichte in %", 1, 100, 1, c.density)
+      .slider("slopeDeg", "Neigung: ab wie viel Grad Muster 2", 10, 80, 5, c.slopeDeg)
       .toggle("pat", "Danach Muster 1 wählen", false)
       .toggle("pat2", "Danach Muster 2 wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { mode: r.mode, radius: r.radius, depth: r.depth, scale: r.scale, threshold: r.threshold, density: r.density });
+    Object.assign(c, { mode: r.mode, radius: r.radius, depth: r.depth, scale: r.scale, threshold: r.threshold, density: r.density, slopeDeg: r.slopeDeg });
     markDirty(ses);
     if (r.pat) await patternMenu(ses, "pattern");
     if (r.pat2) await patternMenu(ses, "pattern2");

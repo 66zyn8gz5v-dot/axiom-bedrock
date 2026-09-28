@@ -97,6 +97,10 @@ export async function patternMenu(ses, which = "pattern") {
         },
       },
       {
+        text: "Paletten (gespeicherte Muster)",
+        run: () => paletteMenu(ses, which),
+      },
+      {
         text: "Luft (Löschen)",
         run: () => {
           ses.s[which] = [{ id: "minecraft:air", w: 1 }];
@@ -135,4 +139,52 @@ export async function maskMenu(ses) {
       .map(normId);
   markDirty(ses);
   msg(ses.player, "Maske: §e" + describeMask(m));
+}
+
+/**
+ * Benannte Muster speichern und laden.
+ * @param {import("../core/state.js").Session} ses
+ * @param {"pattern"|"pattern2"} which
+ */
+export async function paletteMenu(ses, which) {
+  const p = ses.player;
+  const pals = ses.s.palettes;
+  const names = Object.keys(pals).sort();
+  await menu(p, "Paletten", `Aktuelles Muster: §e${formatPattern(ses.s[which])}`, [
+    {
+      text: "§aAktuelles Muster speichern",
+      run: async () => {
+        const r = await new Modal("Palette speichern").text("name", "Name", "Burgmauer", "").show(p);
+        if (!r) return;
+        const name = String(r.name).trim().slice(0, 24);
+        if (!name) return err(p, "Bitte einen Namen eingeben.");
+        if (!(name in pals) && Object.keys(pals).length >= 30) return err(p, "Maximal 30 Paletten.");
+        pals[name] = ses.s[which].map((e) => ({ ...e }));
+        markDirty(ses);
+        msg(p, `Palette §e${name}§r gespeichert.`);
+      },
+    },
+    ...names.map((n) => ({
+      text: `${n}\n§8${formatPattern(pals[n]).slice(0, 40)}`,
+      run: () =>
+        menu(p, n, formatPattern(pals[n]), [
+          {
+            text: "Laden",
+            run: () => {
+              ses.s[which] = pals[n].map((e) => ({ ...e }));
+              markDirty(ses);
+              msg(p, `Muster: §e${formatPattern(ses.s[which])}`);
+            },
+          },
+          {
+            text: "§cLöschen",
+            run: () => {
+              delete pals[n];
+              markDirty(ses);
+              msg(p, "Palette gelöscht.");
+            },
+          },
+        ]),
+    })),
+  ]);
 }

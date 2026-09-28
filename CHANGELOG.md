@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.3.0 – 28.09.2026
+- **Pfad** kann jetzt flach gebaut werden (Straße/Rampe), auf Wunsch mit Unterbau bis zum Boden
+- **Modellieren:** neue Modi „Verzerren“ (Gelände wellenförmig verbiegen) und „Zerbrechen“ (Risse/Spalten)
+- **Maler:** neuer Modus „Nach Neigung“ – flache Stellen Muster 1, steile Hänge Muster 2
+- **Formen:** Prisma (Satteldach) und Spirale (Wendelrampe)
+- **Auswahl:** Wasser ablassen / mit Wasser füllen, in 3D aufblasen/schrumpfen, auf Oberfläche begrenzen
+- **Muster-Paletten:** Muster unter einem Namen speichern und laden
+- **Verlauf:** gezielt zu einem früheren Schritt zurückspringen
+
 ## 0.2.1 – 27.09.2026
 - Alle Werkzeug-Icons überarbeitet: durchgehende dunkle Umrandung (wird beim Bauen automatisch gezogen),
   Licht und Schatten, neue Details (Kristallkugel mit Sockel, Stern-Zauberstab, Farbtropfen, Pfeil-Block …)

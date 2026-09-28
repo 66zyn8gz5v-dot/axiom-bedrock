@@ -63,23 +63,23 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Magische Auswahl** | Wählt verbundene Blöcke automatisch: gleicher Blocktyp, sichtbare Oberfläche, oder alle festen Blöcke. |
 | **Pinsel-Auswahl** | Freihand-Auswahl: mit dem Pinsel über Blöcke „malen“. |
 | **Baumeister** | Fügt die Zwischenablage am Blickziel ein (mit Vorschau-Rahmen). Schlagen = 90° drehen. Einstellungen: Spiegeln, Luft mit einfügen, Kreaturen, Höhenversatz. |
-| **Formen** | Kugel/Ellipsoid, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen – massiv oder hohl, mittig oder auf dem Boden. |
-| **Modellieren** | Aufbauen, Abtragen, Glätten, Schmelzen/Erodieren, Auffüllen, Felsen, Aufrauen – optional mit unregelmäßigem Rand. |
-| **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, Streuen (z.B. Gras & Blumen verteilen), Säubern (Pflanzen/Wasser weg). |
+| **Formen** | Kugel/Ellipsoid, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen, Prisma (Dach), Spirale (Wendelrampe) – massiv oder hohl, mittig oder auf dem Boden. |
+| **Modellieren** | Aufbauen, Abtragen, Glätten, Schmelzen/Erodieren, Auffüllen, Felsen, Aufrauen, Verzerren, Zerbrechen – optional mit unregelmäßigem Rand. |
+| **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Säubern (Pflanzen/Wasser weg). |
 | **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. |
 | **Extrudieren** | Zieht eine ganze Fläche verbundener Blöcke um eine Schicht heraus bzw. drückt sie hinein. |
-| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen (Dicke, hohl als Röhre). |
+| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
 | **Text** | Schreibt Text aus Blöcken – an eine Wand oder flach auf den Boden, in bis zu 8-facher Größe. |
 | **Lineal** | Misst Abstände und Größen zwischen zwei Punkten. |
 | **Blockzustand-Editor** | Ändert Zustände eines Blocks (Richtung, Achse, offen/zu, Stufe …). Schlagen = drehen. |
 | **Bulldozer** | Baut Blöcke auf große Entfernung sofort ab (einzeln oder im Radius). |
-| **Rückgängig** | Benutzen = Rückgängig, Schleichen + Benutzen = Wiederherstellen (40 Schritte pro Spieler). |
+| **Rückgängig** | Benutzen = Rückgängig, Schleichen + Benutzen = Wiederherstellen (40 Schritte pro Spieler). Im Menü „Verlauf“ kann man gezielt zu einem Schritt zurückspringen. |
 
 ### Auswahl bearbeiten (im Axiom-Menü)
-Füllen · Ersetzen · Leeren · Hohlräume füllen · Wände · Umriss · Aushöhlen · Überziehen · Natürlich machen · Glätten ·
+Füllen · Ersetzen · Leeren · Hohlräume füllen · Wasser ablassen · Mit Wasser füllen · Wände · Umriss · Aushöhlen · Überziehen · Natürlich machen · Glätten ·
 Kopieren · Ausschneiden · Stapeln · Array (Versatz + Drehung pro Kopie, z.B. Wendeltreppen) · Verschieben ·
 Drehen (90/180/270°) · Spiegeln · Analysieren (Blöcke zählen) ·
-Auswahl erweitern/verkleinern/verschieben · per Koordinaten · Auswahl aufheben.
+Auswahl erweitern/verkleinern/verschieben · in 3D aufblasen/schrumpfen · auf Oberfläche begrenzen · per Koordinaten · Auswahl aufheben.
 
 Auswahl-Modus (in den Auswahl-Werkzeugen): **Ersetzen**, **Hinzufügen (+)** oder **Entfernen (−)** – so lassen
 sich Auswahlen wie bei Axiom kombinieren.
@@ -87,6 +87,7 @@ sich Auswahlen wie bei Axiom kombinieren.
 ### Muster (aktiver Block)
 - **Pipette:** mit einem Axiom-Werkzeug auf einen Block schlagen (übernimmt auch Zustände wie Holzachse).
 - Aus dem Inventar wählen, **Hotbar-Blöcke als Mischung**, oder als Text: `3*stone, andesite, oak_log[pillar_axis=x]`.
+- **Paletten:** Muster unter einem Namen speichern und später mit einem Klick wieder laden.
 
 ### Maske
 Legt fest, welche Blöcke Werkzeuge verändern dürfen: alles, nur Luft/Pflanzen, nur feste Blöcke,

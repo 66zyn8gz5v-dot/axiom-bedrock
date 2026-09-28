@@ -1,6 +1,6 @@
 // Pfad-Werkzeug (Linien/Kurven durch Punkte) und Text-Werkzeug.
 import { runEdit } from "../core/edit.js";
-import { formatPattern, picker } from "../core/pattern.js";
+import { formatPattern, isSolidId, picker } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
 import { markBlock, spawn } from "../core/selection.js";
 import { err, msg, targetOrAir } from "../core/util.js";
@@ -56,8 +56,9 @@ function buildPath(ses) {
     let n = 0;
     for (const s of samples) {
       const ri = Math.ceil(r);
+      const ry = c.flat ? 0 : ri;
       for (let dx = -ri; dx <= ri; dx++)
-        for (let dy = -ri; dy <= ri; dy++)
+        for (let dy = -ry; dy <= ry; dy++)
           for (let dz = -ri; dz <= ri; dz++) {
             const d2 = dx * dx + dy * dy + dz * dz;
             if (d2 > rr) continue;
@@ -67,8 +68,16 @@ function buildPath(ses) {
             const k = k3(x, y, z);
             if (done.has(k)) continue;
             done.add(k);
-            if (c.hollow && r >= 1 && d2 < inner) continue;
+            if (c.hollow && !c.flat && r >= 1 && d2 < inner) continue;
             es.set(x, y, z, pick());
+            if (c.flat && c.support) {
+              // Unterbau bis zum Boden (max. 48 Blöcke)
+              for (let yy = y - 1; yy > y - 48; yy--) {
+                const id = es.id(x, yy, z);
+                if (!id || isSolidId(id)) break;
+                es.set(x, yy, z, pick());
+              }
+            }
             if (++n % 256 === 0) yield;
           }
       yield;
@@ -99,7 +108,7 @@ export const pathTool = {
       for (let i = 0; i < s.length; i += step) spawn(ses.player, "axiom:sel", v(s[i].x + 0.5, s[i].y + 0.5, s[i].z + 0.5));
     }
   },
-  hud: (ses) => `${ses.pathPoints.length} Punkte · Radius ${ses.s.path.radius}${ses.s.path.smooth ? " · Kurve" : " · gerade"} · §e${formatPattern(ses.s.pattern)}`,
+  hud: (ses) => `${ses.pathPoints.length} Punkte · Radius ${ses.s.path.radius}${ses.s.path.flat ? " · flach" : ""}${ses.s.path.smooth ? " · Kurve" : " · gerade"} · §e${formatPattern(ses.s.pattern)}`,
   async menu(ses) {
     await menu(ses.player, "Pfad", `${ses.pathPoints.length} Punkte gesetzt.`, [
       { text: "§aPfad bauen", run: () => buildPath(ses) },
@@ -111,6 +120,8 @@ export const pathTool = {
             .slider("radius", "Dicke (Radius, 0 = 1 Block)", 0, 10, 1, c.radius)
             .toggle("smooth", "Weiche Kurve (statt gerader Linien)", c.smooth)
             .toggle("hollow", "Hohl (Röhre)", c.hollow)
+            .toggle("flat", "Flach (Straße / Rampe statt Rohr)", c.flat)
+            .toggle("support", "Rampe: Unterbau bis zum Boden auffüllen", c.support)
             .show(ses.player);
           if (!r) return;
           Object.assign(c, r);
