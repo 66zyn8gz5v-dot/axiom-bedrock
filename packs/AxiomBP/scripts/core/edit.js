@@ -77,6 +77,8 @@ export class EditSession {
       return false;
     }
     this.count++;
+    // Fortschritt bei großen Operationen in der Aktionsleiste anzeigen
+    if (this.count % 20000 === 0) bar(this.ses.player, `§dArbeite …§r ${fmtNum(this.count)} Blöcke`);
     return true;
   }
 

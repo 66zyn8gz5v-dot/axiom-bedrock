@@ -4,7 +4,7 @@ import { BlockPermutation } from "@minecraft/server";
 import { fillBox, runEdit } from "./edit.js";
 import { air, isSolidId, picker, shortId, isAirId } from "./pattern.js";
 import { selContains, selPositions, selSize, shiftSel, selDims, recomputeBounds, SET_LIMIT } from "./selection.js";
-import { copySelection, freeClip, pasteClip, rotatedSize } from "./clipboard.js";
+import { copySelection, freeClip, getClip, pasteClip, rotatedSize } from "./clipboard.js";
 import { err, fmtNum, msg } from "./util.js";
 import { v, vmax, vmin } from "./vec.js";
 
@@ -512,6 +512,57 @@ export function selSurface(ses) {
   recomputeBounds(out);
   ses.sel = out;
   msg(ses.player, `Oberfläche: ${fmtNum(keys.size)} Blöcke ausgewählt`);
+}
+
+/**
+ * Zwischenablage (z.B. geladene Baum-Blaupause) zufällig auf der Oberfläche der Auswahl verteilen.
+ * @param {import("./state.js").Session} ses
+ * @param {{count:number, spacing:number, rotate:boolean}} o
+ */
+export function opScatterClip(ses, o) {
+  const sel = need(ses);
+  if (!sel) return;
+  const player = ses.player;
+  const clip = getClip(player);
+  if (!clip) return err(player, "Zwischenablage ist leer – erst eine Blaupause laden oder etwas kopieren.");
+  const dim = player.dimension;
+  // Oberflächenpunkte (oberster fester Block je Spalte mit Luft darüber) sammeln
+  /** @type {{x:number,y:number,z:number}[]} */
+  const spots = [];
+  /** @type {Map<string, number>} */
+  const top = new Map();
+  for (const p of selPositions(sel)) {
+    const k = p.x + "," + p.z;
+    if ((top.get(k) ?? -Infinity) >= p.y) continue;
+    try {
+      const b = dim.getBlock(p);
+      const up = dim.getBlock({ x: p.x, y: p.y + 1, z: p.z });
+      if (b && up && isSolidId(b.typeId) && !isSolidId(up.typeId)) top.set(k, p.y);
+    } catch {}
+  }
+  for (const [k, y] of top) {
+    const [x, z] = k.split(",").map(Number);
+    spots.push({ x, y, z });
+  }
+  if (!spots.length) return err(player, "Keine Oberfläche in der Auswahl gefunden.");
+  // Zufällig wählen mit Mindestabstand
+  /** @type {{x:number,y:number,z:number, rot:number}[]} */
+  const chosen = [];
+  for (let tries = 0; tries < o.count * 30 && chosen.length < o.count; tries++) {
+    const s = spots[Math.floor(Math.random() * spots.length)];
+    if (chosen.some((c) => (c.x - s.x) ** 2 + (c.z - s.z) ** 2 < o.spacing * o.spacing)) continue;
+    chosen.push({ ...s, rot: o.rotate ? [0, 90, 180, 270][Math.floor(Math.random() * 4)] : 0 });
+  }
+  const R = Math.max(clip.size.x, clip.size.z);
+  const min = v(sel.min.x - R, sel.min.y, sel.min.z - R);
+  const max = v(sel.max.x + R, sel.max.y + clip.size.y + 1, sel.max.z + R);
+  runEdit(player, { label: `Streuen ×${chosen.length}`, region: { min, max }, forceRegion: true, useMask: false }, function* (es) {
+    for (const c of chosen) {
+      const rs = rotatedSize(clip.size, c.rot);
+      const origin = v(c.x - Math.floor(rs.x / 2), c.y + 1, c.z - Math.floor(rs.z / 2));
+      es.count += yield* pasteClip(player, clip, es.dim, origin, { rotation: c.rot, mirror: "None", air: false, entities: false }, false);
+    }
+  });
 }
 
 /** In Zwischenablage kopieren (optional ausschneiden). @param {import("./state.js").Session} ses @param {boolean} cut */

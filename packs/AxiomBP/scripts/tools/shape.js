@@ -4,7 +4,7 @@ import { formatPattern, picker } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
 import { markBlock } from "../core/selection.js";
 import { targetOrAir } from "../core/util.js";
-import { v } from "../core/vec.js";
+import { cardinal, v } from "../core/vec.js";
 import { Modal } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
 
@@ -23,7 +23,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
 
 /**
  * Liefert Test-Funktion (dx,dy,dz) -> innerhalb? und die Ausdehnung.
- * @param {{type:string, rx:number, ry:number, rz:number}} c
+ * @param {{type:string, rx:number, ry:number, rz:number, pitch?:number}} c
  * @returns {{inside:(x:number,y:number,z:number)=>boolean, ext:{x:number,y:number,z:number}, yMin:number}}
  */
 export function shapeFn(c) {
@@ -97,7 +97,7 @@ export function shapeFn(c) {
       };
     case "spiral": {
       // Wendelrampe: Radius rx, Breite rz, Höhe 2*ry+1, 12 Blöcke Steigung pro Umdrehung
-      const pitch = 12;
+      const pitch = Math.max(3, c.pitch ?? 12);
       const w = Math.max(1, c.rz);
       return {
         inside: (x, y, z) => {
@@ -117,11 +117,26 @@ export function shapeFn(c) {
   }
 }
 
+/**
+ * Form ggf. nach Blickrichtung drehen: schaut der Spieler nach Osten/Westen, werden X und Z getauscht,
+ * damit Bogen, Prisma, Quader usw. immer quer zum Spieler stehen.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ * @returns {ReturnType<typeof shapeFn>}
+ */
+export function orientedShape(ses, c) {
+  const f = shapeFn(c);
+  if (!c.look) return f;
+  const d = cardinal(ses.player.getViewDirection(), true);
+  if (d.x === 0) return f;
+  return { inside: (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => f.inside(z, y, x), ext: v(f.ext.z, f.ext.y, f.ext.x), yMin: f.yMin };
+}
+
 /** @param {import("../core/state.js").Session} ses */
 function center(ses) {
   const c = ses.s.shape;
   const t = targetOrAir(ses.player, ses.s);
-  const f = shapeFn(c);
+  const f = orientedShape(ses, c);
   if (c.anchor === "base") return v(t.adjacent.x, t.adjacent.y - f.yMin, t.adjacent.z);
   return t.hit ? t.pos : t.adjacent;
 }
@@ -133,7 +148,7 @@ export const shapeTool = {
   help: "Benutzen: Form am Blickziel platzieren. Schleichen+Benutzen: Form, Größe, hohl, Block wählen.",
   onUse(ses) {
     const c = { ...ses.s.shape };
-    const f = shapeFn(c);
+    const f = orientedShape(ses, c);
     const ctr = center(ses);
     const pick = picker(ses.s.pattern);
     const hollow = c.hollow;
@@ -188,10 +203,12 @@ export const shapeTool = {
         ],
         c.anchor
       )
+      .toggle("look", "Nach Blickrichtung drehen (Bogen/Prisma stehen quer zu dir)", c.look)
+      .slider("pitch", "Spirale: Höhe pro Umdrehung", 3, 40, 1, c.pitch)
       .toggle("pat", "Danach Block/Muster wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor });
+    Object.assign(c, { look: r.look, pitch: r.pitch, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor });
     markDirty(ses);
     if (r.pat) await patternMenu(ses);
   },

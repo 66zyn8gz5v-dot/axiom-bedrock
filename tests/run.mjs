@@ -168,6 +168,28 @@ ses.s.painter.mode = "scatter";
 ses.s.painter.density = 50;
 ses.s.pattern = parsePattern("short_grass, poppy");
 await roundTrip("Maler scatter", () => use("axiom:painter", G));
+// Flutfüllung: Becken ausheben und mit Wasser füllen
+{
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("air");
+  Object.assign(ses.s.shape, { type: "cuboid", rx: 2, ry: 1, rz: 2, hollow: false, anchor: "center", look: false });
+  await use("axiom:shape", { x: 0, y: 63, z: 0 }); // Grube 5x3x5 (y 62..64)
+  ses.s.painter.mode = "flood";
+  ses.s.pattern = parsePattern("water");
+  await roundTrip("Flutfüllung Becken", () => use("axiom:painter", { x: 0, y: 61, z: 0 }));
+  await use("axiom:painter", { x: 0, y: 61, z: 0 });
+  check(dim._get(0, 62, 0).type.id === "minecraft:water" && dim._get(0, 65, 0).type.id === "minecraft:air", "Flutfüllung füllt nur bis Starthöhe");
+  await undo();
+  // Undichtes Becken (offene Oberfläche) -> keine Änderung
+  ses.s.painter.floodLimit = 500;
+  const snap = dim.snapshot();
+  system.currentTick += 100;
+  await use("axiom:painter", { x: 0, y: 64, z: 0 });
+  check(eqSnap(snap, dim.snapshot()) && player.messages.at(-1).includes("nicht dicht"), "Flutfüllung: undichtes Becken abgelehnt");
+  ses.s.painter.floodLimit = 20000;
+  await undo();
+  dim.blocks.clear();
+}
 // Säubern: erst Gras setzen
 dim._set(1, 65, 1, BlockPermutation.resolve("minecraft:short_grass"));
 ses.s.painter.mode = "clean";
@@ -350,6 +372,32 @@ check(true, "Auswahl-Subtraktion ohne Fehler");
 ses.s.selMode = "set";
 
 console.log("Blaupausen");
+// Formen nach Blickrichtung drehen
+{
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "prism", rx: 5, ry: 2, rz: 1, hollow: false, anchor: "base", look: true });
+  ses.s.pattern = parsePattern("bricks");
+  player.view = { x: 1, y: 0, z: 0 };
+  await use("axiom:shape", G);
+  const keys = [...dim.blocks.keys()].map((k) => k.split(",").map(Number));
+  const spanX = Math.max(...keys.map((k) => k[0])) - Math.min(...keys.map((k) => k[0]));
+  const spanZ = Math.max(...keys.map((k) => k[2])) - Math.min(...keys.map((k) => k[2]));
+  check(spanZ > spanX, `Prisma quer zur Blickrichtung Osten (X ${spanX}, Z ${spanZ})`);
+  await undo();
+  player.view = { x: 0, y: 0, z: -1 };
+}
+// Zwischenablage verstreuen
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 1, y: 67, z: 0 });
+  ops.opFill(ses, parsePattern("oak_log"));
+  await drain();
+  ops.opCopy(ses, false);
+  await drain();
+  await undo();
+  ses.sel = boxSel(dim.id, { x: -20, y: 60, z: -20 }, { x: 20, y: 70, z: 20 });
+  await roundTrip("Zwischenablage verstreuen", () => ops.opScatterClip(ses, { count: 5, spacing: 6, rotate: true }));
+}
 ses.sel = boxSel(dim.id, { x: 0, y: 64, z: 0 }, { x: 2, y: 66, z: 2 });
 ops.opCopy(ses, false);
 await drain();

@@ -63,9 +63,9 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Magische Auswahl** | Wählt verbundene Blöcke automatisch: gleicher Blocktyp, sichtbare Oberfläche, oder alle festen Blöcke. |
 | **Pinsel-Auswahl** | Freihand-Auswahl: mit dem Pinsel über Blöcke „malen“. |
 | **Baumeister** | Fügt die Zwischenablage am Blickziel ein (mit Vorschau-Rahmen). Schlagen = 90° drehen. Einstellungen: Spiegeln, Luft mit einfügen, Kreaturen, Höhenversatz. |
-| **Formen** | Kugel/Ellipsoid, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen, Prisma (Dach), Spirale (Wendelrampe) – massiv oder hohl, mittig oder auf dem Boden. |
+| **Formen** | Kugel/Ellipsoid, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen, Prisma (Dach), Spirale (Wendelrampe, Steigung einstellbar) – massiv oder hohl, mittig oder auf dem Boden, auf Wunsch quer zur Blickrichtung gedreht. |
 | **Modellieren** | Aufbauen, Abtragen, Glätten, Schmelzen/Erodieren, Auffüllen, Felsen, Aufrauen, Verzerren, Zerbrechen – optional mit unregelmäßigem Rand. |
-| **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Säubern (Pflanzen/Wasser weg). |
+| **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Flutfüllung (See/Becken ab Blickziel füllen), Säubern (Pflanzen/Wasser weg). |
 | **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. |
 | **Extrudieren** | Zieht eine ganze Fläche verbundener Blöcke um eine Schicht heraus bzw. drückt sie hinein. |
 | **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
@@ -78,7 +78,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 ### Auswahl bearbeiten (im Axiom-Menü)
 Füllen · Ersetzen · Leeren · Hohlräume füllen · Wasser ablassen · Mit Wasser füllen · Wände · Umriss · Aushöhlen · Überziehen · Natürlich machen · Glätten ·
 Kopieren · Ausschneiden · Stapeln · Array (Versatz + Drehung pro Kopie, z.B. Wendeltreppen) · Verschieben ·
-Drehen (90/180/270°) · Spiegeln · Analysieren (Blöcke zählen) ·
+Drehen (90/180/270°) · Spiegeln · Zwischenablage verstreuen (z.B. Baum-Blaupause als Wald) · Analysieren (Blöcke zählen) ·
 Auswahl erweitern/verkleinern/verschieben · in 3D aufblasen/schrumpfen · auf Oberfläche begrenzen · per Koordinaten · Auswahl aufheben.
 
 Auswahl-Modus (in den Auswahl-Werkzeugen): **Ersetzen**, **Hinzufügen (+)** oder **Entfernen (−)** – so lassen

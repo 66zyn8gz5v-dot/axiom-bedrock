@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.4.0 – 28.09.2026 (nächtlicher Ausbau)
+- **Verstreuen:** Zwischenablage oder geladene Blaupause (z.B. ein Baum) zufällig auf der Oberfläche der Auswahl
+  verteilen – mit Anzahl, Mindestabstand und zufälliger Drehung (Axiom-Menü → Auswahl bearbeiten)
+- **Maler „Flutfüllung“:** füllt ein Becken/einen See ab dem Blickziel wie Wasser (seitlich und nach unten, nie höher
+  als der Startpunkt). Ist das Becken undicht, wird nichts verändert
+- **Formen:** drehen sich auf Wunsch nach der Blickrichtung (Bogen/Prisma stehen immer quer zu dir),
+  Spirale mit einstellbarer Höhe pro Umdrehung
+- Große Operationen zeigen den Fortschritt in der Aktionsleiste
+
 ## 0.3.0 – 28.09.2026
 - **Pfad** kann jetzt flach gebaut werden (Straße/Rampe), auf Wunsch mit Unterbau bis zum Boden
 - **Modellieren:** neue Modi „Verzerren“ (Gelände wellenförmig verbiegen) und „Zerbrechen“ (Risse/Spalten)

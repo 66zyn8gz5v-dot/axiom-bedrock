@@ -3,7 +3,7 @@ import { runEdit } from "../core/edit.js";
 import { air, formatPattern, isLiquidId, isSoftId, isSolidId, isAirId, picker } from "../core/pattern.js";
 import { fbm } from "../core/noise.js";
 import { markDirty } from "../core/state.js";
-import { target } from "../core/util.js";
+import { err, now, target } from "../core/util.js";
 import { Modal } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
 import { sphereOffsets, strokeId } from "./registry.js";
@@ -17,7 +17,58 @@ export const PAINT_MODES = /** @type {[string,string][]} */ ([
   ["slope", "Nach Neigung (flach Muster 1, steil Muster 2)"],
   ["scatter", "Streuen (Muster verstreut auf die Oberfläche setzen)"],
   ["clean", "Säubern (Pflanzen & Flüssigkeiten entfernen)"],
+  ["flood", "Flutfüllung ab Blickziel (See/Becken füllen, z.B. mit Wasser)"],
 ]);
+
+/**
+ * Flutfüllung wie Wasser: breitet sich seitlich und nach unten aus, nie über die Starthöhe.
+ * Läuft das Becken „aus“ (zu groß), wird nichts verändert.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{x:number,y:number,z:number}} start
+ */
+function floodFill(ses, start) {
+  const limit = ses.s.painter.floodLimit;
+  const pick = picker(ses.s.pattern);
+  const player = ses.player;
+  runEdit(player, { label: "Flutfüllung" }, function* (es) {
+    /** @param {number} x @param {number} y @param {number} z */
+    const open = (x, y, z) => {
+      const id = es.id(x, y, z);
+      return !!id && !isSolidId(id) && !isLiquidId(id);
+    };
+    if (!open(start.x, start.y, start.z)) {
+      err(player, "Am Blickziel ist kein freier Platz zum Füllen.");
+      return false;
+    }
+    const seen = new Set([start.x + "," + start.y + "," + start.z]);
+    const list = [start];
+    const D = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0]];
+    let qi = 0;
+    while (qi < list.length) {
+      const p = list[qi++];
+      for (const [dx, dy, dz] of D) {
+        const x = p.x + dx;
+        const y = p.y + dy;
+        const z = p.z + dz;
+        const k = x + "," + y + "," + z;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        if (!open(x, y, z)) continue;
+        list.push({ x, y, z });
+        if (list.length > limit) {
+          err(player, `Das Becken ist nicht dicht oder größer als ${limit} Blöcke – nichts verändert.`);
+          return false;
+        }
+      }
+      if (qi % 256 === 0) yield;
+    }
+    let n = 0;
+    for (const p of list) {
+      es.set(p.x, p.y, p.z, pick());
+      if (++n % 256 === 0) yield;
+    }
+  });
+}
 
 /** @type {import("./registry.js").Tool} */
 export const painterTool = {
@@ -29,6 +80,13 @@ export const painterTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = ses.s.painter;
+    if (c.mode === "flood") {
+      // Nur einmal pro Tastendruck, nicht beim Gedrückthalten wiederholen
+      const last = ses.floodLast ?? -100;
+      ses.floodLast = now();
+      if (now() - last < 20) return;
+      return floodFill(ses, t.adjacent);
+    }
     const ctr = t.pos;
     const r = c.radius;
     const p1 = picker(ses.s.pattern);
@@ -112,12 +170,13 @@ export const painterTool = {
       .slider("scale", "Rauschen: Größe der Flecken", 2, 40, 1, c.scale)
       .slider("threshold", "Rauschen: Anteil Muster 2 (-100 viel … 100 wenig)", -100, 100, 5, c.threshold)
       .slider("density", "Streuen: Dichte in %", 1, 100, 1, c.density)
+      .slider("floodLimit", "Flutfüllung: maximale Blöcke (×1000)", 1, 200, 1, Math.round(c.floodLimit / 1000))
       .slider("slopeDeg", "Neigung: ab wie viel Grad Muster 2", 10, 80, 5, c.slopeDeg)
       .toggle("pat", "Danach Muster 1 wählen", false)
       .toggle("pat2", "Danach Muster 2 wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { mode: r.mode, radius: r.radius, depth: r.depth, scale: r.scale, threshold: r.threshold, density: r.density, slopeDeg: r.slopeDeg });
+    Object.assign(c, { mode: r.mode, radius: r.radius, depth: r.depth, scale: r.scale, threshold: r.threshold, density: r.density, slopeDeg: r.slopeDeg, floodLimit: r.floodLimit * 1000 });
     markDirty(ses);
     if (r.pat) await patternMenu(ses, "pattern");
     if (r.pat2) await patternMenu(ses, "pattern2");

@@ -184,6 +184,21 @@ export async function selectionMenu(ses) {
           { text: "Nord-Süd spiegeln", run: () => ops.opTransform(ses, 0, "Z") },
         ]),
     },
+    {
+      text: "Zwischenablage verstreuen (z.B. Bäume)",
+      run: async () => {
+        const c = ses.s.scatter;
+        const r = await new Modal("Verstreuen")
+          .slider("count", "Anzahl", 1, 100, 1, c.count)
+          .slider("spacing", "Mindestabstand", 1, 64, 1, c.spacing)
+          .toggle("rotate", "Zufällig drehen", c.rotate)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opScatterClip(ses, c);
+      },
+    },
     { text: "Analysieren (Blöcke zählen)", run: () => ops.opAnalyze(ses) },
     { text: "Auswahl anpassen …", run: () => adjustSelection(ses) },
     {
