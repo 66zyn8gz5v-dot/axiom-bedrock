@@ -34,6 +34,7 @@ export function defaultSettings() {
     bulldozer: { radius: 0 },
     stack: { count: 2, gap: 0 },
     move: { distance: 1 },
+    entity: { radius: 4 },
   };
 }
 
@@ -55,6 +56,7 @@ export function defaultSettings() {
  *   lastAction: number,
  *   lastHit?: number,
  *   floodLast?: number,
+ *   entities?: import("@minecraft/server").Entity[],
  *   using: boolean,
  *   usingUntil: number,
  *   busy: boolean,

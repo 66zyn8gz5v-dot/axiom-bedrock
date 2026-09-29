@@ -47,6 +47,9 @@
     "axiom_bulldozer": {
       "textures": "textures/items/axiom_bulldozer"
     },
+    "axiom_entity": {
+      "textures": "textures/items/axiom_entity"
+    },
     "axiom_undo": {
       "textures": "textures/items/axiom_undo"
     }

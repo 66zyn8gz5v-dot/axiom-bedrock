@@ -99,9 +99,37 @@ export class BlockVolume {
   }
 }
 
+let entityCounter = 0;
+export class Entity {
+  constructor(dim, typeId, loc) {
+    this.dimension = dim;
+    this.typeId = typeId;
+    this.location = { ...loc };
+    this.rotation = { x: 0, y: 0 };
+    this.nameTag = "";
+    this.id = "e" + ++entityCounter;
+    this.isValid = true;
+  }
+  teleport(loc, o = {}) {
+    this.location = { ...loc };
+    if (o.rotation) this.rotation = o.rotation;
+  }
+  getRotation() {
+    return { ...this.rotation };
+  }
+  setRotation(r) {
+    this.rotation = { ...r };
+  }
+  remove() {
+    this.isValid = false;
+    this.dimension.entities = this.dimension.entities.filter((e) => e !== this);
+  }
+}
+
 class Dimension {
   constructor(id) {
     this.id = id;
+    this.entities = [];
     this.heightRange = { min: -64, max: 320 };
     this.blocks = new Map();
     this.writes = 0;
@@ -138,6 +166,22 @@ class Dimension {
           n++;
         }
     return { getCapacity: () => n };
+  }
+  spawnEntity(typeId, loc) {
+    const e = new Entity(this, typeId, loc);
+    this.entities.push(e);
+    return e;
+  }
+  getEntities(o = {}) {
+    return this.entities.filter((e) => {
+      const l = e.location;
+      if (o.maxDistance !== undefined && o.location && Math.hypot(l.x - o.location.x, l.y - o.location.y, l.z - o.location.z) > o.maxDistance) return false;
+      if (o.volume && o.location) {
+        if (l.x < o.location.x || l.y < o.location.y || l.z < o.location.z) return false;
+        if (l.x > o.location.x + o.volume.x || l.y > o.location.y + o.volume.y || l.z > o.location.z + o.volume.z) return false;
+      }
+      return true;
+    });
   }
   setWeather() {}
   spawnParticle() {}
@@ -298,6 +342,9 @@ export class Player {
   }
   getHeadLocation() {
     return { x: this.location.x, y: this.location.y + 1.6, z: this.location.z };
+  }
+  getEntitiesFromViewDirection() {
+    return (this.entityHits ?? []).filter((e) => e.isValid).map((entity) => ({ entity, distance: 3 }));
   }
   getBlockFromViewDirection() {
     if (!this.rayHit) return undefined;

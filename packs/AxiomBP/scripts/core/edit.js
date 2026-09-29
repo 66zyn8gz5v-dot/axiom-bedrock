@@ -37,6 +37,8 @@ export class EditSession {
     /** @type {Map<string, import("@minecraft/server").BlockPermutation>} */
     this.changes = new Map();
     this.count = 0;
+    /** Geschätzte Gesamtzahl (für Prozentanzeige), 0 = unbekannt */
+    this.total = 0;
     this.minY = dim.heightRange.min;
     this.maxY = dim.heightRange.max - 1;
   }
@@ -78,7 +80,10 @@ export class EditSession {
     }
     this.count++;
     // Fortschritt bei großen Operationen in der Aktionsleiste anzeigen
-    if (this.count % 20000 === 0) bar(this.ses.player, `§dArbeite …§r ${fmtNum(this.count)} Blöcke`);
+    if (this.count % 20000 === 0) {
+      const pct = this.total ? ` (${Math.min(99, Math.floor((this.count / this.total) * 100))} %)` : "";
+      bar(this.ses.player, `§dArbeite …§r ${fmtNum(this.count)} Blöcke${pct}`);
+    }
     return true;
   }
 
@@ -139,6 +144,7 @@ export function runEdit(player, opts, body) {
   // Große Bereiche vorab als Struktur sichern, statt jeden Block einzeln zu protokollieren.
   const useRegion = !!region && (!!opts.forceRegion || (volume(region.min, region.max) > REGION_THRESHOLD && !(ses.s.symmetry.center && opts.symmetry)));
   const es = new EditSession(ses, dim, { useMask: opts.useMask, symmetry: opts.symmetry, record: !useRegion });
+  if (region) es.total = volume(region.min, region.max);
 
   // Pinselstriche zusammenfassen: gleicher Strich -> gleicher Verlaufseintrag
   if (opts.stroke && !useRegion) {

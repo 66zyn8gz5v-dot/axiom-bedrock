@@ -4,14 +4,14 @@
     "name": "Axiom Bedrock §7(Ressourcen)",
     "description": "Texturen und Texte für Axiom Bedrock",
     "uuid": "a3969edf-36aa-4132-9585-9ee946055c78",
-    "version": [0, 4, 0],
+    "version": [0, 5, 0],
     "min_engine_version": [1, 21, 120]
   },
   "modules": [
     {
       "type": "resources",
       "uuid": "8ba423e6-0b27-4286-a62e-65897de2d7e4",
-      "version": [0, 4, 0]
+      "version": [0, 5, 0]
     }
   ]
 }

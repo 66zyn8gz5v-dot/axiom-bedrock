@@ -15,4 +15,5 @@ item.axiom:text.name=Text
 item.axiom:ruler.name=Lineal
 item.axiom:tinker.name=Blockzustand-Editor
 item.axiom:bulldozer.name=Bulldozer
+item.axiom:entity.name=Kreaturen
 item.axiom:undo.name=Rückgängig

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.5.0 – 29.09.2026 (nächtlicher Ausbau)
+- **Neues Werkzeug „Kreaturen“:** Kreaturen, Rüstungsständer usw. im Blick an-/abwählen, ohne Treffer alle im
+  Umkreis des Blickziels, oder alle in der Block-Auswahl. Dann über Schleichen+Benutzen: verschieben, zum Blickziel
+  setzen, zu dir holen, drehen (90°, 180°, zu dir schauen, in deine Blickrichtung), benennen, kopieren, löschen
+- Große Operationen zeigen den Fortschritt jetzt in Prozent
+
 ## 0.4.0 – 28.09.2026 (nächtlicher Ausbau)
 - **Verstreuen:** Zwischenablage oder geladene Blaupause (z.B. ein Baum) zufällig auf der Oberfläche der Auswahl
   verteilen – mit Anzahl, Mindestabstand und zufälliger Drehung (Axiom-Menü → Auswahl bearbeiten)

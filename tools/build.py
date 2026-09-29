@@ -36,6 +36,7 @@ TOOLS = [
     ("ruler", "Lineal", "Ruler", False),
     ("tinker", "Blockzustand-Editor", "Block State Editor", False),
     ("bulldozer", "Bulldozer", "Bulldozer", True),
+    ("entity", "Kreaturen", "Entities", False),
     ("undo", "Rückgängig", "Undo", False),
 ]
 

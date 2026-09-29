@@ -15,4 +15,5 @@ item.axiom:text.name=Text
 item.axiom:ruler.name=Ruler
 item.axiom:tinker.name=Block State Editor
 item.axiom:bulldozer.name=Bulldozer
+item.axiom:entity.name=Entities
 item.axiom:undo.name=Undo

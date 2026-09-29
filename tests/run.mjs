@@ -411,6 +411,47 @@ await roundTrip("Blaupause nach erneutem Speichern unter gleichem Namen", () => 
 loadBlueprint(player, "mein_haeuschen");
 await roundTrip("Blaupause neu geladen", () => use("axiom:builder", { x: 40, y: 64, z: 40 }));
 
+console.log("Kreaturen");
+{
+  const cow = dim.spawnEntity("minecraft:cow", { x: 5.5, y: 65, z: 5.5 });
+  const stand = dim.spawnEntity("minecraft:armor_stand", { x: 6.5, y: 65, z: 5.5 });
+  dim.spawnEntity("minecraft:pig", { x: 50, y: 65, z: 50 });
+  player.entityHits = [cow];
+  await use("axiom:entity", G);
+  check(ses.entities.length === 1 && ses.entities[0] === cow, "Kreatur im Blick ausgewählt");
+  await use("axiom:entity", G);
+  check(ses.entities.length === 0, "Kreatur wieder abgewählt");
+  player.entityHits = [];
+  ses.s.entity.radius = 4;
+  await use("axiom:entity", { x: 5, y: 64, z: 5 });
+  check(ses.entities.length === 2, "Umkreis-Auswahl findet 2 Kreaturen: " + ses.entities.length);
+  player.view = { x: 1, y: 0, z: 0 };
+  answers.push({ selectText: "Verschieben" }, { set: { Blöcke: 3 } });
+  await use("axiom:entity", G, { sneak: true });
+  check(cow.location.x === 8.5 && stand.location.x === 9.5, "Kreaturen nach Osten verschoben");
+  player.view = { x: 0, y: 0, z: -1 };
+  answers.push({ selectText: "Drehen" }, { set: { "Wie drehen": "90° im Uhrzeigersinn" } });
+  await use("axiom:entity", G, { sneak: true });
+  check(cow.getRotation().y === 90, "Kreatur gedreht: " + cow.getRotation().y);
+  answers.push({ selectText: "Namen geben" }, { set: { Name: "Berta" } });
+  await use("axiom:entity", G, { sneak: true });
+  check(cow.nameTag === "Berta", "Kreatur benannt");
+  const before = dim.entities.length;
+  answers.push({ selectText: "Kopieren" });
+  await use("axiom:entity", G, { sneak: true });
+  check(dim.entities.length === before + 2, "Kreaturen kopiert");
+  answers.push({ selectText: "Löschen" }, { selectText: "Ja" });
+  await use("axiom:entity", G, { sneak: true });
+  check(!cow.isValid && !stand.isValid && dim.entities.length === before, "Kreaturen gelöscht");
+  ses.sel = boxSel(dim.id, { x: 45, y: 60, z: 45 }, { x: 55, y: 70, z: 55 });
+  answers.push({ selectText: "Block-Auswahl" });
+  await use("axiom:entity", G, { sneak: true });
+  check(ses.entities.length === 1 && ses.entities[0].typeId === "minecraft:pig", "Kreaturen in Block-Auswahl");
+  await hit("axiom:entity", G);
+  check(ses.entities.length === 0, "Schlagen leert Kreaturen-Auswahl");
+  dim.entities = [];
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

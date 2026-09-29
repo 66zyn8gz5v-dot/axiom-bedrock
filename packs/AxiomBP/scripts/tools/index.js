@@ -7,6 +7,7 @@ import { terrainTool } from "./terrain.js";
 import { extrudeTool } from "./extrude.js";
 import { pathTool, textTool } from "./path.js";
 import { builderTool } from "./builder.js";
+import { entityTool } from "./entity.js";
 import { rulerTool, tinkerTool, bulldozerTool, undoTool } from "./misc.js";
 import { mainMenu } from "../ui/main.js";
 
@@ -37,6 +38,7 @@ export const TOOL_LIST = [
   rulerTool,
   tinkerTool,
   bulldozerTool,
+  entityTool,
   undoTool,
 ];
 

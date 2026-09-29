@@ -73,6 +73,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Lineal** | Misst Abstände und Größen zwischen zwei Punkten. |
 | **Blockzustand-Editor** | Ändert Zustände eines Blocks (Richtung, Achse, offen/zu, Stufe …). Schlagen = drehen. |
 | **Bulldozer** | Baut Blöcke auf große Entfernung sofort ab (einzeln oder im Radius). |
+| **Kreaturen** | Kreaturen, Rüstungsständer & Co. im Blick an-/abwählen (oder alle rund ums Blickziel bzw. in der Block-Auswahl) und dann verschieben, zum Blickziel setzen, zu dir holen, drehen, benennen, kopieren oder löschen. Schlagen = Auswahl leeren. |
 | **Rückgängig** | Benutzen = Rückgängig, Schleichen + Benutzen = Wiederherstellen (40 Schritte pro Spieler). Im Menü „Verlauf“ kann man gezielt zu einem Schritt zurückspringen. |
 
 ### Auswahl bearbeiten (im Axiom-Menü)

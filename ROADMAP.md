@@ -27,6 +27,7 @@ Neue Ideen unten anhängen.
       Formen Prisma & Spirale, Maler „Nach Neigung“
 - [x] v0.4: Zwischenablage/Blaupausen verstreuen, Flutfüllung ab Blickziel, Formen nach Blickrichtung drehen,
       Spiral-Steigung, Fortschrittsanzeige bei großen Operationen
+- [x] v0.5: Kreaturen-Werkzeug (auswählen, verschieben, drehen, holen, benennen, kopieren, löschen), Fortschritt in %
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Spiegeln „Ost-West“ spiegelt wirklich Ost↔West (sonst `mirEnum` in core/clipboard.js tauschen)
@@ -35,10 +36,11 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Kreaturen-Werkzeug**: Kreaturen/Rüstungsständer auswählen, verschieben, drehen, löschen
 - [ ] **Anmerkungen**: schwebende Texte/Linien als Bau-Notizen (eigene Entität im Ressourcenpaket)
 - [ ] Mehr Tests: Masken-Kombinationen, Symmetrie + Struktur-Verlauf, Blaupausen über Neustart
-- [ ] Leistung: Fortschritt in Prozent (statt nur Blockzahl) bei großen Operationen
+
+- [ ] **Kreaturen**: Ausrüstung von Rüstungsständern bearbeiten, Kreaturen beim Kopieren/Einfügen mitnehmen testen
+- [ ] **Auswahl-Werkzeug „Lasso“**: Umriss per Pfadpunkten zeichnen und die Fläche darin auswählen
 
 ## Ideen / später
 - Bild → Blöcke (Pixel-Art aus eingegebenen Farbcodes)
