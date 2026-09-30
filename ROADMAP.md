@@ -28,19 +28,20 @@ Neue Ideen unten anhängen.
 - [x] v0.4: Zwischenablage/Blaupausen verstreuen, Flutfüllung ab Blickziel, Formen nach Blickrichtung drehen,
       Spiral-Steigung, Fortschrittsanzeige bei großen Operationen
 - [x] v0.5: Kreaturen-Werkzeug (auswählen, verschieben, drehen, holen, benennen, kopieren, löschen), Fortschritt in %
+- [x] v0.6: Lasso-Auswahl (Umriss aus Pfadpunkten), Anmerkungen (schwebende Bau-Notizen)
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
+- [ ] Anmerkungen: Text schwebt sichtbar, die Entität selbst ist unsichtbar und lässt sich nicht verletzen
 - [ ] Spiegeln „Ost-West“ spiegelt wirklich Ost↔West (sonst `mirEnum` in core/clipboard.js tauschen)
 - [ ] Schlagen mit Werkzeug im Kreativmodus löst Pipette/Zusatzaktion aus (sonst Alternative über Menü nötig –
       die Pipette gibt es zusätzlich im Muster-Menü)
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Anmerkungen**: schwebende Texte/Linien als Bau-Notizen (eigene Entität im Ressourcenpaket)
 - [ ] Mehr Tests: Masken-Kombinationen, Symmetrie + Struktur-Verlauf, Blaupausen über Neustart
 
 - [ ] **Kreaturen**: Ausrüstung von Rüstungsständern bearbeiten, Kreaturen beim Kopieren/Einfügen mitnehmen testen
-- [ ] **Auswahl-Werkzeug „Lasso“**: Umriss per Pfadpunkten zeichnen und die Fläche darin auswählen
+- [ ] **Anmerkungen**: auch Linien/Pfeile zwischen zwei Punkten (Partikel), Anmerkungen mit dem Kreaturen-Werkzeug verschieben testen
 
 ## Ideen / später
 - Bild → Blöcke (Pixel-Art aus eingegebenen Farbcodes)

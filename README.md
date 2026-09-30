@@ -68,7 +68,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Flutfüllung (See/Becken ab Blickziel füllen), Säubern (Pflanzen/Wasser weg). |
 | **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. |
 | **Extrudieren** | Zieht eine ganze Fläche verbundener Blöcke um eine Schicht heraus bzw. drückt sie hinein. |
-| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
+| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen. Im Menü außerdem **Lasso**: die Fläche innerhalb der Punkte auswählen. – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
 | **Text** | Schreibt Text aus Blöcken – an eine Wand oder flach auf den Boden, in bis zu 8-facher Größe. |
 | **Lineal** | Misst Abstände und Größen zwischen zwei Punkten. |
 | **Blockzustand-Editor** | Ändert Zustände eines Blocks (Richtung, Achse, offen/zu, Stufe …). Schlagen = drehen. |
@@ -113,6 +113,10 @@ von allen Spielern geladen werden.
 
 ### Ansichten
 Standpunkte mit Blickrichtung speichern und später per Menü wieder hinspringen (wie Axioms „Views“).
+
+### Anmerkungen
+Schwebende Bau-Notizen (farbiger Text), die alle Spieler sehen – z.B. „Hier kommt das Tor hin“. Im Axiom-Menü
+setzen, bearbeiten, hinfliegen, versetzen oder löschen.
 
 ### Welt
 Tageszeit, Wetter, Tageszyklus/Wetterwechsel, Mob-Spawning, Feuer, Mob-Griefing, Zufalls-Tick, Koordinaten.

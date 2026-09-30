@@ -11,6 +11,7 @@ import * as ops from "../core/selops.js";
 import { Modal, confirm, menu } from "./forms.js";
 import { maskMenu, patternMenu } from "./common.js";
 import { viewsMenu } from "./views.js";
+import { notesMenu } from "./notes.js";
 import { selInfo } from "../tools/select.js";
 import { doUndo } from "../tools/misc.js";
 import { TOOL_LIST } from "../tools/index.js";
@@ -34,6 +35,7 @@ export async function mainMenu(ses) {
       { text: "Fähigkeiten", run: () => capsMenu(ses) },
       { text: "Symmetrie", run: () => symmetryMenu(ses) },
       { text: "Ansichten (Standpunkte)", run: () => viewsMenu(ses) },
+      { text: "Anmerkungen (Bau-Notizen)", run: () => notesMenu(ses) },
       { text: "Welt (Zeit, Wetter, Regeln)", run: () => worldMenu(ses) },
       { text: "Hotbar-Sätze", run: () => hotbarMenu(ses) },
       { text: "Hilfe", run: () => helpMenu(ses) },

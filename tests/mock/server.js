@@ -175,6 +175,7 @@ class Dimension {
   getEntities(o = {}) {
     return this.entities.filter((e) => {
       const l = e.location;
+      if (o.type && e.typeId !== o.type) return false;
       if (o.maxDistance !== undefined && o.location && Math.hypot(l.x - o.location.x, l.y - o.location.y, l.z - o.location.z) > o.maxDistance) return false;
       if (o.volume && o.location) {
         if (l.x < o.location.x || l.y < o.location.y || l.z < o.location.z) return false;

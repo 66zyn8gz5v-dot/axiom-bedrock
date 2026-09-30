@@ -1,0 +1,12 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "axiom:note",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/particle/axiom_dot" },
+      "geometry": { "default": "geometry.axiom_note" },
+      "render_controllers": ["controller.render.axiom_note"]
+    }
+  }
+}

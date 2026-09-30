@@ -452,6 +452,24 @@ console.log("Kreaturen");
   dim.entities = [];
 }
 
+console.log("Lasso & Anmerkungen");
+{
+  ses.s.selMode = "set";
+  ses.pathPoints = [{ x: 0, y: 64, z: 0 }, { x: 10, y: 64, z: 0 }, { x: 0, y: 64, z: 10 }];
+  answers.push({ selectText: "Lasso" }, { set: { "unter dem": 0, "über dem": 0 } });
+  await use("axiom:path", G, { sneak: true });
+  // Dreieck (0,0)-(10,0)-(0,10): Punkt (2,2) drin, (8,8) draußen
+  check(ses.sel?.kind === "set" && ses.sel.keys.has("2,64,2") && !ses.sel.keys.has("8,64,8"), "Lasso-Auswahl im Dreieck: " + ses.sel?.keys?.size);
+  ses.pathPoints = [];
+  dim.entities = [];
+  answers.push({ selectText: "Anmerkungen" }, { selectText: "Neue Anmerkung" }, { set: { Text: "Hier kommt das Tor hin" } });
+  await use("axiom:menu", G);
+  check(dim.entities.length === 1 && dim.entities[0].typeId === "axiom:note" && dim.entities[0].nameTag.includes("Tor"), "Anmerkung gesetzt");
+  answers.push({ selectText: "Anmerkungen" }, { selectText: "Hier kommt" }, { selectText: "Löschen" });
+  await use("axiom:menu", G);
+  check(dim.entities.length === 0, "Anmerkung gelöscht");
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

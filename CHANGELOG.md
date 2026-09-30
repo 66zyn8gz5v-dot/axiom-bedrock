@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.6.0 – 30.09.2026 (nächtlicher Ausbau)
+- **Lasso-Auswahl:** Mit dem Pfad-Werkzeug einen Umriss aus Punkten setzen, dann Schleichen+Benutzen → „Lasso“.
+  Ausgewählt wird alles innerhalb des Umrisses (Höhenbereich einstellbar, optional nur feste Blöcke, auch
+  Hinzufügen/Entfernen möglich)
+- **Anmerkungen:** schwebende, farbige Bau-Notizen setzen, bearbeiten, anfliegen, versetzen und löschen
+  (Axiom-Menü → Anmerkungen)
+
 ## 0.5.0 – 29.09.2026 (nächtlicher Ausbau)
 - **Neues Werkzeug „Kreaturen“:** Kreaturen, Rüstungsständer usw. im Blick an-/abwählen, ohne Treffer alle im
   Umkreis des Blickziels, oder alle in der Block-Auswahl. Dann über Schleichen+Benutzen: verschieben, zum Blickziel

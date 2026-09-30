@@ -8,6 +8,8 @@ import { cardinal, fmt, k3, v } from "../core/vec.js";
 import { Modal, menu } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
 import { FONT } from "./font.js";
+import { SEL_MODES, applySel, selInfo } from "./select.js";
+import { SET_LIMIT } from "../core/selection.js";
 
 /**
  * Catmull-Rom-Kurve durch Punkte abtasten.
@@ -85,6 +87,60 @@ function buildPath(ses) {
   });
 }
 
+/**
+ * Punkt-in-Polygon (XZ-Ebene, Strahltest).
+ * @param {{x:number,z:number}[]} poly @param {number} x @param {number} z
+ */
+export function inPolygon(poly, x, z) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i];
+    const b = poly[j];
+    if (a.z > z !== b.z > z && x < ((b.x - a.x) * (z - a.z)) / (b.z - a.z) + a.x) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Lasso: alle Blöcke, deren Mitte im Umriss der Pfadpunkte liegt, zwischen tiefstem und höchstem Punkt (± Rand).
+ * @param {import("../core/state.js").Session} ses @param {number} below @param {number} above @param {boolean} solidOnly
+ */
+function lassoSelect(ses, below, above, solidOnly) {
+  const pts = ses.pathPoints.map((p) => ({ x: p.x + 0.5, z: p.z + 0.5 }));
+  const xs = ses.pathPoints.map((p) => p.x);
+  const zs = ses.pathPoints.map((p) => p.z);
+  const ys = ses.pathPoints.map((p) => p.y);
+  const dim = ses.player.dimension;
+  const y0 = Math.max(dim.heightRange.min, Math.min(...ys) - below);
+  const y1 = Math.min(dim.heightRange.max - 1, Math.max(...ys) + above);
+  const keys = new Set();
+  for (let x = Math.min(...xs); x <= Math.max(...xs); x++)
+    for (let z = Math.min(...zs); z <= Math.max(...zs); z++) {
+      if (!inPolygon(pts, x + 0.5, z + 0.5)) continue;
+      for (let y = y0; y <= y1; y++) {
+        if (solidOnly) {
+          try {
+            const b = dim.getBlock({ x, y, z });
+            if (!b || !isSolidId(b.typeId)) continue;
+          } catch {
+            continue;
+          }
+        }
+        keys.add(k3(x, y, z));
+        if (keys.size > SET_LIMIT) return err(ses.player, "Lasso-Fläche zu groß.");
+      }
+    }
+  if (!keys.size) return err(ses.player, "Nichts innerhalb des Lassos gefunden.");
+  const part = {
+    kind: /** @type {"set"} */ ("set"),
+    dim: dim.id,
+    keys,
+    min: v(Math.min(...xs), y0, Math.min(...zs)),
+    max: v(Math.max(...xs), y1, Math.max(...zs)),
+  };
+  if (applySel(ses, part)) msg(ses.player, `Lasso: ${keys.size} Blöcke → ${selInfo(ses)}`);
+}
+
 /** @type {import("./registry.js").Tool} */
 export const pathTool = {
   id: "axiom:path",
@@ -112,6 +168,22 @@ export const pathTool = {
   async menu(ses) {
     await menu(ses.player, "Pfad", `${ses.pathPoints.length} Punkte gesetzt.`, [
       { text: "§aPfad bauen", run: () => buildPath(ses) },
+      {
+        text: "Lasso: Fläche innerhalb der Punkte auswählen",
+        run: async () => {
+          if (ses.pathPoints.length < 3) return err(ses.player, "Für das Lasso mindestens 3 Punkte setzen.");
+          const r = await new Modal("Lasso-Auswahl")
+            .slider("below", "Blöcke unter dem tiefsten Punkt", 0, 64, 1, 3)
+            .slider("above", "Blöcke über dem höchsten Punkt", 0, 64, 1, 3)
+            .toggle("solid", "Nur feste Blöcke auswählen", false)
+            .dropdown("sel", "Auswahl-Modus", SEL_MODES, ses.s.selMode)
+            .show(ses.player);
+          if (!r) return;
+          ses.s.selMode = r.sel;
+          markDirty(ses);
+          lassoSelect(ses, r.below, r.above, r.solid);
+        },
+      },
       {
         text: "Einstellungen",
         run: async () => {
