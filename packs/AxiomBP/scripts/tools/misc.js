@@ -37,6 +37,7 @@ export const rulerTool = {
         `  Luftlinie: §b${d.toFixed(2)}§r · horizontal: §b${Math.hypot(p.x - a.x, p.z - a.z).toFixed(2)}`
     );
     ses.rulerB = p;
+    ses.rulerLast = { a: { ...a }, b: { ...p } };
     ses.rulerA = null;
   },
   onHit(ses) {

@@ -29,6 +29,8 @@ Neue Ideen unten anhängen.
       Spiral-Steigung, Fortschrittsanzeige bei großen Operationen
 - [x] v0.5: Kreaturen-Werkzeug (auswählen, verschieben, drehen, holen, benennen, kopieren, löschen), Fortschritt in %
 - [x] v0.6: Lasso-Auswahl (Umriss aus Pfadpunkten), Anmerkungen (schwebende Bau-Notizen)
+- [x] v0.7: Terrain-Stempel Berg & Krater, Anmerkungs-Linien aus Lineal-Messung, Tests für Masken,
+      Symmetrie mit großen Formen und Blaupausen aus Weltdaten
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Anmerkungen: Text schwebt sichtbar, die Entität selbst ist unsichtbar und lässt sich nicht verletzen
@@ -38,12 +40,12 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] Mehr Tests: Masken-Kombinationen, Symmetrie + Struktur-Verlauf, Blaupausen über Neustart
-
-- [ ] **Kreaturen**: Ausrüstung von Rüstungsständern bearbeiten, Kreaturen beim Kopieren/Einfügen mitnehmen testen
-- [ ] **Anmerkungen**: auch Linien/Pfeile zwischen zwei Punkten (Partikel), Anmerkungen mit dem Kreaturen-Werkzeug verschieben testen
+- [ ] **Verlauf in der Auswahl**: Muster 1 → Muster 2 entlang einer Achse (z.B. Stein unten, Andesit oben) mit Übergangszone
+- [ ] **Auswahl ausdünnen**: zufällig X % der Blöcke entfernen/ersetzen (Ruinen, Verfall)
+- [ ] **Bild → Blöcke**: Pixel-Art aus eingegebenen Zeilen (Zeichen → Block-Zuordnung) an Wand/Boden setzen
+- [ ] **Treppen automatisch**: Stufenkanten im Gelände mit passenden Treppen/Stufen glätten
+- [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
+- [ ] **Englische Menütexte** (Sprache umschaltbar)
 
 ## Ideen / später
-- Bild → Blöcke (Pixel-Art aus eingegebenen Farbcodes)
-- Höhenkarten-Stempel (vordefinierte Berge/Krater)
-- Englische Menütexte (Sprache umschaltbar)
+- Weitere Stempel (Vulkan, Insel, Canyon)

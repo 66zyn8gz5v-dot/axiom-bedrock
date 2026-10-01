@@ -1,5 +1,7 @@
 // Anmerkungen: schwebende Texte als Bau-Notizen (unsichtbare Entität „axiom:note“ mit Namensschild).
+import { world } from "@minecraft/server";
 import { err, msg, targetOrAir } from "../core/util.js";
+import { spawn } from "../core/selection.js";
 import { v } from "../core/vec.js";
 import { Modal, confirm, menu } from "./forms.js";
 
@@ -14,6 +16,53 @@ const COLORS = /** @type {[string,string][]} */ ([
   ["§d", "Pink"],
   ["§6", "Gold"],
 ]);
+
+// ---------- Linien (dauerhaft gespeicherte Partikel-Linien) ----------
+const LINES_KEY = "axiom:lines";
+const MAX_LINES = 60;
+const LINE_COLORS = /** @type {[string,string][]} */ ([
+  ["axiom:marker", "Gelb"],
+  ["axiom:sel", "Pink"],
+  ["axiom:pos1", "Grün"],
+  ["axiom:pos2", "Blau"],
+  ["axiom:sym", "Rot"],
+]);
+
+/** @typedef {{d:string, a:{x:number,y:number,z:number}, b:{x:number,y:number,z:number}, c:string}} Line */
+
+/** @returns {Line[]} */
+export function loadLines() {
+  try {
+    const raw = world.getDynamicProperty(LINES_KEY);
+    if (typeof raw === "string") return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+/** @param {Line[]} lines */
+function storeLines(lines) {
+  world.setDynamicProperty(LINES_KEY, JSON.stringify(lines.slice(-MAX_LINES)));
+}
+
+/** @type {Line[] | null} */
+let lineCache = null;
+/** Linien in der Nähe des Spielers zeichnen. @param {import("@minecraft/server").Player} p */
+export function renderLines(p) {
+  lineCache ??= loadLines();
+  const l = p.location;
+  let budget = 400;
+  for (const ln of lineCache) {
+    if (ln.d !== p.dimension.id) continue;
+    const mx = (ln.a.x + ln.b.x) / 2;
+    const mz = (ln.a.z + ln.b.z) / 2;
+    if (Math.abs(mx - l.x) > 128 || Math.abs(mz - l.z) > 128) continue;
+    const len = Math.hypot(ln.b.x - ln.a.x, ln.b.y - ln.a.y, ln.b.z - ln.a.z);
+    const step = Math.max(0.5, len / 120);
+    for (let t = 0; t <= len && budget > 0; t += step, budget--) {
+      const f = len ? t / len : 0;
+      spawn(p, ln.c, v(ln.a.x + 0.5 + (ln.b.x - ln.a.x) * f, ln.a.y + 0.5 + (ln.b.y - ln.a.y) * f, ln.a.z + 0.5 + (ln.b.z - ln.a.z) * f));
+    }
+  }
+}
 
 /** Anmerkungen in der Nähe (nächste zuerst). @param {import("@minecraft/server").Player} p @param {number} [radius] */
 export function nearbyNotes(p, radius = 96) {
@@ -87,6 +136,31 @@ export async function notesMenu(ses) {
           },
         ]),
     })),
+    {
+      text: "Linie aus der letzten Lineal-Messung",
+      run: async () => {
+        const m = ses.rulerLast;
+        if (!m) return err(p, "Erst mit dem Lineal zwei Punkte messen (A, dann B).");
+        const r = await new Modal("Linie speichern").dropdown("c", "Farbe", LINE_COLORS, "axiom:marker").show(p);
+        if (!r) return;
+        const lines = loadLines();
+        lines.push({ d: p.dimension.id, a: m.a, b: m.b, c: r.c });
+        storeLines(lines);
+        lineCache = null;
+        msg(p, "Linie gespeichert – sichtbar, solange du ein Axiom-Werkzeug hältst.");
+      },
+    },
+    {
+      text: "§cLinien in der Nähe löschen",
+      run: () => {
+        const l = p.location;
+        const all = loadLines();
+        const keep = all.filter((ln) => ln.d !== p.dimension.id || Math.hypot((ln.a.x + ln.b.x) / 2 - l.x, (ln.a.z + ln.b.z) / 2 - l.z) > 96);
+        storeLines(keep);
+        lineCache = null;
+        msg(p, `${all.length - keep.length} Linien gelöscht.`);
+      },
+    },
     {
       text: "§cAlle Anmerkungen in der Nähe löschen",
       run: async () => {

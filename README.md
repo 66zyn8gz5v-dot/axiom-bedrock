@@ -66,7 +66,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Formen** | Kugel/Ellipsoid, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen, Prisma (Dach), Spirale (Wendelrampe, Steigung einstellbar) – massiv oder hohl, mittig oder auf dem Boden, auf Wunsch quer zur Blickrichtung gedreht. |
 | **Modellieren** | Aufbauen, Abtragen, Glätten, Schmelzen/Erodieren, Auffüllen, Felsen, Aufrauen, Verzerren, Zerbrechen – optional mit unregelmäßigem Rand. |
 | **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Flutfüllung (See/Becken ab Blickziel füllen), Säubern (Pflanzen/Wasser weg). |
-| **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. |
+| **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. Dazu Stempel für **Berg** und **Krater** (ein Klick). |
 | **Extrudieren** | Zieht eine ganze Fläche verbundener Blöcke um eine Schicht heraus bzw. drückt sie hinein. |
 | **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen. Im Menü außerdem **Lasso**: die Fläche innerhalb der Punkte auswählen. – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
 | **Text** | Schreibt Text aus Blöcken – an eine Wand oder flach auf den Boden, in bis zu 8-facher Größe. |
@@ -116,7 +116,9 @@ Standpunkte mit Blickrichtung speichern und später per Menü wieder hinspringen
 
 ### Anmerkungen
 Schwebende Bau-Notizen (farbiger Text), die alle Spieler sehen – z.B. „Hier kommt das Tor hin“. Im Axiom-Menü
-setzen, bearbeiten, hinfliegen, versetzen oder löschen.
+setzen, bearbeiten, hinfliegen, versetzen oder löschen. Außerdem lassen sich farbige **Linien** speichern: mit dem
+Lineal zwei Punkte messen, dann im Anmerkungen-Menü „Linie aus der letzten Lineal-Messung“ (sichtbar, solange man
+ein Axiom-Werkzeug hält).
 
 ### Welt
 Tageszeit, Wetter, Tageszyklus/Wetterwechsel, Mob-Spawning, Feuer, Mob-Griefing, Zufalls-Tick, Koordinaten.

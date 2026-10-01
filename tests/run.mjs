@@ -197,7 +197,7 @@ await roundTrip("Maler clean", () => use("axiom:painter", G));
 dim.blocks.clear();
 
 console.log("Terrain");
-for (const mode of ["raise", "lower", "flatten", "smooth", "hills", "terrace"]) {
+for (const mode of ["raise", "lower", "flatten", "smooth", "hills", "terrace", "mountain", "crater"]) {
   ses.s.terrain.mode = mode;
   ses.s.terrain.strength = 3;
   if (mode === "flatten" || mode === "smooth" || mode === "terrace") {
@@ -468,6 +468,56 @@ console.log("Lasso & Anmerkungen");
   answers.push({ selectText: "Anmerkungen" }, { selectText: "Hier kommt" }, { selectText: "Löschen" });
   await use("axiom:menu", G);
   check(dim.entities.length === 0, "Anmerkung gelöscht");
+}
+
+console.log("Linien, Masken, Symmetrie+Struktur, Blaupause nach Neustart");
+{
+  dim.blocks.clear();
+  ses.rulerA = null;
+  await use("axiom:ruler", { x: 0, y: 64, z: 0 });
+  await use("axiom:ruler", { x: 10, y: 70, z: 0 });
+  answers.push({ selectText: "Anmerkungen" }, { selectText: "Lineal-Messung" }, { set: { Farbe: "Blau" } });
+  await use("axiom:menu", G);
+  const lines = JSON.parse(world.getDynamicProperty("axiom:lines"));
+  check(lines.length === 1 && lines[0].b.x === 10 && lines[0].c === "axiom:pos2", "Linie aus Lineal gespeichert");
+  hold("axiom:ruler");
+  tickIntervals(10);
+  answers.push({ selectText: "Anmerkungen" }, { selectText: "Linien in der Nähe löschen" });
+  await use("axiom:menu", G);
+  check(JSON.parse(world.getDynamicProperty("axiom:lines")).length === 0, "Linien gelöscht");
+
+  // Masken: nur Liste / alles außer Liste / nur Luft
+  ses.s.pattern = parsePattern("gold_block");
+  ses.sel = boxSel(dim.id, { x: 0, y: 62, z: 0 }, { x: 3, y: 66, z: 3 });
+  ses.s.mask = { mode: "list", ids: ["minecraft:dirt"] };
+  ops.opFill(ses);
+  await drain();
+  check(dim._get(1, 63, 1).type.id === "minecraft:gold_block" && dim._get(1, 64, 1).type.id === "minecraft:grass_block" && dim._get(1, 65, 1).type.id === "minecraft:air", "Maske „nur diese“");
+  await undo();
+  ses.s.mask = { mode: "notlist", ids: ["minecraft:dirt"] };
+  ops.opFill(ses);
+  await drain();
+  check(dim._get(1, 63, 1).type.id === "minecraft:dirt" && dim._get(1, 64, 1).type.id === "minecraft:gold_block", "Maske „alles außer“");
+  await undo();
+  ses.s.mask = { mode: "air", ids: [] };
+  ops.opFill(ses);
+  await drain();
+  check(dim._get(1, 64, 1).type.id === "minecraft:grass_block" && dim._get(1, 65, 1).type.id === "minecraft:gold_block", "Maske „nur Luft“");
+  await undo();
+  check(dim.blocks.size === 0, "Masken rückgängig");
+  ses.s.mask = { mode: "none", ids: [] };
+
+  // Symmetrie mit großer Form (würde sonst Struktur-Verlauf nutzen)
+  ses.s.symmetry = { x: true, z: false, center: { x: 0, y: 64, z: 0 } };
+  Object.assign(ses.s.shape, { type: "sphere", rx: 25, ry: 25, rz: 25, hollow: false, anchor: "center", look: false });
+  await roundTrip("Symmetrie + große Form", () => use("axiom:shape", { x: 40, y: 90, z: 0 }));
+  ses.s.symmetry = { x: false, z: false, center: null };
+
+  // Blaupause nach „Neustart“: Zwischenspeicher des Skripts leeren, Daten bleiben in der Welt
+  const { listBlueprints: lb, loadBlueprint: ldb } = await import("../packs/AxiomBP/scripts/core/clipboard.js");
+  check(lb().length > 0, "Blaupausen-Liste aus Weltdaten");
+  ldb(player, lb()[0].name);
+  await roundTrip("Blaupause aus Weltdaten erneut laden + einfügen", () => use("axiom:builder", { x: -30, y: 64, z: 30 }));
 }
 
 console.log("Fähigkeiten & Symmetrie");

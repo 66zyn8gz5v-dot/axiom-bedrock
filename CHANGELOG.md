@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.7.0 – 01.10.2026 (nächtlicher Ausbau)
+- **Terrain-Stempel:** neue Modi „Berg“ und „Krater“ – ein Klick setzt einen ganzen Berg bzw. Krater mit Rand
+  (Größe über Radius, Höhe/Tiefe über Stärke)
+- **Anmerkungs-Linien:** mit dem Lineal zwei Punkte messen, dann im Anmerkungen-Menü als farbige Linie speichern
+  (z.B. Grundriss-Markierungen); sichtbar, solange man ein Axiom-Werkzeug hält
+- Mehr Tests: Masken („nur diese“, „alles außer“, „nur Luft“), Symmetrie mit großen Formen, Blaupausen aus Weltdaten
+
 ## 0.6.0 – 30.09.2026 (nächtlicher Ausbau)
 - **Lasso-Auswahl:** Mit dem Pfad-Werkzeug einen Umriss aus Punkten setzen, dann Schleichen+Benutzen → „Lasso“.
   Ausgewählt wird alles innerhalb des Umrisses (Höhenbereich einstellbar, optional nur feste Blöcke, auch

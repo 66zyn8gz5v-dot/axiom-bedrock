@@ -4,7 +4,7 @@ import { runEdit } from "../core/edit.js";
 import { air, isSolidId } from "../core/pattern.js";
 import { fbm } from "../core/noise.js";
 import { markDirty } from "../core/state.js";
-import { target } from "../core/util.js";
+import { now, target } from "../core/util.js";
 import { Modal } from "../ui/forms.js";
 import { strokeId } from "./registry.js";
 
@@ -15,6 +15,8 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["smooth", "Höhen glätten"],
   ["hills", "Hügel / Rauschen"],
   ["terrace", "Terrassen (Stufen)"],
+  ["mountain", "Stempel: Berg (ein Klick)"],
+  ["crater", "Stempel: Krater (ein Klick)"],
 ]);
 
 const NOT_GROUND = /(leaves|log|wood|mushroom_block|vine|bamboo|cactus)/;
@@ -42,6 +44,12 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
+    if (c.mode === "mountain" || c.mode === "crater") {
+      // Stempel nur einmal pro Tastendruck
+      const last = ses.floodLast ?? -100;
+      ses.floodLast = now();
+      if (now() - last < 20) return;
+    }
     const ctr = t.pos;
     const R = c.radius;
     const seed = 77.37;
@@ -108,6 +116,19 @@ export const terrainTool = {
             case "hills":
               target = h + Math.round(fbm(x / 16 + seed, 0.5, z / 16 + 13.71, 3) * c.strength * 3 * fall);
               break;
+            case "mountain": {
+              // Spitze Bergform mit etwas Rauschen
+              const f = Math.max(0, 1 - d / (R + 0.5));
+              target = h + Math.round(c.strength * 4 * Math.pow(f, 1.6) * (1 + 0.35 * fbm(x / 7 + seed, 0.3, z / 7, 2)));
+              break;
+            }
+            case "crater": {
+              // Mulde in der Mitte, aufgeworfener Rand außen
+              const q = d / (R + 0.5);
+              if (q < 0.7) target = h - Math.round(c.strength * 3 * (1 - (q / 0.7) ** 2));
+              else target = h + Math.round(c.strength * Math.sin(((q - 0.7) / 0.3) * Math.PI) * 0.9);
+              break;
+            }
             case "terrace": {
               const step = Math.max(2, c.strength);
               target = Math.round(h + (Math.floor(h / step) * step - h) * fall);

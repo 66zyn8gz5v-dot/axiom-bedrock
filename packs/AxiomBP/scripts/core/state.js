@@ -53,6 +53,7 @@ export function defaultSettings() {
  *   pathPoints: {x:number,y:number,z:number}[],
  *   rulerA: {x:number,y:number,z:number} | null,
  *   rulerB?: {x:number,y:number,z:number},
+ *   rulerLast?: {a:{x:number,y:number,z:number}, b:{x:number,y:number,z:number}},
  *   lastAction: number,
  *   lastHit?: number,
  *   floodLast?: number,

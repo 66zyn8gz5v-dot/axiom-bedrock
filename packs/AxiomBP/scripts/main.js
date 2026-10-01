@@ -19,6 +19,7 @@ import { bar, err, heldItem, msg, pointInFront, target } from "./core/util.js";
 import { k3 } from "./core/vec.js";
 import { mainMenu } from "./ui/main.js";
 import { doUndo, renderSymmetry } from "./tools/misc.js";
+import { renderLines } from "./ui/notes.js";
 
 /** Blöcke, die man im Ersetzen-Modus weiterhin normal benutzen kann (Schleichen = trotzdem ersetzen). */
 const INTERACTIVE = /(chest|barrel|door|gate|button|lever|crafting|furnace|smoker|anvil|table|shulker|hopper|dispenser|dropper|bed|bell|repeater|comparator|note|jukebox|lectern|loom|stonecutter|grindstone|beacon|brewing|cartography|smithing|campfire|sign)/;
@@ -264,6 +265,7 @@ function tickPlayer(player) {
     }
     if (ses.sel && (tool || ses.s.showSel)) renderSelection(player, ses.sel);
     if (tool) renderSymmetry(ses);
+    if (tool) renderLines(player);
   }
   if (tick % 100 === 0 && ses.s.caps.nightVision) {
     try {
