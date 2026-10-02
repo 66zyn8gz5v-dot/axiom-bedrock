@@ -106,6 +106,46 @@ export async function selectionMenu(ses) {
     { text: "Hohlräume füllen (Innenräume)", run: () => ops.opFillEnclosed(ses) },
     { text: "Wasser ablassen", run: () => ops.opDrain(ses) },
     { text: "Mit Wasser füllen", run: () => ops.opFlood(ses) },
+    {
+      text: "Verlauf (Muster 1 → Muster 2)",
+      run: async () => {
+        const c = ses.s.gradient;
+        const r = await new Modal("Verlauf")
+          .dropdown(
+            "axis",
+            `Richtung (Muster 1: ${formatPattern(ses.s.pattern)} → Muster 2: ${formatPattern(ses.s.pattern2)})`,
+            [
+              ["y", "Von unten nach oben"],
+              ["x", "Von West nach Ost"],
+              ["z", "Von Nord nach Süd"],
+            ],
+            c.axis
+          )
+          .toggle("reverse", "Umkehren", c.reverse)
+          .slider("blend", "Breite der Übergangszone", 0, 10, 1, c.blend)
+          .toggle("pat2", "Vorher Muster 2 wählen", false)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, { axis: r.axis, reverse: r.reverse, blend: r.blend });
+        markDirty(ses);
+        if (r.pat2) await patternMenu(ses, "pattern2");
+        ops.opGradient(ses, c);
+      },
+    },
+    {
+      text: "Ausdünnen (Ruinen / Verfall)",
+      run: async () => {
+        const c = ses.s.thin;
+        const r = await new Modal("Ausdünnen")
+          .slider("percent", "Anteil der Blöcke in %", 1, 100, 1, c.percent)
+          .toggle("replace", "Durch aktives Muster ersetzen statt entfernen (z.B. bemooster Bruchstein)", c.replace)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opThin(ses, c);
+      },
+    },
     { text: "Wände", run: () => ops.opShell(ses, "walls") },
     { text: "Umriss (Hülle)", run: () => ops.opShell(ses, "outline") },
     { text: "Aushöhlen", run: () => ops.opShell(ses, "hollow") },

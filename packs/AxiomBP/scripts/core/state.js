@@ -29,7 +29,9 @@ export function defaultSettings() {
     path: { radius: 1, smooth: true, hollow: false, flat: false, support: false },
     /** Gespeicherte Muster-Paletten: Name -> Muster */
     palettes: /** @type {Record<string, {id:string, states?:Record<string, string|number|boolean>, w:number}[]>} */ ({}),
-    text: { text: "AXIOM", scale: 1, orient: "wall", spacing: 1 },
+    text: { text: "AXIOM", scale: 1, orient: "wall", spacing: 1, mode: "text", pixel: "rr.rr/rrrrr/.rrr./..r..", legend: "r=red_wool" },
+    gradient: { axis: "y", blend: 3, reverse: false },
+    thin: { percent: 30, replace: false },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },
     stack: { count: 2, gap: 0 },

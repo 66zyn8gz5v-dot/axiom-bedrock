@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.8.0 – 02.10.2026 (nächtlicher Ausbau)
+- **Verlauf:** Auswahl von Muster 1 zu Muster 2 übergehen lassen (unten→oben, West→Ost, Nord→Süd), mit
+  einstellbarer, zufällig gemischter Übergangszone – ideal für Felswände oder Türme
+- **Ausdünnen:** zufällig einen Anteil der Blöcke entfernen oder ersetzen – für Ruinen und verfallene Mauern
+- **Pixel-Art:** das Text-Werkzeug kann jetzt Block-Bilder aus Zeichen-Zeilen setzen (Legende: Zeichen = Block)
+
 ## 0.7.0 – 01.10.2026 (nächtlicher Ausbau)
 - **Terrain-Stempel:** neue Modi „Berg“ und „Krater“ – ein Klick setzt einen ganzen Berg bzw. Krater mit Rand
   (Größe über Radius, Höhe/Tiefe über Stärke)

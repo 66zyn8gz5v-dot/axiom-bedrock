@@ -520,6 +520,35 @@ console.log("Linien, Masken, Symmetrie+Struktur, Blaupause nach Neustart");
   await roundTrip("Blaupause aus Weltdaten erneut laden + einfügen", () => use("axiom:builder", { x: -30, y: 64, z: 30 }));
 }
 
+console.log("Verlauf, Ausdünnen, Pixel-Art");
+{
+  dim.blocks.clear();
+  ses.s.mask = { mode: "none", ids: [] };
+  ses.s.symmetry = { x: false, z: false, center: null };
+  ses.sel = boxSel(dim.id, { x: 0, y: 40, z: 0 }, { x: 4, y: 60, z: 4 });
+  ses.s.pattern = parsePattern("stone");
+  ses.s.pattern2 = parsePattern("andesite");
+  await roundTrip("Verlauf", () => ops.opGradient(ses, { axis: "y", blend: 2, reverse: false }));
+  ops.opGradient(ses, { axis: "y", blend: 0, reverse: false });
+  await drain();
+  check(dim._get(2, 41, 2).type.id === "minecraft:stone" && dim._get(2, 59, 2).type.id === "minecraft:andesite", "Verlauf unten→oben");
+  await undo();
+  await roundTrip("Ausdünnen", () => ops.opThin(ses, { percent: 40, replace: false }));
+  ops.opThin(ses, { percent: 100, replace: false });
+  await drain();
+  check(dim._get(2, 50, 2).type.id === "minecraft:air", "Ausdünnen 100 %");
+  await undo();
+
+  Object.assign(ses.s.text, { mode: "pixel", pixel: "rw/.r", legend: "r=red_wool, w=white_wool", scale: 1, orient: "wall" });
+  player.view = { x: 0, y: 0, z: -1 };
+  await roundTrip("Pixel-Art", () => use("axiom:text", G));
+  await use("axiom:text", G);
+  const ids = [...dim.blocks.values()].map((p) => p.type.id).sort().join(",");
+  check(dim.blocks.size === 3 && ids === "minecraft:red_wool,minecraft:red_wool,minecraft:white_wool", "Pixel-Art: 3 Blöcke " + ids);
+  await undo();
+  ses.s.text.mode = "text";
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

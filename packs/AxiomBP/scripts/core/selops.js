@@ -565,6 +565,48 @@ export function opScatterClip(ses, o) {
   });
 }
 
+/**
+ * Verlauf in der Auswahl: Muster 1 → Muster 2 entlang einer Achse, mit zufällig gemischter Übergangszone.
+ * Ersetzt nur feste Blöcke.
+ * @param {import("./state.js").Session} ses
+ * @param {{axis:string, blend:number, reverse:boolean}} o
+ */
+export function opGradient(ses, o) {
+  const sel = need(ses);
+  if (!sel) return;
+  const p1 = picker(ses.s.pattern);
+  const p2 = picker(ses.s.pattern2);
+  const ax = /** @type {"x"|"y"|"z"} */ (o.axis);
+  const lo = sel.min[ax];
+  const hi = sel.max[ax];
+  const span = Math.max(1, hi - lo);
+  perBlock(ses, "Verlauf", (es, x, y, z) => {
+    const id = es.id(x, y, z);
+    if (!id || !isSolidId(id)) return;
+    let f = (({ x, y, z })[ax] - lo) / span;
+    if (o.reverse) f = 1 - f;
+    // Übergangszone: je größer „blend", desto breiter die Mischung um die Mitte
+    const width = Math.min(1, o.blend / 10);
+    const pr = width <= 0 ? (f >= 0.5 ? 1 : 0) : Math.max(0, Math.min(1, (f - 0.5) / width + 0.5));
+    es.set(x, y, z, Math.random() < pr ? p2() : p1());
+  });
+}
+
+/**
+ * Auswahl ausdünnen: zufällig X % der festen Blöcke entfernen (oder durch das Muster ersetzen).
+ * @param {import("./state.js").Session} ses
+ * @param {{percent:number, replace:boolean}} o
+ */
+export function opThin(ses, o) {
+  const A = air();
+  const pick = picker(ses.s.pattern);
+  perBlock(ses, "Ausdünnen", (es, x, y, z) => {
+    const id = es.id(x, y, z);
+    if (!id || !isSolidId(id) || Math.random() * 100 >= o.percent) return;
+    es.set(x, y, z, o.replace ? pick() : A);
+  });
+}
+
 /** In Zwischenablage kopieren (optional ausschneiden). @param {import("./state.js").Session} ses @param {boolean} cut */
 export function opCopy(ses, cut) {
   const sel = need(ses);

@@ -1,6 +1,6 @@
 // Pfad-Werkzeug (Linien/Kurven durch Punkte) und Text-Werkzeug.
 import { runEdit } from "../core/edit.js";
-import { formatPattern, isSolidId, picker } from "../core/pattern.js";
+import { formatPattern, isSolidId, parsePattern, picker } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
 import { markBlock, spawn } from "../core/selection.js";
 import { err, msg, targetOrAir } from "../core/util.js";
@@ -214,6 +214,67 @@ export const pathTool = {
 
 // ---------- Text ----------
 
+/**
+ * Legende „r=red_wool, w=white_wool“ einlesen.
+ * @param {string} legend
+ * @returns {Map<string, import("@minecraft/server").BlockPermutation>}
+ */
+export function parseLegend(legend) {
+  const map = new Map();
+  for (const part of legend.split(",")) {
+    const m = part.trim().match(/^(.)\s*=\s*(.+)$/);
+    if (!m) continue;
+    map.set(m[1], picker(parsePattern(m[2]))());
+  }
+  return map;
+}
+
+/** Pixel-Art aus Zeichen-Zeilen am Blickziel setzen (wie Text: Wand oder Boden). @param {import("../core/state.js").Session} ses */
+function pixelArt(ses) {
+  const c = ses.s.text;
+  let legend;
+  try {
+    legend = parseLegend(c.legend);
+  } catch (e) {
+    return err(ses.player, "Legende ungültig: " + e);
+  }
+  if (!legend.size) return err(ses.player, "Legende ist leer (Format: r=red_wool, w=white_wool).");
+  const rows = c.pixel.split("/");
+  const W = Math.max(...rows.map((r) => [...r].length));
+  const H = rows.length;
+  const t = targetOrAir(ses.player, ses.s);
+  const f = cardinal(ses.player.getViewDirection(), true);
+  const right = v(-f.z, 0, f.x);
+  const S = Math.max(1, c.scale);
+  const base = t.hit ? t.adjacent : t.pos;
+  const wall = c.orient === "wall";
+  const missing = new Set();
+  runEdit(ses.player, { label: "Pixel-Art" }, function* (es) {
+    const u0 = -Math.floor((W * S) / 2);
+    for (let row = 0; row < H; row++) {
+      const chars = [...rows[row]];
+      for (let col = 0; col < chars.length; col++) {
+        const ch = chars[col];
+        if (ch === "." || ch === " ") continue;
+        const perm = legend.get(ch);
+        if (!perm) {
+          missing.add(ch);
+          continue;
+        }
+        for (let sx = 0; sx < S; sx++)
+          for (let sy = 0; sy < S; sy++) {
+            const u = u0 + col * S + sx;
+            const w = (H - 1 - row) * S + sy;
+            const p = wall ? v(base.x + right.x * u, base.y + w, base.z + right.z * u) : v(base.x + right.x * u + f.x * w, base.y, base.z + right.z * u + f.z * w);
+            es.set(p.x, p.y, p.z, perm);
+          }
+      }
+      yield;
+    }
+    if (missing.size) err(ses.player, "Zeichen ohne Legende übersprungen: " + [...missing].join(" "));
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const textTool = {
   id: "axiom:text",
@@ -221,6 +282,7 @@ export const textTool = {
   help: "Benutzen: Text aus Blöcken an das Blickziel schreiben. Schleichen+Benutzen: Text, Größe, Ausrichtung.",
   onUse(ses) {
     const c = ses.s.text;
+    if (c.mode === "pixel") return pixelArt(ses);
     const t = targetOrAir(ses.player, ses.s);
     const f = cardinal(ses.player.getViewDirection(), true);
     const right = v(-f.z, 0, f.x);
@@ -253,11 +315,22 @@ export const textTool = {
       }
     });
   },
-  hud: (ses) => `„${ses.s.text.text}“ · Größe ${ses.s.text.scale} · ${ses.s.text.orient === "wall" ? "Wand" : "Boden"} · §e${formatPattern(ses.s.pattern)}`,
+  hud: (ses) => (ses.s.text.mode === "pixel" ? `Pixel-Art ${ses.s.text.pixel.split("/").length} Zeilen` : `„${ses.s.text.text}“`) + ` · Größe ${ses.s.text.scale} · ${ses.s.text.orient === "wall" ? "Wand" : "Boden"} · §e${formatPattern(ses.s.pattern)}`,
   async menu(ses) {
     const c = ses.s.text;
     const r = await new Modal("Text")
+      .dropdown(
+        "mode",
+        "Was schreiben?",
+        [
+          ["text", "Text"],
+          ["pixel", "Pixel-Art (Zeichen → Blöcke)"],
+        ],
+        c.mode
+      )
       .text("text", "Text (A–Z, 0–9, ÄÖÜ, Satzzeichen)", "Hallo", c.text)
+      .text("pixel", "Pixel-Art: Zeilen mit / trennen, Punkt = leer. z.B. rr.rr/rrrrr/.rrr./..r..", "rr.rr/rrrrr", c.pixel)
+      .text("legend", "Pixel-Art: Zeichen=Block, Komma-getrennt. z.B. r=red_wool, w=white_wool", "r=red_wool", c.legend)
       .slider("scale", "Größe", 1, 8, 1, c.scale)
       .slider("spacing", "Abstand zwischen Buchstaben", 0, 4, 1, c.spacing)
       .dropdown(
@@ -272,7 +345,15 @@ export const textTool = {
       .toggle("pat", "Danach Block/Muster wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { text: String(r.text).slice(0, 64) || "AXIOM", scale: r.scale, spacing: r.spacing, orient: r.orient });
+    Object.assign(c, {
+      mode: r.mode,
+      text: String(r.text).slice(0, 64) || "AXIOM",
+      pixel: String(r.pixel).slice(0, 2000),
+      legend: String(r.legend).slice(0, 500),
+      scale: r.scale,
+      spacing: r.spacing,
+      orient: r.orient,
+    });
     markDirty(ses);
     if (r.pat) await patternMenu(ses);
   },
