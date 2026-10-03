@@ -15,6 +15,7 @@ const NOT_BLOCKS = /(sword|pickaxe|^axiom:|apple|stick$|bucket)/;
 const STATE_VALUES = {
   pillar_axis: ["y", "x", "z"],
   "minecraft:cardinal_direction": ["south", "west", "north", "east"],
+  weirdo_direction: [0, 1, 2, 3],
   upside_down_bit: [false, true],
 };
 
@@ -29,7 +30,7 @@ export class BlockPermutation {
     const def = {};
     if (/_log$/.test(id)) def.pillar_axis = "y";
     if (/_stairs$/.test(id)) {
-      def["minecraft:cardinal_direction"] = "south";
+      def.weirdo_direction = 0;
       def.upside_down_bit = false;
     }
     const all = { ...def, ...states };

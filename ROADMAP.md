@@ -32,8 +32,10 @@ Neue Ideen unten anhängen.
 - [x] v0.7: Terrain-Stempel Berg & Krater, Anmerkungs-Linien aus Lineal-Messung, Tests für Masken,
       Symmetrie mit großen Formen und Blaupausen aus Weltdaten
 - [x] v0.8: Verlauf in der Auswahl (Muster 1 → 2), Ausdünnen (Ruinen), Pixel-Art im Text-Werkzeug
+- [x] v0.9: Terrain „Treppen an Stufenkanten“, Stempel Vulkan & Hochplateau, Pixel-Art-Vorlagen
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
+- [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
 - [ ] Anmerkungen: Text schwebt sichtbar, die Entität selbst ist unsichtbar und lässt sich nicht verletzen
 - [ ] Spiegeln „Ost-West“ spiegelt wirklich Ost↔West (sonst `mirEnum` in core/clipboard.js tauschen)
 - [ ] Schlagen mit Werkzeug im Kreativmodus löst Pipette/Zusatzaktion aus (sonst Alternative über Menü nötig –
@@ -41,10 +43,9 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Pixel-Art-Vorlagen**: ein paar fertige Motive (Herz, Schwert, Creeper-Gesicht) zum Auswählen
-- [ ] **Treppen automatisch**: Stufenkanten im Gelände mit passenden Treppen/Stufen glätten
+- [ ] **Treppen**: auch Ecken (innen/außen) und Stufen-Platten für halbe Höhen
 - [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
 
 ## Ideen / später
-- Weitere Stempel (Vulkan, Insel, Canyon)
+- Weitere Stempel (Insel, Canyon)

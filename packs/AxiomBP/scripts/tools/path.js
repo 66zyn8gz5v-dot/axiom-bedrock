@@ -214,6 +214,17 @@ export const pathTool = {
 
 // ---------- Text ----------
 
+/** Fertige Pixel-Art-Motive: [Name, Zeilen, Legende] */
+export const PIXEL_TEMPLATES = /** @type {[string, string, string][]} */ ([
+  ["Herz", ".rr.rr./rrrrrrr/rrrrrrr/.rrrrr./..rrr../...r...", "r=red_wool"],
+  ["Creeper-Gesicht", "gggggggg/gggggggg/gbbggbbg/gbbggbbg/gggbbggg/ggbbbbgg/ggbbbbgg/ggbggbgg", "g=lime_wool, b=black_wool"],
+  ["Schwert", "......ww/.....wsw/....wsw./.k.wsw../..kws.../..bk..../.b.k..../b......", "w=white_concrete, s=light_gray_concrete, k=brown_wool, b=dark_oak_planks"],
+  ["Smiley", "..yyyy../.yyyyyy./yykyykyy/yyyyyyyy/ykyyyyky/yykkkkyy/.yyyyyy./..yyyy..", "y=yellow_wool, k=black_wool"],
+  ["Stern", "....y..../....y..../...yyy.../yyyyyyyyy/.yyyyyyy./..yyyyy../..yy.yy../.yy...yy.", "y=gold_block"],
+  ["Pfeil nach oben", "...r.../..rrr../.rrrrr./rrrrrrr/..rrr../..rrr../..rrr..", "r=red_concrete"],
+  ["Haus", "....r..../...rrr.../..rrrrr../.rrrrrrr./rrrrrrrrr/.wwwwwww./.wbwwwgw./.wbwwwww./.wbwwwww.", "r=red_wool, w=white_concrete, b=brown_wool, g=light_blue_stained_glass"],
+]);
+
 /**
  * Legende „r=red_wool, w=white_wool“ einlesen.
  * @param {string} legend
@@ -331,6 +342,12 @@ export const textTool = {
       .text("text", "Text (A–Z, 0–9, ÄÖÜ, Satzzeichen)", "Hallo", c.text)
       .text("pixel", "Pixel-Art: Zeilen mit / trennen, Punkt = leer. z.B. rr.rr/rrrrr/.rrr./..r..", "rr.rr/rrrrr", c.pixel)
       .text("legend", "Pixel-Art: Zeichen=Block, Komma-getrennt. z.B. r=red_wool, w=white_wool", "r=red_wool", c.legend)
+      .dropdown(
+        "tpl",
+        "Pixel-Art-Vorlage (überschreibt Zeilen & Legende)",
+        [["", "Keine Vorlage"], ...PIXEL_TEMPLATES.map((t) => /** @type {[string,string]} */ ([t[0], t[0]]))],
+        ""
+      )
       .slider("scale", "Größe", 1, 8, 1, c.scale)
       .slider("spacing", "Abstand zwischen Buchstaben", 0, 4, 1, c.spacing)
       .dropdown(
@@ -345,6 +362,12 @@ export const textTool = {
       .toggle("pat", "Danach Block/Muster wählen", false)
       .show(ses.player);
     if (!r) return;
+    const tpl = PIXEL_TEMPLATES.find((t) => t[0] === r.tpl);
+    if (tpl) {
+      r.mode = "pixel";
+      r.pixel = tpl[1];
+      r.legend = tpl[2];
+    }
     Object.assign(c, {
       mode: r.mode,
       text: String(r.text).slice(0, 64) || "AXIOM",

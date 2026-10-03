@@ -197,7 +197,7 @@ await roundTrip("Maler clean", () => use("axiom:painter", G));
 dim.blocks.clear();
 
 console.log("Terrain");
-for (const mode of ["raise", "lower", "flatten", "smooth", "hills", "terrace", "mountain", "crater"]) {
+for (const mode of ["raise", "lower", "flatten", "smooth", "hills", "terrace", "mountain", "crater", "volcano", "mesa"]) {
   ses.s.terrain.mode = mode;
   ses.s.terrain.strength = 3;
   if (mode === "flatten" || mode === "smooth" || mode === "terrace") {
@@ -546,6 +546,30 @@ console.log("Verlauf, Ausdünnen, Pixel-Art");
   const ids = [...dim.blocks.values()].map((p) => p.type.id).sort().join(",");
   check(dim.blocks.size === 3 && ids === "minecraft:red_wool,minecraft:red_wool,minecraft:white_wool", "Pixel-Art: 3 Blöcke " + ids);
   await undo();
+  ses.s.text.mode = "text";
+}
+
+console.log("Treppen & Pixel-Vorlagen");
+{
+  dim.blocks.clear();
+  // Stufe: Spalten x>=1 sind 1 Block höher (Stein auf y=65)
+  ses.sel = boxSel(dim.id, { x: 1, y: 65, z: -3 }, { x: 4, y: 65, z: 3 });
+  ses.s.mask = { mode: "none", ids: [] };
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  ses.s.terrain.mode = "stairs";
+  ses.s.terrain.radius = 3;
+  await roundTrip("Treppen an Stufenkanten", () => use("axiom:terrain", { x: 0, y: 64, z: 0 }));
+  await use("axiom:terrain", { x: 0, y: 64, z: 0 });
+  const st = dim._get(0, 65, 0);
+  check(st.type.id === "minecraft:stone_stairs" && st.getAllStates().weirdo_direction === 0, "Treppe vor der Stufe, steigt nach Osten an: " + st.type.id);
+  await undo();
+  await undo();
+  dim.blocks.clear();
+  answers.push({ set: { "Pixel-Art-Vorlage": "Herz" } });
+  await use("axiom:text", G, { sneak: true });
+  check(ses.s.text.mode === "pixel" && ses.s.text.legend === "r=red_wool", "Pixel-Vorlage übernommen");
+  await roundTrip("Pixel-Vorlage Herz setzen", () => use("axiom:text", G));
   ses.s.text.mode = "text";
 }
 

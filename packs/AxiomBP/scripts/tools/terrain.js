@@ -17,7 +17,42 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["terrace", "Terrassen (Stufen)"],
   ["mountain", "Stempel: Berg (ein Klick)"],
   ["crater", "Stempel: Krater (ein Klick)"],
+  ["volcano", "Stempel: Vulkan (ein Klick)"],
+  ["mesa", "Stempel: Hochplateau (ein Klick)"],
+  ["stairs", "Treppen an Stufenkanten setzen"],
 ]);
+
+/** Richtung zur höheren Nachbarspalte -> weirdo_direction (0 Ost, 1 West, 2 Süd, 3 Nord) */
+const STAIR_DIRS = /** @type {[number, number, number][]} */ ([
+  [1, 0, 0],
+  [-1, 0, 1],
+  [0, 1, 2],
+  [0, -1, 3],
+]);
+
+const STAIR_MAP = /** @type {Record<string,string>} */ ({
+  "minecraft:stone": "minecraft:stone_stairs",
+  "minecraft:cobblestone": "minecraft:stone_stairs",
+  "minecraft:mossy_cobblestone": "minecraft:mossy_cobblestone_stairs",
+  "minecraft:sandstone": "minecraft:sandstone_stairs",
+  "minecraft:red_sandstone": "minecraft:red_sandstone_stairs",
+  "minecraft:andesite": "minecraft:andesite_stairs",
+  "minecraft:diorite": "minecraft:diorite_stairs",
+  "minecraft:granite": "minecraft:granite_stairs",
+  "minecraft:deepslate": "minecraft:cobbled_deepslate_stairs",
+  "minecraft:cobbled_deepslate": "minecraft:cobbled_deepslate_stairs",
+  "minecraft:stone_bricks": "minecraft:stone_brick_stairs",
+  "minecraft:bricks": "minecraft:brick_stairs",
+  "minecraft:oak_planks": "minecraft:oak_stairs",
+  "minecraft:spruce_planks": "minecraft:spruce_stairs",
+  "minecraft:blackstone": "minecraft:blackstone_stairs",
+  "minecraft:mud_bricks": "minecraft:mud_brick_stairs",
+});
+
+/** Passende Treppe zum Material der höheren Stufe (Gras/Erde -> Bruchstein-Treppe). @param {string} id */
+function stairFor(id) {
+  return STAIR_MAP[id] ?? (/dirt|grass|podzol|mycelium|mud/.test(id) ? "minecraft:cobblestone_stairs" : "minecraft:stone_stairs");
+}
 
 const NOT_GROUND = /(leaves|log|wood|mushroom_block|vine|bamboo|cactus)/;
 
@@ -44,7 +79,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if (c.mode === "mountain" || c.mode === "crater") {
+    if (c.mode === "mountain" || c.mode === "crater" || c.mode === "volcano" || c.mode === "mesa") {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -64,7 +99,7 @@ export const terrainTool = {
         if (!hm.has(k)) hm.set(k, groundY(es, x, z, scanTop, range));
         return hm.get(k) ?? null;
       };
-      const pad = c.mode === "smooth" ? 2 : 0;
+      const pad = c.mode === "smooth" ? 2 : c.mode === "stairs" ? 1 : 0;
       for (let dx = -R - pad; dx <= R + pad; dx++) {
         for (let dz = -R - pad; dz <= R + pad; dz++) H(ctr.x + dx, ctr.z + dz);
         yield;
@@ -87,6 +122,20 @@ export const terrainTool = {
           const z = ctr.z + dz;
           const h = H(x, z);
           if (h === null) continue;
+          if (c.mode === "stairs") {
+            // Stufe genau 1 Block höher daneben? -> Treppe davor setzen, die zur höheren Seite ansteigt
+            const above = es.id(x, h + 1, z);
+            if (!above || isSolidId(above)) continue;
+            for (const [dx2, dz2, dir] of STAIR_DIRS) {
+              if (H(x + dx2, z + dz2) !== h + 1) continue;
+              const stair = stairFor(es.id(x + dx2, h + 1, z + dz2));
+              try {
+                es.set(x, h + 1, z, BlockPermutation.resolve(stair, { weirdo_direction: dir, upside_down_bit: false }));
+              } catch {}
+              break;
+            }
+            continue;
+          }
           const fall = c.falloff ? Math.max(0, Math.cos((Math.min(d, R) / (R + 0.5)) * (Math.PI / 2))) : 1;
           let target = h;
           switch (c.mode) {
@@ -127,6 +176,21 @@ export const terrainTool = {
               const q = d / (R + 0.5);
               if (q < 0.7) target = h - Math.round(c.strength * 3 * (1 - (q / 0.7) ** 2));
               else target = h + Math.round(c.strength * Math.sin(((q - 0.7) / 0.3) * Math.PI) * 0.9);
+              break;
+            }
+            case "volcano": {
+              // Kegel mit Krater oben
+              const q = d / (R + 0.5);
+              const cone = c.strength * 5 * Math.max(0, 1 - q);
+              const pit = q < 0.18 ? c.strength * 2.5 * (1 - q / 0.18) : 0;
+              target = h + Math.round(cone - pit);
+              break;
+            }
+            case "mesa": {
+              // Flache Oberseite, steile Flanken
+              const q = d / (R + 0.5);
+              const top = c.strength * 3;
+              target = h + Math.round(q < 0.65 ? top : top * Math.max(0, 1 - (q - 0.65) / 0.35) ** 0.6);
               break;
             }
             case "terrace": {

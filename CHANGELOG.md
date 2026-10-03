@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.9.0 – 03.10.2026 (nächtlicher Ausbau)
+- **Terrain „Treppen an Stufenkanten“:** setzt vor jeder 1-Block-Stufe im Pinsel eine passende Treppe
+  (Stein → Steintreppe, Gras/Erde → Bruchsteintreppe, Sandstein → Sandsteintreppe …)
+- **Neue Stempel:** Vulkan (Kegel mit Krater) und Hochplateau (flache Oberseite, steile Flanken)
+- **Pixel-Art-Vorlagen:** Herz, Creeper-Gesicht, Schwert, Smiley, Stern, Pfeil und Haus direkt im Text-Werkzeug wählbar
+
 ## 0.8.0 – 02.10.2026 (nächtlicher Ausbau)
 - **Verlauf:** Auswahl von Muster 1 zu Muster 2 übergehen lassen (unten→oben, West→Ost, Nord→Süd), mit
   einstellbarer, zufällig gemischter Übergangszone – ideal für Felswände oder Türme
