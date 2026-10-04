@@ -197,7 +197,7 @@ await roundTrip("Maler clean", () => use("axiom:painter", G));
 dim.blocks.clear();
 
 console.log("Terrain");
-for (const mode of ["raise", "lower", "flatten", "smooth", "hills", "terrace", "mountain", "crater", "volcano", "mesa"]) {
+for (const mode of ["raise", "lower", "flatten", "smooth", "hills", "terrace", "mountain", "crater", "volcano", "mesa", "island", "canyon"]) {
   ses.s.terrain.mode = mode;
   ses.s.terrain.strength = 3;
   if (mode === "flatten" || mode === "smooth" || mode === "terrace") {
@@ -562,8 +562,13 @@ console.log("Treppen & Pixel-Vorlagen");
   await roundTrip("Treppen an Stufenkanten", () => use("axiom:terrain", { x: 0, y: 64, z: 0 }));
   await use("axiom:terrain", { x: 0, y: 64, z: 0 });
   const st = dim._get(0, 65, 0);
-  check(st.type.id === "minecraft:stone_stairs" && st.getAllStates().weirdo_direction === 0, "Treppe vor der Stufe, steigt nach Osten an: " + st.type.id);
+  check(st.type.id === "minecraft:normal_stone_stairs" && st.getAllStates().weirdo_direction === 0, "Treppe vor der Stufe, steigt nach Osten an: " + st.type.id);
   await undo();
+  ses.s.terrain.slab = true;
+  await use("axiom:terrain", { x: 0, y: 64, z: 0 });
+  check(dim._get(0, 65, 0).type.id === "minecraft:normal_stone_slab", "Stufen-Platte statt Treppe: " + dim._get(0, 65, 0).type.id);
+  await undo();
+  ses.s.terrain.slab = false;
   await undo();
   dim.blocks.clear();
   answers.push({ set: { "Pixel-Art-Vorlage": "Herz" } });

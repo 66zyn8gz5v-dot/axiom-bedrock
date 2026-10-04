@@ -33,6 +33,7 @@ Neue Ideen unten anhängen.
       Symmetrie mit großen Formen und Blaupausen aus Weltdaten
 - [x] v0.8: Verlauf in der Auswahl (Muster 1 → 2), Ausdünnen (Ruinen), Pixel-Art im Text-Werkzeug
 - [x] v0.9: Terrain „Treppen an Stufenkanten“, Stempel Vulkan & Hochplateau, Pixel-Art-Vorlagen
+- [x] v0.10: Stufen (Platten) statt Treppen, korrekte Bedrock-Treppen-IDs, Stempel Insel & Schlucht
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
@@ -43,9 +44,10 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Treppen**: auch Ecken (innen/außen) und Stufen-Platten für halbe Höhen
+- [ ] **Fluss entlang Pfad**: Pfadpunkte als Flussbett ausheben und mit Wasser füllen
+- [ ] **Auswahl als Blaupause exportieren/teilen**: Blaupausen-Liste mit Größe & Datum, umbenennen
 - [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
 
 ## Ideen / später
-- Weitere Stempel (Insel, Canyon)
+- Weitere Stempel (Wasserfall, Flussbett entlang Pfad)

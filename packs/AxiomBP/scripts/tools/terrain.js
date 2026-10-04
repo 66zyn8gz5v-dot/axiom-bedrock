@@ -19,7 +19,9 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["crater", "Stempel: Krater (ein Klick)"],
   ["volcano", "Stempel: Vulkan (ein Klick)"],
   ["mesa", "Stempel: Hochplateau (ein Klick)"],
-  ["stairs", "Treppen an Stufenkanten setzen"],
+  ["island", "Stempel: Insel mit Strand (ein Klick)"],
+  ["canyon", "Stempel: Schlucht in Blickrichtung (ein Klick)"],
+  ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
 ]);
 
 /** Richtung zur höheren Nachbarspalte -> weirdo_direction (0 Ost, 1 West, 2 Süd, 3 Nord) */
@@ -31,7 +33,7 @@ const STAIR_DIRS = /** @type {[number, number, number][]} */ ([
 ]);
 
 const STAIR_MAP = /** @type {Record<string,string>} */ ({
-  "minecraft:stone": "minecraft:stone_stairs",
+  "minecraft:stone": "minecraft:normal_stone_stairs",
   "minecraft:cobblestone": "minecraft:stone_stairs",
   "minecraft:mossy_cobblestone": "minecraft:mossy_cobblestone_stairs",
   "minecraft:sandstone": "minecraft:sandstone_stairs",
@@ -51,7 +53,13 @@ const STAIR_MAP = /** @type {Record<string,string>} */ ({
 
 /** Passende Treppe zum Material der höheren Stufe (Gras/Erde -> Bruchstein-Treppe). @param {string} id */
 function stairFor(id) {
-  return STAIR_MAP[id] ?? (/dirt|grass|podzol|mycelium|mud/.test(id) ? "minecraft:cobblestone_stairs" : "minecraft:stone_stairs");
+  // In Bedrock heißt die Bruchsteintreppe „stone_stairs“
+  return STAIR_MAP[id] ?? "minecraft:stone_stairs";
+}
+
+/** Passende Stufe (Platte) zur Treppe. @param {string} stair */
+function slabFor(stair) {
+  return stair === "minecraft:stone_stairs" ? "minecraft:cobblestone_slab" : stair.replace(/_stairs$/, "_slab");
 }
 
 const NOT_GROUND = /(leaves|log|wood|mushroom_block|vine|bamboo|cactus)/;
@@ -79,7 +87,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if (c.mode === "mountain" || c.mode === "crater" || c.mode === "volcano" || c.mode === "mesa") {
+    if (["mountain", "crater", "volcano", "mesa", "island", "canyon"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -87,6 +95,10 @@ export const terrainTool = {
     }
     const ctr = t.pos;
     const R = c.radius;
+    const vd = ses.player.getViewDirection();
+    const vl = Math.hypot(vd.x, vd.z) || 1;
+    const fx = vd.x / vl;
+    const fz = vd.z / vl;
     const seed = 77.37;
     runEdit(ses.player, { label: "Terrain", stroke: strokeId(ses, "terrain"), symmetry: true }, function* (es) {
       const A = air();
@@ -130,13 +142,16 @@ export const terrainTool = {
               if (H(x + dx2, z + dz2) !== h + 1) continue;
               const stair = stairFor(es.id(x + dx2, h + 1, z + dz2));
               try {
-                es.set(x, h + 1, z, BlockPermutation.resolve(stair, { weirdo_direction: dir, upside_down_bit: false }));
+                if (c.slab) es.set(x, h + 1, z, BlockPermutation.resolve(slabFor(stair)));
+                else es.set(x, h + 1, z, BlockPermutation.resolve(stair, { weirdo_direction: dir, upside_down_bit: false }));
               } catch {}
               break;
             }
             continue;
           }
           const fall = c.falloff ? Math.max(0, Math.cos((Math.min(d, R) / (R + 0.5)) * (Math.PI / 2))) : 1;
+          /** @type {string|undefined} */
+          let topOverride;
           let target = h;
           switch (c.mode) {
             case "raise":
@@ -193,14 +208,30 @@ export const terrainTool = {
               target = h + Math.round(q < 0.65 ? top : top * Math.max(0, 1 - (q - 0.65) / 0.35) ** 0.6);
               break;
             }
+            case "island": {
+              // Flacher Hügel, außen Sandstrand
+              const q = d / (R + 0.5);
+              target = h + Math.round(c.strength * 2.5 * Math.max(0, 1 - q * q));
+              if (q > 0.65) topOverride = "minecraft:sand";
+              break;
+            }
+            case "canyon": {
+              // Langgezogene Schlucht entlang der Blickrichtung
+              const across = Math.abs(dx * fz - dz * fx);
+              const along = Math.abs(dx * fx + dz * fz);
+              const w = Math.max(1.5, R * 0.35);
+              if (across > w) break;
+              target = h - Math.round(c.strength * 4 * (1 - (across / w) ** 2) * (1 - (along / (R + 0.5)) ** 4));
+              break;
+            }
             case "terrace": {
               const step = Math.max(2, c.strength);
               target = Math.round(h + (Math.floor(h / step) * step - h) * fall);
               break;
             }
           }
-          if (target === h) continue;
-          const topId = es.id(x, h, z);
+          if (target === h && !topOverride) continue;
+          const topId = topOverride ?? es.id(x, h, z);
           const belowId = es.id(x, h - 1, z);
           const fillId = belowId && isSolidId(belowId) ? belowId : topId;
           if (target > h) {
@@ -228,6 +259,7 @@ export const terrainTool = {
       .slider("radius", "Radius", 1, 32, 1, c.radius)
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
       .toggle("falloff", "Weicher Rand (zur Mitte stärker)", c.falloff)
+      .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
       .show(ses.player);
     if (!r) return;
     Object.assign(c, r);

@@ -24,7 +24,7 @@ export function defaultSettings() {
     sculpt: { mode: "add", radius: 4, noise: false },
     painter: { mode: "surface", radius: 4, depth: 1, scale: 8, threshold: 0, density: 8, slopeDeg: 40, floodLimit: 20000 },
     scatter: { count: 10, spacing: 6, rotate: true },
-    terrain: { mode: "raise", radius: 6, strength: 2, falloff: true },
+    terrain: { mode: "raise", radius: 6, strength: 2, falloff: true, slab: false },
     extrude: { mode: "push", sameType: true, limit: 4096 },
     path: { radius: 1, smooth: true, hollow: false, flat: false, support: false },
     /** Gespeicherte Muster-Paletten: Name -> Muster */

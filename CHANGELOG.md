@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.10.0 – 04.10.2026 (nächtlicher Ausbau)
+- **Treppen-Modus:** wahlweise Stufen (Platten) statt Treppen; Treppen nutzen jetzt die richtigen Bedrock-Namen
+  (Stein → Steintreppe, Bruchstein/Gras → Bruchsteintreppe). Ecken verbinden sich in Bedrock automatisch
+- **Neue Stempel:** Insel (flacher Hügel mit Sandstrand) und Schlucht (langgezogen in deiner Blickrichtung)
+
 ## 0.9.0 – 03.10.2026 (nächtlicher Ausbau)
 - **Terrain „Treppen an Stufenkanten“:** setzt vor jeder 1-Block-Stufe im Pinsel eine passende Treppe
   (Stein → Steintreppe, Gras/Erde → Bruchsteintreppe, Sandstein → Sandsteintreppe …)
