@@ -5,7 +5,7 @@ import { describeMask, formatPattern, normId } from "../core/pattern.js";
 import { err, msg, target, targetOrAir } from "../core/util.js";
 import { boxSel, selDims, shiftSel } from "../core/selection.js";
 import { cardinal, dirName, fmt, v } from "../core/vec.js";
-import { getClip, listBlueprints, loadBlueprint, saveBlueprint, deleteBlueprint } from "../core/clipboard.js";
+import { getClip, listBlueprints, loadBlueprint, saveBlueprint, deleteBlueprint, renameBlueprint } from "../core/clipboard.js";
 import { getHistory, clearHistory } from "../core/history.js";
 import * as ops from "../core/selops.js";
 import { Modal, confirm, menu } from "./forms.js";
@@ -370,16 +370,27 @@ async function clipboardMenu(ses) {
       },
     },
     {
-      text: "Blaupause laden",
-      run: async () => {
-        const list = listBlueprints();
-        if (!list.length) return err(p, "Noch keine Blaupausen gespeichert.");
-        await menu(
-          p,
-          "Blaupause laden",
-          "In die Zwischenablage laden – dann mit dem Baumeister einfügen.",
-          list.map((b) => ({
-            text: `${b.name}\n§8${b.size.x}×${b.size.y}×${b.size.z} · ${b.author}`,
+      text: "Blaupausen (laden, umbenennen, löschen)",
+      run: () => blueprintMenu(ses),
+    },
+  ]);
+}
+
+/** Blaupausen-Verwaltung. @param {import("../core/state.js").Session} ses */
+async function blueprintMenu(ses) {
+  const p = ses.player;
+  const list = listBlueprints();
+  if (!list.length) return err(p, "Noch keine Blaupausen gespeichert.");
+  await menu(
+    p,
+    "Blaupausen",
+    `${list.length} gespeichert. Wählen zum Laden, Umbenennen oder Löschen.`,
+    list.map((b) => ({
+      text: `${b.name}\n§8${b.size.x}×${b.size.y}×${b.size.z} · ${b.author}${b.date ? " · " + b.date : ""}`,
+      run: () =>
+        menu(p, b.name, `Größe ${b.size.x}×${b.size.y}×${b.size.z}\nvon ${b.author}${b.date ? " am " + b.date : ""}`, [
+          {
+            text: "§aIn Zwischenablage laden",
             run: () => {
               try {
                 loadBlueprint(p, b.name);
@@ -388,32 +399,32 @@ async function clipboardMenu(ses) {
                 err(p, String(e));
               }
             },
-          }))
-        );
-      },
-    },
-    {
-      text: "§cBlaupause löschen",
-      run: async () => {
-        const list = listBlueprints();
-        if (!list.length) return err(p, "Keine Blaupausen vorhanden.");
-        await menu(
-          p,
-          "Blaupause löschen",
-          "",
-          list.map((b) => ({
-            text: b.name,
+          },
+          {
+            text: "Umbenennen",
+            run: async () => {
+              const r = await new Modal("Umbenennen").text("name", "Neuer Name", "burg_tor", b.name).show(p);
+              if (!r) return;
+              try {
+                const n = renameBlueprint(b.name, String(r.name));
+                msg(p, `Umbenannt in §e${n}§r.`);
+              } catch (e) {
+                err(p, String(e));
+              }
+            },
+          },
+          {
+            text: "§cLöschen",
             run: async () => {
               if (await confirm(p, "Löschen?", `Blaupause „${b.name}“ wirklich löschen?`)) {
                 deleteBlueprint(b.name);
                 msg(p, "Gelöscht.");
               }
             },
-          }))
-        );
-      },
-    },
-  ]);
+          },
+        ]),
+    }))
+  );
 }
 
 // ---------- Verlauf ----------

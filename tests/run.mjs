@@ -578,6 +578,28 @@ console.log("Treppen & Pixel-Vorlagen");
   ses.s.text.mode = "text";
 }
 
+console.log("Fluss & Blaupausen-Verwaltung");
+{
+  dim.blocks.clear();
+  ses.s.mask = { mode: "none", ids: [] };
+  ses.pathPoints = [{ x: 0, y: 65, z: 0 }, { x: 20, y: 65, z: 5 }];
+  answers.push({ selectText: "Fluss" }, { set: { Breite: 2, Tiefe: 2 } });
+  await roundTrip("Fluss entlang Pfad", () => use("axiom:path", G, { sneak: true }));
+  answers.push({ selectText: "Fluss" }, { set: { Breite: 2, Tiefe: 2 } });
+  await use("axiom:path", G, { sneak: true });
+  check(dim._get(0, 64, 0).type.id === "minecraft:water" && dim._get(0, 63, 0).type.id === "minecraft:water" && dim._get(0, 62, 0).type.id === "minecraft:sand", "Fluss: Wasser + Sandbett");
+  await undo();
+  ses.pathPoints = [];
+  const { listBlueprints: lb } = await import("../packs/AxiomBP/scripts/core/clipboard.js");
+  const first = lb()[0].name;
+  answers.push({ selectText: "Zwischenablage" }, { selectText: "Blaupausen" }, { selectText: first }, { selectText: "Umbenennen" }, { set: { "Neuer Name": "Turm Nord" } });
+  await use("axiom:menu", G);
+  const names = lb().map((b) => b.name);
+  check(names.includes("turm_nord") && !names.includes(first), "Blaupause umbenannt: " + names.join(","));
+  loadBlueprint(player, "turm_nord");
+  await roundTrip("Umbenannte Blaupause einfügen", () => use("axiom:builder", { x: 60, y: 64, z: 60 }));
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });
@@ -620,7 +642,7 @@ for (const [label, extra] of [
   ["Hilfe", [{ selectText: "Formen" }, { selectText: "OK" }]],
   ["Ansichten", [{ selectText: "speichern" }, { set: { Name: "Turm" } }]],
   ["Block / Muster", [{ selectText: "Als Text" }, { set: { Blöcke: "2*stone, dirt" } }]],
-  ["Zwischenablage", [{ selectText: "Blaupause laden" }, { selectText: "mein_haeuschen" }]],
+  ["Zwischenablage", [{ selectText: "Blaupausen" }, { selectText: "turm_nord" }, { selectText: "In Zwischenablage" }]],
 ]) {
   const m0 = player.messages.length;
   answers.push({ selectText: label }, ...extra);

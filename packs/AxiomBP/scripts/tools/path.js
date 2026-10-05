@@ -1,6 +1,7 @@
 // Pfad-Werkzeug (Linien/Kurven durch Punkte) und Text-Werkzeug.
 import { runEdit } from "../core/edit.js";
-import { formatPattern, isSolidId, parsePattern, picker } from "../core/pattern.js";
+import { air, formatPattern, isSolidId, parsePattern, picker } from "../core/pattern.js";
+import { BlockPermutation } from "@minecraft/server";
 import { markDirty } from "../core/state.js";
 import { markBlock, spawn } from "../core/selection.js";
 import { err, msg, targetOrAir } from "../core/util.js";
@@ -141,6 +142,56 @@ function lassoSelect(ses, below, above, solidOnly) {
   if (applySel(ses, part)) msg(ses.player, `Lasso: ${keys.size} Blöcke → ${selInfo(ses)}`);
 }
 
+/**
+ * Fluss: entlang der Pfadpunkte ein Bett ausheben (tiefste Stelle in der Mitte) und mit Wasser füllen.
+ * Wasseroberfläche = Höhe der Pfadpunkte − 1 (Punkte werden auf den Boden gesetzt).
+ * @param {import("../core/state.js").Session} ses
+ */
+function buildRiver(ses) {
+  const c = ses.s.river;
+  let bed;
+  try {
+    bed = picker(parsePattern(c.bed))();
+  } catch (e) {
+    return err(ses.player, "Flussbett-Block ungültig: " + e);
+  }
+  const W = BlockPermutation.resolve("minecraft:water");
+  const samples = samplePath(ses.pathPoints, true);
+  const r = c.width;
+  runEdit(ses.player, { label: "Fluss" }, function* (es) {
+    /** @type {Map<string, {y:number, depth:number}>} */
+    const cols = new Map();
+    for (const s of samples) {
+      const wy = Math.round(s.y) - 1;
+      for (let dx = -r; dx <= r; dx++)
+        for (let dz = -r; dz <= r; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > r + 0.4) continue;
+          const x = Math.round(s.x + dx);
+          const z = Math.round(s.z + dz);
+          const depth = Math.max(1, Math.round(c.depth * (1 - (d / (r + 0.5)) ** 2)));
+          const k = x + "," + z;
+          const old = cols.get(k);
+          // Tiefere Stelle bzw. niedrigerer Wasserspiegel gewinnt (Gefälle)
+          if (!old || wy < old.y || (wy === old.y && depth > old.depth)) cols.set(k, { y: wy, depth });
+        }
+      yield;
+    }
+    let n = 0;
+    for (const [k, col] of cols) {
+      const [x, z] = k.split(",").map(Number);
+      // Ufer oberhalb des Wasserspiegels freiräumen (bis 4 Blöcke)
+      for (let y = col.y + 1; y <= col.y + 4; y++) {
+        const id = es.id(x, y, z);
+        if (id && isSolidId(id)) es.set(x, y, z, air());
+      }
+      for (let y = col.y - col.depth + 1; y <= col.y; y++) es.set(x, y, z, W);
+      es.set(x, col.y - col.depth, z, bed);
+      if (++n % 64 === 0) yield;
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const pathTool = {
   id: "axiom:path",
@@ -168,6 +219,22 @@ export const pathTool = {
   async menu(ses) {
     await menu(ses.player, "Pfad", `${ses.pathPoints.length} Punkte gesetzt.`, [
       { text: "§aPfad bauen", run: () => buildPath(ses) },
+      {
+        text: "Fluss entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.river;
+          const r = await new Modal("Fluss")
+            .slider("width", "Breite (Radius)", 1, 12, 1, c.width)
+            .slider("depth", "Tiefe", 1, 8, 1, c.depth)
+            .text("bed", "Flussbett-Block", "sand", c.bed)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { width: r.width, depth: r.depth, bed: String(r.bed) || "sand" });
+          markDirty(ses);
+          buildRiver(ses);
+        },
+      },
       {
         text: "Lasso: Fläche innerhalb der Punkte auswählen",
         run: async () => {

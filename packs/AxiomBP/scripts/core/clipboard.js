@@ -230,13 +230,13 @@ export function sanitizeName(name) {
 }
 
 export function listBlueprints() {
-  /** @type {{name:string, size:{x:number,y:number,z:number}, author:string}[]} */
+  /** @type {{name:string, size:{x:number,y:number,z:number}, author:string, date:string}[]} */
   const out = [];
   for (const id of world.getDynamicPropertyIds()) {
     if (!id.startsWith(BP_PREFIX)) continue;
     try {
       const meta = JSON.parse(/** @type {string} */ (world.getDynamicProperty(id)));
-      out.push({ name: id.slice(BP_PREFIX.length), size: meta.size, author: meta.author ?? "?" });
+      out.push({ name: id.slice(BP_PREFIX.length), size: meta.size, author: meta.author ?? "?", date: meta.date ?? "" });
     } catch {}
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
@@ -275,7 +275,34 @@ export function saveBlueprint(player, rawName) {
   }
   // Die eigene Zwischenablage zeigt ab jetzt auf die neue Kopie
   if (clip.shared && clip.name === name) setClip(player, { size: clip.size, tiles, shared: true, name });
-  world.setDynamicProperty(BP_PREFIX + name, JSON.stringify({ size: clip.size, tiles, author: player.name }));
+  const d = new Date();
+  const date = `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+  world.setDynamicProperty(BP_PREFIX + name, JSON.stringify({ size: clip.size, tiles, author: player.name, date }));
+  return name;
+}
+
+/**
+ * Blaupause umbenennen (Strukturen werden unter neuen Namen kopiert).
+ * @param {string} oldName @param {string} rawNew
+ */
+export function renameBlueprint(oldName, rawNew) {
+  const raw = world.getDynamicProperty(BP_PREFIX + oldName);
+  if (typeof raw !== "string") throw new Error("Blaupause nicht gefunden.");
+  const name = sanitizeName(rawNew);
+  if (!name) throw new Error("Ungültiger Name.");
+  if (name === oldName) return name;
+  if (typeof world.getDynamicProperty(BP_PREFIX + name) === "string") throw new Error(`„${name}“ gibt es schon.`);
+  const meta = JSON.parse(raw);
+  const stamp = system.currentTick % 1000000;
+  meta.tiles = meta.tiles.map((/** @type {ClipTile} */ t, /** @type {number} */ i) => {
+    const src = world.structureManager.get(t.id);
+    if (!src) throw new Error("Blaupause beschädigt.");
+    const id = `axiom:bp_${name}_${stamp}_${i}`;
+    src.saveAs(id, StructureSaveMode.World);
+    return { ...t, id };
+  });
+  world.setDynamicProperty(BP_PREFIX + name, JSON.stringify(meta));
+  deleteBlueprint(oldName);
   return name;
 }
 

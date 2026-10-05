@@ -68,7 +68,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Flutfüllung (See/Becken ab Blickziel füllen), Säubern (Pflanzen/Wasser weg). |
 | **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. Dazu Stempel für **Berg**, **Krater**, **Vulkan**, **Hochplateau**, **Insel** (mit Sandstrand) und **Schlucht** (in Blickrichtung) – je ein Klick – sowie **Treppen an Stufenkanten** (setzt passende Treppen oder wahlweise Stufen-Platten vor 1-Block-Stufen). |
 | **Extrudieren** | Zieht eine ganze Fläche verbundener Blöcke um eine Schicht heraus bzw. drückt sie hinein. |
-| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen. Im Menü außerdem **Lasso**: die Fläche innerhalb der Punkte auswählen. – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
+| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen. Im Menü außerdem **Lasso** (Fläche innerhalb der Punkte auswählen) und **Fluss** (Flussbett mit Wasser entlang der Punkte, Breite/Tiefe/Bett-Block einstellbar). – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
 | **Text** | Schreibt Text aus Blöcken – an eine Wand oder flach auf den Boden, in bis zu 8-facher Größe. Modus **Pixel-Art**: Zeilen aus Zeichen (z.B. `rr.rr/rrrrr`) plus Legende (`r=red_wool`) werden zu einem Block-Bild – mit fertigen Vorlagen (Herz, Creeper, Schwert, Smiley, Stern, Pfeil, Haus). |
 | **Lineal** | Misst Abstände und Größen zwischen zwei Punkten. |
 | **Blockzustand-Editor** | Ändert Zustände eines Blocks (Richtung, Achse, offen/zu, Stufe …). Schlagen = drehen. |
@@ -109,7 +109,8 @@ Spiegelt alles, was Werkzeuge bauen – und auch normales Bauen und Abbauen – 
 
 ### Zwischenablage & Blaupausen
 Kopien bleiben auch nach einem Neustart der Welt erhalten. Blaupausen werden in der Welt gespeichert und können
-von allen Spielern geladen werden.
+von allen Spielern geladen werden. Die Blaupausen-Liste zeigt Größe, Ersteller und Datum; Blaupausen lassen sich
+laden, umbenennen und löschen.
 
 ### Ansichten
 Standpunkte mit Blickrichtung speichern und später per Menü wieder hinspringen (wie Axioms „Views“).

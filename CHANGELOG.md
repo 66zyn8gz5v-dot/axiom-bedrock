@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.11.0 – 05.10.2026 (nächtlicher Ausbau)
+- **Fluss:** Mit dem Pfad-Werkzeug Punkte auf den Boden setzen, dann Schleichen+Benutzen → „Fluss entlang der
+  Punkte“. Gräbt ein geschwungenes Flussbett (in der Mitte am tiefsten), füllt es mit Wasser und legt ein Bett aus
+  Sand (oder einem anderen Block) an
+- **Blaupausen-Verwaltung:** Liste mit Größe, Ersteller und Datum; jede Blaupause lässt sich laden, umbenennen
+  oder löschen (Axiom-Menü → Zwischenablage & Blaupausen → Blaupausen)
+
 ## 0.10.0 – 04.10.2026 (nächtlicher Ausbau)
 - **Treppen-Modus:** wahlweise Stufen (Platten) statt Treppen; Treppen nutzen jetzt die richtigen Bedrock-Namen
   (Stein → Steintreppe, Bruchstein/Gras → Bruchsteintreppe). Ecken verbinden sich in Bedrock automatisch
