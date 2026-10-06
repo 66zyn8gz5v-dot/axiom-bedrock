@@ -69,7 +69,10 @@ async function roundTrip(name, action, { expectChange = true } = {}) {
   const msgs = player.messages.length;
   const f0 = failures;
   try {
-    await action();
+    // Aktion starten, Jobs abarbeiten, dann auf das Ergebnis warten (Jobs laufen erst bei drain)
+    const pending = Promise.resolve(action());
+    await drain();
+    await pending;
     await drain();
   } catch (e) {
     failures++;
@@ -598,6 +601,27 @@ console.log("Fluss & Blaupausen-Verwaltung");
   check(names.includes("turm_nord") && !names.includes(first), "Blaupause umbenannt: " + names.join(","));
   loadBlueprint(player, "turm_nord");
   await roundTrip("Umbenannte Blaupause einfügen", () => use("axiom:builder", { x: 60, y: 64, z: 60 }));
+}
+
+console.log("Blaupausen-Vorschau & Auswahl direkt speichern");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 64, z: 0 }, { x: 3, y: 66, z: 2 });
+  answers.push({ selectText: "Zwischenablage" }, { selectText: "Auswahl direkt" }, { set: { Name: "Kiste" } });
+  await use("axiom:menu", G);
+  const { listBlueprints: lb2 } = await import("../packs/AxiomBP/scripts/core/clipboard.js");
+  const kiste = lb2().find((b) => b.name === "kiste");
+  check(!!kiste && kiste.size.x === 4 && kiste.size.y === 3 && kiste.size.z === 3, "Auswahl direkt als Blaupause gespeichert");
+  check(/^\d\d\.\d\d\.\d{4}$/.test(kiste?.date ?? ""), "Blaupause hat Datum: " + kiste?.date);
+  answers.push({ selectText: "Zwischenablage" }, { selectText: "Blaupausen" }, { selectText: "kiste" }, { selectText: "Vorschau" });
+  await use("axiom:menu", G);
+  check(ses.bpPreview?.name === "kiste", "Blaupausen-Vorschau aktiv");
+  hold("minecraft:stone");
+  tickIntervals(10);
+  check(String(player.actionBar).includes("Vorschau"), "Vorschau in Aktionsleiste");
+  system.currentTick += 400;
+  tickIntervals(10);
+  check(!ses.bpPreview, "Vorschau läuft ab");
 }
 
 console.log("Fähigkeiten & Symmetrie");

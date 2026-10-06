@@ -5,7 +5,7 @@ import { describeMask, formatPattern, normId } from "../core/pattern.js";
 import { err, msg, target, targetOrAir } from "../core/util.js";
 import { boxSel, selDims, shiftSel } from "../core/selection.js";
 import { cardinal, dirName, fmt, v } from "../core/vec.js";
-import { getClip, listBlueprints, loadBlueprint, saveBlueprint, deleteBlueprint, renameBlueprint } from "../core/clipboard.js";
+import { getClip, listBlueprints, loadBlueprint, saveBlueprint, deleteBlueprint, renameBlueprint, rotatedSize } from "../core/clipboard.js";
 import { getHistory, clearHistory } from "../core/history.js";
 import * as ops from "../core/selops.js";
 import { Modal, confirm, menu } from "./forms.js";
@@ -370,6 +370,21 @@ async function clipboardMenu(ses) {
       },
     },
     {
+      text: "Auswahl direkt als Blaupause speichern",
+      run: async () => {
+        if (!ses.sel) return err(p, "Keine Auswahl.");
+        const r = await new Modal("Auswahl als Blaupause").text("name", "Name", "mein_haus", "").show(p);
+        if (!r) return;
+        await ops.opCopy(ses, false);
+        try {
+          const n = saveBlueprint(p, String(r.name));
+          msg(p, `Auswahl als Blaupause §e${n}§r gespeichert.`);
+        } catch (e) {
+          err(p, String(e));
+        }
+      },
+    },
+    {
       text: "Blaupausen (laden, umbenennen, löschen)",
       run: () => blueprintMenu(ses),
     },
@@ -389,6 +404,13 @@ async function blueprintMenu(ses) {
       text: `${b.name}\n§8${b.size.x}×${b.size.y}×${b.size.z} · ${b.author}${b.date ? " · " + b.date : ""}`,
       run: () =>
         menu(p, b.name, `Größe ${b.size.x}×${b.size.y}×${b.size.z}\nvon ${b.author}${b.date ? " am " + b.date : ""}`, [
+          {
+            text: "Vorschau am Blickziel (15 Sekunden)",
+            run: () => {
+              ses.bpPreview = { size: rotatedSize(b.size, ses.s.paste.rotation), until: system.currentTick + 300, name: b.name };
+              msg(p, "Vorschau-Rahmen (blau) folgt deinem Blick – so groß würde die Blaupause.");
+            },
+          },
           {
             text: "§aIn Zwischenablage laden",
             run: () => {

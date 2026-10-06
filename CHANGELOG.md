@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.12.0 – 06.10.2026 (nächtlicher Ausbau)
+- **Blaupausen-Vorschau:** in der Blaupausen-Liste „Vorschau am Blickziel“ wählen – 15 Sekunden lang zeigt ein
+  blauer Rahmen, wie groß die Blaupause wäre und wo sie landen würde (folgt deinem Blick)
+- **Auswahl direkt als Blaupause speichern:** ein Schritt statt Kopieren + Speichern
+
 ## 0.11.0 – 05.10.2026 (nächtlicher Ausbau)
 - **Fluss:** Mit dem Pfad-Werkzeug Punkte auf den Boden setzen, dann Schleichen+Benutzen → „Fluss entlang der
   Punkte“. Gräbt ein geschwungenes Flussbett (in der Mitte am tiefsten), füllt es mit Wasser und legt ein Bett aus

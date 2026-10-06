@@ -110,7 +110,8 @@ Spiegelt alles, was Werkzeuge bauen – und auch normales Bauen und Abbauen – 
 ### Zwischenablage & Blaupausen
 Kopien bleiben auch nach einem Neustart der Welt erhalten. Blaupausen werden in der Welt gespeichert und können
 von allen Spielern geladen werden. Die Blaupausen-Liste zeigt Größe, Ersteller und Datum; Blaupausen lassen sich
-laden, umbenennen und löschen.
+laden, umbenennen und löschen – und vorher als **Vorschau-Rahmen** am Blickziel anzeigen. Eine Auswahl kann auch
+direkt als Blaupause gespeichert werden (ohne Umweg über Kopieren).
 
 ### Ansichten
 Standpunkte mit Blickrichtung speichern und später per Menü wieder hinspringen (wie Axioms „Views“).

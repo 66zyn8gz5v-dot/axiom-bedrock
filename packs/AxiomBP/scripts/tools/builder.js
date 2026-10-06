@@ -42,6 +42,46 @@ export function doPaste(player, clip, origin) {
   );
 }
 
+/**
+ * Quader-Rahmen aus Partikeln zeichnen.
+ * @param {import("@minecraft/server").Player} player
+ * @param {{x:number,y:number,z:number}} a minimale Ecke
+ * @param {{x:number,y:number,z:number}} size
+ * @param {string} particle
+ */
+export function drawFrame(player, a, size, particle) {
+  const b = v(a.x + size.x, a.y + size.y, a.z + size.z);
+  const L = 2 * (size.x + size.y + size.z);
+  const step = Math.max(1, L / 120);
+  /** @param {number} x @param {number} y @param {number} z */
+  const s = (x, y, z) => spawn(player, particle, v(x, y, z));
+  for (let x = a.x; x <= b.x; x += step) {
+    s(x, a.y, a.z);
+    s(x, a.y, b.z);
+    s(x, b.y, a.z);
+    s(x, b.y, b.z);
+  }
+  for (let z = a.z; z <= b.z; z += step) {
+    s(a.x, a.y, z);
+    s(b.x, a.y, z);
+    s(a.x, b.y, z);
+    s(b.x, b.y, z);
+  }
+  for (let y = a.y; y <= b.y; y += step) {
+    s(a.x, y, a.z);
+    s(b.x, y, a.z);
+    s(a.x, y, b.z);
+    s(b.x, y, b.z);
+  }
+}
+
+/** Ursprung für einen Quader der Größe size am Blickziel (wie beim Einfügen). @param {import("../core/state.js").Session} ses @param {{x:number,y:number,z:number}} size */
+export function originAtTarget(ses, size) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  return v(base.x - Math.floor(size.x / 2), base.y + ses.s.paste.offsetY, base.z - Math.floor(size.z / 2));
+}
+
 /** @type {import("./registry.js").Tool} */
 export const builderTool = {
   id: "axiom:builder",
@@ -59,32 +99,9 @@ export const builderTool = {
   },
   preview(ses) {
     const po = pasteOrigin(ses);
-    if (!po) return;
-    const a = po.min;
-    const b = v(a.x + po.size.x, a.y + po.size.y, a.z + po.size.z);
-    const L = 2 * (po.size.x + po.size.y + po.size.z);
-    const step = Math.max(1, L / 120);
-    /** @param {number} x @param {number} y @param {number} z */
-    const s = (x, y, z) => spawn(ses.player, "axiom:marker", v(x, y, z));
-    for (let x = a.x; x <= b.x; x += step) {
-      s(x, a.y, a.z);
-      s(x, a.y, b.z);
-      s(x, b.y, a.z);
-      s(x, b.y, b.z);
-    }
-    for (let z = a.z; z <= b.z; z += step) {
-      s(a.x, a.y, z);
-      s(b.x, a.y, z);
-      s(a.x, b.y, z);
-      s(b.x, b.y, z);
-    }
-    for (let y = a.y; y <= b.y; y += step) {
-      s(a.x, y, a.z);
-      s(b.x, y, a.z);
-      s(a.x, y, b.z);
-      s(b.x, y, b.z);
-    }
+    if (po) drawFrame(ses.player, po.min, po.size, "axiom:marker");
   },
+
   hud(ses) {
     const clip = getClip(ses.player);
     const o = ses.s.paste;

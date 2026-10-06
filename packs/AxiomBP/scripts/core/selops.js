@@ -613,7 +613,7 @@ export function opCopy(ses, cut) {
   if (!sel) return;
   const player = ses.player;
   const entities = ses.s.paste.entities;
-  runEdit(player, { label: cut ? "Ausschneiden" : "Kopieren", region: cut ? { min: sel.min, max: sel.max } : undefined, useMask: false, quiet: true }, function* (es) {
+  return runEdit(player, { label: cut ? "Ausschneiden" : "Kopieren", region: cut ? { min: sel.min, max: sel.max } : undefined, useMask: false, quiet: true }, function* (es) {
     const clip = yield* copySelection(player, sel, entities);
     if (cut) {
       const A = air();

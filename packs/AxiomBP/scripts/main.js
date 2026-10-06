@@ -20,6 +20,7 @@ import { k3 } from "./core/vec.js";
 import { mainMenu } from "./ui/main.js";
 import { doUndo, renderSymmetry } from "./tools/misc.js";
 import { renderLines } from "./ui/notes.js";
+import { drawFrame, originAtTarget } from "./tools/builder.js";
 
 /** Blöcke, die man im Ersetzen-Modus weiterhin normal benutzen kann (Schleichen = trotzdem ersetzen). */
 const INTERACTIVE = /(chest|barrel|door|gate|button|lever|crafting|furnace|smoker|anvil|table|shulker|hopper|dispenser|dropper|bed|bell|repeater|comparator|note|jukebox|lectern|loom|stonecutter|grindstone|beacon|brewing|cartography|smithing|campfire|sign)/;
@@ -262,6 +263,14 @@ function tickPlayer(player) {
         tool.preview?.(ses);
       } catch {}
       if (ses.nextCorner === 2 && ses.corner1) markBlock(player, "axiom:pos1", ses.corner1);
+    }
+    // Blaupausen-Vorschau (zeitlich begrenzt, unabhängig vom Werkzeug)
+    if (ses.bpPreview) {
+      if (system.currentTick > ses.bpPreview.until) ses.bpPreview = undefined;
+      else {
+        drawFrame(player, originAtTarget(ses, ses.bpPreview.size), ses.bpPreview.size, "axiom:pos2");
+        bar(player, `§bVorschau „${ses.bpPreview.name}“§r ${ses.bpPreview.size.x}×${ses.bpPreview.size.y}×${ses.bpPreview.size.z}`);
+      }
     }
     if (ses.sel && (tool || ses.s.showSel)) renderSelection(player, ses.sel);
     if (tool) renderSymmetry(ses);
