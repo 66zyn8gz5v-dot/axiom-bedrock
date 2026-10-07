@@ -36,6 +36,7 @@ Neue Ideen unten anhängen.
 - [x] v0.10: Stufen (Platten) statt Treppen, korrekte Bedrock-Treppen-IDs, Stempel Insel & Schlucht
 - [x] v0.11: Fluss entlang Pfadpunkten, Blaupausen-Verwaltung (Größe, Autor, Datum, umbenennen)
 - [x] v0.12: Blaupausen-Vorschau am Blickziel, Auswahl direkt als Blaupause speichern
+- [x] v0.13: Stempel Wasserfall (Rinne in Felswand, Quelle oben, Becken unten)
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
@@ -46,7 +47,8 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Wasserfall-Stempel**: Rinne in eine Klippe schneiden und Wasserquelle oben setzen
+- [ ] **Gespiegelte Kopie**: Auswahl kopieren und gespiegelt direkt daneben einfügen (symmetrische Gebäudeflügel)
+- [ ] **Brücke**: Pfad mit Bogen nach unten + Geländer an beiden Seiten
 - [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
 

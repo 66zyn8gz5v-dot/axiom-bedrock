@@ -4,7 +4,7 @@ import { runEdit } from "../core/edit.js";
 import { air, isSolidId } from "../core/pattern.js";
 import { fbm } from "../core/noise.js";
 import { markDirty } from "../core/state.js";
-import { now, target } from "../core/util.js";
+import { err, now, target } from "../core/util.js";
 import { Modal } from "../ui/forms.js";
 import { strokeId } from "./registry.js";
 
@@ -21,6 +21,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["mesa", "Stempel: Hochplateau (ein Klick)"],
   ["island", "Stempel: Insel mit Strand (ein Klick)"],
   ["canyon", "Stempel: Schlucht in Blickrichtung (ein Klick)"],
+  ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
 ]);
 
@@ -77,6 +78,55 @@ function groundY(es, x, z, from, range) {
   return null;
 }
 
+/**
+ * Wasserfall: schmale Rinne von der getroffenen Stelle bis zur Oberkante in die Wand schneiden,
+ * oben eine Wasserquelle setzen und unten ein kleines Becken ausheben.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {{radius:number, strength:number}} c
+ */
+function waterfall(ses, t, c) {
+  const n = t.normal;
+  if (n.y !== 0) return err(ses.player, "Für den Wasserfall auf eine senkrechte Felswand zielen (nicht auf Boden/Decke).");
+  const W = BlockPermutation.resolve("minecraft:water");
+  const pool = Math.max(1, Math.min(4, Math.round(c.radius / 2)));
+  runEdit(ses.player, { label: "Wasserfall" }, function* (es) {
+    const A = air();
+    const p = t.pos;
+    // Oberkante der Wand suchen (max. 64 Blöcke nach oben)
+    let top = p.y;
+    while (top < p.y + 64) {
+      const above = es.id(p.x, top + 1, p.z);
+      if (!above || !isSolidId(above)) break;
+      top++;
+    }
+    // Rinne: 1 breit, 2 tief, von der Trefferhöhe bis zur Oberkante
+    for (let y = p.y; y <= top; y++) {
+      for (let d = 0; d <= 1; d++) es.set(p.x - n.x * d, y, p.z - n.z * d, A);
+    }
+    yield;
+    // Quelle oben in der Rinne – das Wasser fließt die Wand hinunter
+    es.set(p.x - n.x, top, p.z - n.z, W);
+    // Becken vor der Wand am Boden
+    const fx = p.x + n.x * (pool + 1);
+    const fz = p.z + n.z * (pool + 1);
+    let gy = p.y;
+    while (gy > p.y - 64) {
+      const id = es.id(fx, gy, fz);
+      if (id && isSolidId(id)) break;
+      gy--;
+    }
+    for (let dx = -pool; dx <= pool; dx++)
+      for (let dz = -pool; dz <= pool; dz++) {
+        if (dx * dx + dz * dz > pool * pool + pool) continue;
+        for (let dy = 0; dy < 2; dy++) {
+          const id = es.id(fx + dx, gy - dy, fz + dz);
+          if (id && isSolidId(id)) es.set(fx + dx, gy - dy, fz + dz, W);
+        }
+      }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const terrainTool = {
   id: "axiom:terrain",
@@ -87,12 +137,13 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if (["mountain", "crater", "volcano", "mesa", "island", "canyon"].includes(c.mode)) {
+    if (["mountain", "crater", "volcano", "mesa", "island", "canyon", "waterfall"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
       if (now() - last < 20) return;
     }
+    if (c.mode === "waterfall") return waterfall(ses, t, c);
     const ctr = t.pos;
     const R = c.radius;
     const vd = ses.player.getViewDirection();

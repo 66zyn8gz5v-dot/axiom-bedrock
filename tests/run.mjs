@@ -624,6 +624,28 @@ console.log("Blaupausen-Vorschau & Auswahl direkt speichern");
   check(!ses.bpPreview, "Vorschau läuft ab");
 }
 
+console.log("Wasserfall");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 5, y: 65, z: -3 }, { x: 7, y: 74, z: 3 });
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  Object.assign(ses.s.terrain, { mode: "waterfall", radius: 6 });
+  await roundTrip("Wasserfall", () => use("axiom:terrain", { x: 5, y: 66, z: 0 }, { face: "West" }));
+  await use("axiom:terrain", { x: 5, y: 66, z: 0 }, { face: "West" });
+  check(dim._get(6, 74, 0).type.id === "minecraft:water", "Wasserfall: Quelle oben");
+  check(dim._get(5, 70, 0).type.id === "minecraft:air", "Wasserfall: Rinne frei");
+  check(dim._get(1, 64, 0).type.id === "minecraft:water", "Wasserfall: Becken unten");
+  await undo();
+  const m0 = player.messages.length;
+  system.currentTick += 100;
+  await use("axiom:terrain", { x: 0, y: 64, z: 0 }, { face: "Up" });
+  check(player.messages.slice(m0).some((m) => m.includes("Felswand")), "Wasserfall: Boden wird abgelehnt");
+  await undo();
+  dim.blocks.clear();
+  ses.s.terrain.mode = "raise";
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

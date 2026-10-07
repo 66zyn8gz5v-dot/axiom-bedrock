@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.13.0 – 07.10.2026 (nächtlicher Ausbau)
+- **Stempel „Wasserfall“:** im Terrain-Werkzeug auf eine senkrechte Felswand zielen und benutzen – schneidet eine
+  Rinne bis zur Oberkante, setzt oben eine Wasserquelle und hebt unten vor der Wand ein Becken aus
+  (Beckengröße über den Radius)
+
 ## 0.12.0 – 06.10.2026 (nächtlicher Ausbau)
 - **Blaupausen-Vorschau:** in der Blaupausen-Liste „Vorschau am Blickziel“ wählen – 15 Sekunden lang zeigt ein
   blauer Rahmen, wie groß die Blaupause wäre und wo sie landen würde (folgt deinem Blick)
