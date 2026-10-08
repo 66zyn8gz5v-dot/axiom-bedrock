@@ -192,6 +192,56 @@ function buildRiver(ses) {
   });
 }
 
+/**
+ * Brücke: Belag entlang der Punkte mit Bogen nach oben und Geländer an beiden Rändern.
+ * @param {import("../core/state.js").Session} ses
+ */
+function buildBridge(ses) {
+  const c = ses.s.bridge;
+  let deck;
+  let rail;
+  try {
+    deck = picker(c.deck.trim() ? parsePattern(c.deck) : ses.s.pattern);
+    rail = c.railing.trim() ? picker(parsePattern(c.railing)) : null;
+  } catch (e) {
+    return err(ses.player, "Block ungültig: " + e);
+  }
+  const samples = samplePath(ses.pathPoints, ses.s.path.smooth);
+  // Länge entlang des Pfads für den Bogen
+  const acc = [0];
+  for (let i = 1; i < samples.length; i++) acc.push(acc[i - 1] + Math.hypot(samples[i].x - samples[i - 1].x, samples[i].z - samples[i - 1].z));
+  const total = acc[acc.length - 1] || 1;
+  const W = c.width;
+  runEdit(ses.player, { label: "Brücke", symmetry: true }, function* (es) {
+    const done = new Set();
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i];
+      const a = samples[Math.max(0, i - 1)];
+      const b = samples[Math.min(samples.length - 1, i + 1)];
+      let dx = b.x - a.x;
+      let dz = b.z - a.z;
+      const l = Math.hypot(dx, dz) || 1;
+      dx /= l;
+      dz /= l;
+      const y = Math.round(s.y + c.arch * Math.sin(Math.PI * (acc[i] / total)));
+      for (let w = -W - (rail ? 1 : 0); w <= W + (rail ? 1 : 0); w++) {
+        const x = Math.round(s.x - dz * w);
+        const z = Math.round(s.z + dx * w);
+        const edge = Math.abs(w) === W + 1;
+        const k = `${x},${y},${z},${edge ? 1 : 0}`;
+        if (done.has(k)) continue;
+        done.add(k);
+        if (!edge) es.set(x, y, z, deck());
+        else if (rail) {
+          es.set(x, y, z, deck());
+          es.set(x, y + 1, z, rail());
+        }
+      }
+      if (i % 8 === 0) yield;
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const pathTool = {
   id: "axiom:path",
@@ -219,6 +269,23 @@ export const pathTool = {
   async menu(ses) {
     await menu(ses.player, "Pfad", `${ses.pathPoints.length} Punkte gesetzt.`, [
       { text: "§aPfad bauen", run: () => buildPath(ses) },
+      {
+        text: "Brücke entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen (Anfang und Ende der Brücke).");
+          const c = ses.s.bridge;
+          const r = await new Modal("Brücke")
+            .slider("width", "Halbe Breite (1 = 3 Blöcke breit)", 0, 6, 1, c.width)
+            .slider("arch", "Bogenhöhe in der Mitte", 0, 16, 1, c.arch)
+            .text("deck", "Belag (leer = aktives Muster)", formatPattern(ses.s.pattern), c.deck)
+            .text("railing", "Geländer (leer = keins)", "oak_fence", c.railing)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { width: r.width, arch: r.arch, deck: String(r.deck), railing: String(r.railing) });
+          markDirty(ses);
+          buildBridge(ses);
+        },
+      },
       {
         text: "Fluss entlang der Punkte",
         run: async () => {

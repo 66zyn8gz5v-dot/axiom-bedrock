@@ -37,6 +37,7 @@ Neue Ideen unten anhängen.
 - [x] v0.11: Fluss entlang Pfadpunkten, Blaupausen-Verwaltung (Größe, Autor, Datum, umbenennen)
 - [x] v0.12: Blaupausen-Vorschau am Blickziel, Auswahl direkt als Blaupause speichern
 - [x] v0.13: Stempel Wasserfall (Rinne in Felswand, Quelle oben, Becken unten)
+- [x] v0.14: Gespiegelte Kopie neben der Auswahl, Brücke entlang Pfadpunkten (Bogen, Belag, Geländer)
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
@@ -47,8 +48,8 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Gespiegelte Kopie**: Auswahl kopieren und gespiegelt direkt daneben einfügen (symmetrische Gebäudeflügel)
-- [ ] **Brücke**: Pfad mit Bogen nach unten + Geländer an beiden Seiten
+- [ ] **Brücke**: Stützpfeiler bis zum Boden/Wasser als Option
+- [ ] **Säulen-Werkzeug**: Säule vom Blickziel bis zum Boden/zur Decke mit Sockel & Kapitell
 - [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
 

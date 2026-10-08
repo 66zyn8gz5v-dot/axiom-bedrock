@@ -224,6 +224,14 @@ export async function selectionMenu(ses) {
           { text: "90° gegen Uhrzeigersinn", run: () => ops.opTransform(ses, 270, "None") },
           { text: "Ost-West spiegeln", run: () => ops.opTransform(ses, 0, "X") },
           { text: "Nord-Süd spiegeln", run: () => ops.opTransform(ses, 0, "Z") },
+          {
+            text: "Gespiegelte Kopie in Blickrichtung daneben",
+            run: async () => {
+              const d = cardinal(p.getViewDirection(), true);
+              const r = await new Modal(`Gespiegelte Kopie nach ${dirName(d)}`).slider("gap", "Abstand", 0, 32, 1, 0).show(p);
+              if (r) ops.opMirrorCopy(ses, d, r.gap);
+            },
+          },
         ]),
     },
     {

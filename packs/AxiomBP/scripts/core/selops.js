@@ -247,6 +247,33 @@ export function opStack(ses, dir, count, gap) {
 }
 
 /**
+ * Gespiegelte Kopie direkt neben die Auswahl setzen (z.B. zweiter Gebäudeflügel).
+ * @param {import("./state.js").Session} ses
+ * @param {{x:number,y:number,z:number}} dir horizontale Blickrichtung (Einheitsvektor)
+ * @param {number} gap Abstand zwischen Original und Kopie
+ */
+export function opMirrorCopy(ses, dir, gap) {
+  const sel = need(ses);
+  if (!sel) return;
+  if (dir.y !== 0) return err(ses.player, "Gespiegelte Kopie nur seitlich (nach Norden/Süden/Osten/Westen schauen).");
+  const d = selDims(sel);
+  const off = v(dir.x * (d.x + gap), 0, dir.z * (d.z + gap));
+  const o = v(sel.min.x + off.x, sel.min.y, sel.min.z + off.z);
+  const min = vmin(sel.min, o);
+  const max = vmax(sel.max, v(o.x + d.x - 1, o.y + d.y - 1, o.z + d.z - 1));
+  const mirror = dir.x !== 0 ? "X" : "Z";
+  const player = ses.player;
+  return runEdit(player, { label: "Gespiegelte Kopie", region: { min, max }, forceRegion: true, useMask: false }, function* (es) {
+    const clip = yield* copySelection(player, sel, false, true);
+    try {
+      es.count += yield* pasteClip(player, clip, es.dim, o, { rotation: 0, mirror, air: sel.kind === "box", entities: false }, false);
+    } finally {
+      freeClip(clip);
+    }
+  });
+}
+
+/**
  * Array: Kopien mit frei wählbarem Versatz und optionaler Drehung pro Kopie (z.B. Wendeltreppen, Säulenreihen).
  * @param {import("./state.js").Session} ses
  * @param {{x:number,y:number,z:number}} off Versatz pro Kopie

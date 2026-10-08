@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.14.0 – 08.10.2026 (nächtlicher Ausbau)
+- **Gespiegelte Kopie:** Axiom-Menü → Auswahl bearbeiten → Drehen / Spiegeln → „Gespiegelte Kopie in Blickrichtung
+  daneben“. Setzt eine spiegelverkehrte Kopie direkt neben die Auswahl – ideal für symmetrische Gebäudeflügel
+- **Brücke:** Mit dem Pfad-Werkzeug Anfang und Ende (oder mehr Punkte) setzen, dann Schleichen+Benutzen → „Brücke
+  entlang der Punkte“. Breite, Bogenhöhe, Belag und Geländer sind einstellbar
+
 ## 0.13.0 – 07.10.2026 (nächtlicher Ausbau)
 - **Stempel „Wasserfall“:** im Terrain-Werkzeug auf eine senkrechte Felswand zielen und benutzen – schneidet eine
   Rinne bis zur Oberkante, setzt oben eine Wasserquelle und hebt unten vor der Wand ein Becken aus

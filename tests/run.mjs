@@ -646,6 +646,34 @@ console.log("Wasserfall");
   ses.s.terrain.mode = "raise";
 }
 
+console.log("Gespiegelte Kopie & Brücke");
+{
+  dim.blocks.clear();
+  ses.s.mask = { mode: "none", ids: [] };
+  ses.s.symmetry = { x: false, z: false, center: null };
+  // Asymmetrisches L: Block bei x=0 hoch, Rest flach
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 3, y: 65, z: 0 });
+  ops.opFill(ses, parsePattern("bricks"));
+  await drain();
+  dim._set(0, 66, 0, BlockPermutation.resolve("minecraft:gold_block"));
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 3, y: 66, z: 0 });
+  await roundTrip("Gespiegelte Kopie", () => ops.opMirrorCopy(ses, { x: 1, y: 0, z: 0 }, 0));
+  ops.opMirrorCopy(ses, { x: 1, y: 0, z: 0 }, 0);
+  await drain();
+  check(dim._get(7, 66, 0).type.id === "minecraft:gold_block" && dim._get(4, 66, 0).type.id === "minecraft:air", "Kopie gespiegelt: Turm am äußeren Ende");
+  await undo();
+  dim.blocks.clear();
+  ses.pathPoints = [{ x: 0, y: 70, z: 0 }, { x: 20, y: 70, z: 0 }];
+  answers.push({ selectText: "Brücke" }, { set: { "Halbe Breite": 1, Bogenhöhe: 4, Belag: "oak_planks", Geländer: "oak_fence" } });
+  await roundTrip("Brücke", () => use("axiom:path", G, { sneak: true }));
+  answers.push({ selectText: "Brücke" }, { set: { "Halbe Breite": 1, Bogenhöhe: 4, Belag: "oak_planks", Geländer: "oak_fence" } });
+  await use("axiom:path", G, { sneak: true });
+  check(dim._get(10, 74, 0).type.id === "minecraft:oak_planks" && dim._get(0, 70, 0).type.id === "minecraft:oak_planks", "Brücke: Bogen in der Mitte höher");
+  check(dim._get(10, 75, 2).type.id === "minecraft:oak_fence", "Brücke: Geländer am Rand");
+  await undo();
+  ses.pathPoints = [];
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

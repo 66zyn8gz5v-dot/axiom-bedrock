@@ -68,7 +68,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Maler** | Oberfläche bemalen, nur Oberseite, alles ersetzen, Rauschen-Maler (2 Muster), Höhenverlauf, nach Neigung (flach Gras, steil Stein), Streuen (z.B. Gras & Blumen verteilen), Flutfüllung (See/Becken ab Blickziel füllen), Säubern (Pflanzen/Wasser weg). |
 | **Terrain** | Gelände anheben, absenken, einebnen, glätten, Hügel, Terrassen – mit weichem Rand. Dazu Stempel für **Berg**, **Krater**, **Vulkan**, **Hochplateau**, **Insel** (mit Sandstrand), **Schlucht** (in Blickrichtung) und **Wasserfall** (auf eine Felswand zielen) – je ein Klick – sowie **Treppen an Stufenkanten** (setzt passende Treppen oder wahlweise Stufen-Platten vor 1-Block-Stufen). |
 | **Extrudieren** | Zieht eine ganze Fläche verbundener Blöcke um eine Schicht heraus bzw. drückt sie hinein. |
-| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen. Im Menü außerdem **Lasso** (Fläche innerhalb der Punkte auswählen) und **Fluss** (Flussbett mit Wasser entlang der Punkte, Breite/Tiefe/Bett-Block einstellbar). – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
+| **Pfad** | Punkte setzen und als gerade Linie oder weiche Kurve bauen. Im Menü außerdem **Lasso** (Fläche innerhalb der Punkte auswählen), **Brücke** (Belag mit Bogen und Geländer) und **Fluss** (Flussbett mit Wasser entlang der Punkte, Breite/Tiefe/Bett-Block einstellbar). – rund (auch hohl als Röhre) oder flach als Straße/Rampe mit Unterbau bis zum Boden. |
 | **Text** | Schreibt Text aus Blöcken – an eine Wand oder flach auf den Boden, in bis zu 8-facher Größe. Modus **Pixel-Art**: Zeilen aus Zeichen (z.B. `rr.rr/rrrrr`) plus Legende (`r=red_wool`) werden zu einem Block-Bild – mit fertigen Vorlagen (Herz, Creeper, Schwert, Smiley, Stern, Pfeil, Haus). |
 | **Lineal** | Misst Abstände und Größen zwischen zwei Punkten. |
 | **Blockzustand-Editor** | Ändert Zustände eines Blocks (Richtung, Achse, offen/zu, Stufe …). Schlagen = drehen. |
@@ -79,7 +79,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 ### Auswahl bearbeiten (im Axiom-Menü)
 Füllen · Ersetzen · Leeren · Hohlräume füllen · Verlauf (Muster 1 → 2) · Ausdünnen (Ruinen) · Wasser ablassen · Mit Wasser füllen · Wände · Umriss · Aushöhlen · Überziehen · Natürlich machen · Glätten ·
 Kopieren · Ausschneiden · Stapeln · Array (Versatz + Drehung pro Kopie, z.B. Wendeltreppen) · Verschieben ·
-Drehen (90/180/270°) · Spiegeln · Zwischenablage verstreuen (z.B. Baum-Blaupause als Wald) · Analysieren (Blöcke zählen) ·
+Drehen (90/180/270°) · Spiegeln · Gespiegelte Kopie daneben (symmetrische Gebäudeflügel) · Zwischenablage verstreuen (z.B. Baum-Blaupause als Wald) · Analysieren (Blöcke zählen) ·
 Auswahl erweitern/verkleinern/verschieben · in 3D aufblasen/schrumpfen · auf Oberfläche begrenzen · per Koordinaten · Auswahl aufheben.
 
 Auswahl-Modus (in den Auswahl-Werkzeugen): **Ersetzen**, **Hinzufügen (+)** oder **Entfernen (−)** – so lassen
