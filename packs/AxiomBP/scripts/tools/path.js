@@ -237,6 +237,16 @@ function buildBridge(ses) {
           es.set(x, y + 1, z, rail());
         }
       }
+      // Stützpfeiler unter der Mittellinie bis zum festen Boden (durch Wasser hindurch)
+      if (c.pillars > 0 && i > 0 && i < samples.length - 1 && Math.floor(acc[i] / c.pillars) !== Math.floor(acc[i - 1] / c.pillars)) {
+        const px = Math.round(s.x);
+        const pz = Math.round(s.z);
+        for (let yy = y - 1; yy > y - 96; yy--) {
+          const id = es.id(px, yy, pz);
+          if (!id || isSolidId(id)) break;
+          es.set(px, yy, pz, deck());
+        }
+      }
       if (i % 8 === 0) yield;
     }
   });
@@ -279,9 +289,10 @@ export const pathTool = {
             .slider("arch", "Bogenhöhe in der Mitte", 0, 16, 1, c.arch)
             .text("deck", "Belag (leer = aktives Muster)", formatPattern(ses.s.pattern), c.deck)
             .text("railing", "Geländer (leer = keins)", "oak_fence", c.railing)
+            .slider("pillars", "Stützpfeiler alle N Blöcke (0 = keine)", 0, 32, 1, c.pillars)
             .show(ses.player);
           if (!r) return;
-          Object.assign(c, { width: r.width, arch: r.arch, deck: String(r.deck), railing: String(r.railing) });
+          Object.assign(c, { width: r.width, arch: r.arch, deck: String(r.deck), railing: String(r.railing), pillars: r.pillars });
           markDirty(ses);
           buildBridge(ses);
         },

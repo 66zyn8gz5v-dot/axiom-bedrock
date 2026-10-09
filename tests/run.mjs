@@ -674,6 +674,37 @@ console.log("Gespiegelte Kopie & Brücke");
   ses.pathPoints = [];
 }
 
+console.log("Säule & Brückenpfeiler");
+{
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("quartz_block");
+  ses.s.pattern2 = parsePattern("smooth_stone");
+  Object.assign(ses.s.shape, { type: "pillar", rx: 1, ry: 3, rz: 1, hollow: false });
+  await roundTrip("Säule vom Boden", () => use("axiom:shape", G, { face: "Up" }));
+  await use("axiom:shape", G, { face: "Up" });
+  check(dim._get(0, 65, 0).type.id === "minecraft:smooth_stone" && dim._get(0, 68, 0).type.id === "minecraft:quartz_block" && dim._get(0, 71, 0).type.id === "minecraft:smooth_stone" && dim._get(2, 65, 0).type.id === "minecraft:smooth_stone", "Säule: Sockel, Schaft, Kapitell");
+  await undo();
+  // Unter einer Decke: nach unten bis zum Boden
+  ses.sel = boxSel(dim.id, { x: -3, y: 75, z: -3 }, { x: 3, y: 75, z: 3 });
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  await use("axiom:shape", { x: 0, y: 75, z: 0 }, { face: "Down" });
+  check(dim._get(0, 70, 0).type.id === "minecraft:quartz_block" && dim._get(0, 65, 0).type.id === "minecraft:smooth_stone", "Säule von der Decke bis zum Boden");
+  await undo();
+  await undo();
+  dim.blocks.clear();
+  ses.pathPoints = [{ x: 0, y: 72, z: 0 }, { x: 24, y: 72, z: 0 }];
+  answers.push({ selectText: "Brücke" }, { set: { "Halbe Breite": 1, Bogenhöhe: 0, Belag: "stone_bricks", Geländer: "", Stützpfeiler: 8 } });
+  await roundTrip("Brücke mit Pfeilern", () => use("axiom:path", G, { sneak: true }));
+  answers.push({ selectText: "Brücke" }, { set: { "Halbe Breite": 1, Bogenhöhe: 0, Belag: "stone_bricks", Geländer: "", Stützpfeiler: 8 } });
+  await use("axiom:path", G, { sneak: true });
+  const pillarCols = [...dim.blocks.keys()].filter((k) => k.endsWith(",0") && k.split(",")[1] === "66").length;
+  check(pillarCols >= 2, "Brücke: Pfeiler reichen bis zum Boden (" + pillarCols + ")");
+  await undo();
+  ses.pathPoints = [];
+  ses.s.shape.type = "sphere";
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

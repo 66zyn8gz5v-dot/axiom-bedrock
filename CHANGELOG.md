@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.15.0 – 09.10.2026 (nächtlicher Ausbau)
+- **Säule:** neue Form im Formen-Werkzeug. Auf den Boden zielen = Säule nach oben (Höhe über Radius Y); auf eine Decke
+  oder Wand zielen = Säule bis hinunter zum Boden. Schaft aus dem aktiven Muster, Sockel & Kapitell aus Muster 2
+- **Brücke:** neue Option „Stützpfeiler alle N Blöcke“ – Pfeiler reichen bis zum Boden, auch durch Wasser hindurch
+
 ## 0.14.0 – 08.10.2026 (nächtlicher Ausbau)
 - **Gespiegelte Kopie:** Axiom-Menü → Auswahl bearbeiten → Drehen / Spiegeln → „Gespiegelte Kopie in Blickrichtung
   daneben“. Setzt eine spiegelverkehrte Kopie direkt neben die Auswahl – ideal für symmetrische Gebäudeflügel

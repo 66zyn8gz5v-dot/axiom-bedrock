@@ -1,9 +1,9 @@
 // Formen-Werkzeug: Kugel, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen.
 import { runEdit } from "../core/edit.js";
-import { formatPattern, picker } from "../core/pattern.js";
+import { formatPattern, isSolidId, picker } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
 import { markBlock } from "../core/selection.js";
-import { targetOrAir } from "../core/util.js";
+import { target, targetOrAir } from "../core/util.js";
 import { cardinal, v } from "../core/vec.js";
 import { Modal } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
@@ -19,6 +19,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["arch", "Bogen"],
   ["prism", "Prisma (Dach, entlang X)"],
   ["spiral", "Spirale (Wendelrampe)"],
+  ["pillar", "Säule mit Sockel & Kapitell (bis zum Boden)"],
 ]);
 
 /**
@@ -141,6 +142,49 @@ function center(ses) {
   return t.hit ? t.pos : t.adjacent;
 }
 
+/**
+ * Säule: runder Schaft (Radius X) mit breiterem Sockel unten und Kapitell oben (Muster 2).
+ * Auf den Boden zielen = nach oben bauen (Höhe 2×Radius Y + 1); auf Decke/Wand/Luft zielen = nach unten bis zum Boden.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function pillar(ses, c) {
+  const t = target(ses.player, ses.s);
+  const air0 = targetOrAir(ses.player, ses.s);
+  const shaft = picker(ses.s.pattern);
+  const deco = picker(ses.s.pattern2);
+  const r = c.rx;
+  runEdit(ses.player, { label: "Säule", symmetry: true }, function* (es) {
+    let bottom;
+    let top;
+    if (t && t.face === "Up") {
+      bottom = t.adjacent.y;
+      top = bottom + 2 * c.ry;
+    } else {
+      // Von oben nach unten bis zum festen Boden
+      const start = t ? t.adjacent : air0.pos;
+      top = start.y;
+      bottom = top;
+      for (let y = top - 1; y > top - 128; y--) {
+        const id = es.id(start.x, y, start.z);
+        if (!id || isSolidId(id)) break;
+        bottom = y;
+      }
+    }
+    const base = t ? t.adjacent : air0.pos;
+    for (let y = bottom; y <= top; y++) {
+      const ring = y === bottom || y === top ? r + 1 : r;
+      const pick = y === bottom || y === top ? deco : shaft;
+      for (let dx = -ring; dx <= ring; dx++)
+        for (let dz = -ring; dz <= ring; dz++) {
+          if (dx * dx + dz * dz > ring * ring + ring * 0.8) continue;
+          es.set(base.x + dx, y, base.z + dz, pick());
+        }
+      yield;
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const shapeTool = {
   id: "axiom:shape",
@@ -148,6 +192,7 @@ export const shapeTool = {
   help: "Benutzen: Form am Blickziel platzieren. Schleichen+Benutzen: Form, Größe, hohl, Block wählen.",
   onUse(ses) {
     const c = { ...ses.s.shape };
+    if (c.type === "pillar") return pillar(ses, c);
     const f = orientedShape(ses, c);
     const ctr = center(ses);
     const pick = picker(ses.s.pattern);
