@@ -4,26 +4,26 @@
     "name": "Axiom Bedrock §7(Verhalten)",
     "description": "Axiom-ähnliche Bauwerkzeuge für Bedrock – Auswahl, Formen, Modellieren, Malen, Zwischenablage, Rückgängig u.v.m.",
     "uuid": "06eb6cc0-990b-4c86-9ac6-a738cbf4c1ea",
-    "version": [0, 15, 0],
+    "version": [0, 16, 0],
     "min_engine_version": [1, 21, 120]
   },
   "modules": [
     {
       "type": "data",
       "uuid": "294c4272-ed5d-448c-8fac-5d5a1d26b03b",
-      "version": [0, 15, 0]
+      "version": [0, 16, 0]
     },
     {
       "type": "script",
       "language": "javascript",
       "uuid": "f8948340-f611-4b95-9ec2-c4698142e437",
       "entry": "scripts/main.js",
-      "version": [0, 15, 0]
+      "version": [0, 16, 0]
     }
   ],
   "dependencies": [
     { "module_name": "@minecraft/server", "version": "2.4.0" },
     { "module_name": "@minecraft/server-ui", "version": "2.0.0" },
-    { "uuid": "a3969edf-36aa-4132-9585-9ee946055c78", "version": [0, 15, 0] }
+    { "uuid": "a3969edf-36aa-4132-9585-9ee946055c78", "version": [0, 16, 0] }
   ]
 }

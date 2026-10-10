@@ -2,7 +2,7 @@
 // Stapeln, Verschieben, Drehen, Spiegeln, Analysieren, Kopieren/Ausschneiden.
 import { BlockPermutation } from "@minecraft/server";
 import { fillBox, runEdit } from "./edit.js";
-import { air, isSolidId, picker, shortId, isAirId } from "./pattern.js";
+import { air, isSolidId, normId, parsePattern, picker, shortId, isAirId } from "./pattern.js";
 import { selContains, selPositions, selSize, shiftSel, selDims, recomputeBounds, SET_LIMIT } from "./selection.js";
 import { copySelection, freeClip, getClip, pasteClip, rotatedSize } from "./clipboard.js";
 import { err, fmtNum, msg } from "./util.js";
@@ -631,6 +631,141 @@ export function opThin(ses, o) {
     const id = es.id(x, y, z);
     if (!id || !isSolidId(id) || Math.random() * 100 >= o.percent) return;
     es.set(x, y, z, o.replace ? pick() : A);
+  });
+}
+
+/**
+ * Dach auf eine Box-Auswahl setzen (oberhalb der Auswahl).
+ * Satteldach: First entlang der längeren Seite, Giebeldreiecke werden mit dem aktiven Muster gefüllt.
+ * Walmdach: auf allen vier Seiten geneigt.
+ * @param {import("./state.js").Session} ses
+ * @param {{type:string, stairs:string, overhang:number}} o
+ */
+export function opRoof(ses, o) {
+  const sel = need(ses);
+  if (!sel) return;
+  if (sel.kind !== "box") return err(ses.player, "Dach geht nur auf eine Box-Auswahl (Grundriss des Hauses).");
+  let stair;
+  try {
+    stair = normId(o.stairs);
+    BlockPermutation.resolve(stair);
+  } catch (e) {
+    return err(ses.player, "Treppenblock ungültig: " + e);
+  }
+  const slab = stair === "minecraft:stone_stairs" ? "minecraft:cobblestone_slab" : stair.replace(/_stairs$/, "_slab");
+  /** @param {number} dir 0 Ost, 1 West, 2 Süd, 3 Nord (Richtung, in die die Treppe ansteigt) */
+  const S = (dir) => BlockPermutation.resolve(stair, { weirdo_direction: dir, upside_down_bit: false });
+  let slabPerm;
+  try {
+    slabPerm = BlockPermutation.resolve(slab);
+  } catch {
+    slabPerm = S(0);
+  }
+  const wall = picker(ses.s.pattern);
+  const x0 = sel.min.x - o.overhang;
+  const x1 = sel.max.x + o.overhang;
+  const z0 = sel.min.z - o.overhang;
+  const z1 = sel.max.z + o.overhang;
+  const base = sel.max.y + 1;
+  const along = x1 - x0 >= z1 - z0 ? "x" : "z";
+  const half = Math.ceil(((along === "x" ? z1 - z0 : x1 - x0) + 1) / 2);
+  const height = o.type === "hip" ? Math.ceil((Math.min(x1 - x0, z1 - z0) + 1) / 2) : half;
+  const region = { min: v(x0, base, z0), max: v(x1, base + height + 1, z1) };
+  runEdit(ses.player, { label: o.type === "hip" ? "Walmdach" : "Satteldach", region, useMask: false }, function* (es) {
+    if (o.type === "hip") {
+      for (let k = 0; ; k++) {
+        const ax = x0 + k;
+        const bx = x1 - k;
+        const az = z0 + k;
+        const bz = z1 - k;
+        if (ax > bx || az > bz) break;
+        const y = base + k;
+        if (ax === bx || az === bz) {
+          for (let x = ax; x <= bx; x++) for (let z = az; z <= bz; z++) es.set(x, y, z, slabPerm);
+          break;
+        }
+        for (let x = ax; x <= bx; x++) {
+          es.set(x, y, az, S(2));
+          es.set(x, y, bz, S(3));
+        }
+        for (let z = az + 1; z < bz; z++) {
+          es.set(ax, y, z, S(0));
+          es.set(bx, y, z, S(1));
+        }
+        yield;
+      }
+      return;
+    }
+    // Satteldach
+    const lo = along === "x" ? z0 : x0;
+    const hi = along === "x" ? z1 : x1;
+    const a0 = along === "x" ? x0 : z0;
+    const a1 = along === "x" ? x1 : z1;
+    for (let k = 0; lo + k <= hi - k; k++) {
+      const y = base + k;
+      const p = lo + k;
+      const q = hi - k;
+      for (let a = a0; a <= a1; a++) {
+        const at = (/** @type {number} */ c, /** @type {import("@minecraft/server").BlockPermutation} */ perm) =>
+          along === "x" ? es.set(a, y, c, perm) : es.set(c, y, a, perm);
+        if (p === q) at(p, slabPerm);
+        else {
+          at(p, S(along === "x" ? 2 : 0));
+          at(q, S(along === "x" ? 3 : 1));
+        }
+      }
+      // Giebel: unter dem Dach an beiden Enden (ohne Überstand) mit Wandmaterial füllen
+      if (k > 0) {
+        const g0 = along === "x" ? sel.min.x : sel.min.z;
+        const g1 = along === "x" ? sel.max.x : sel.max.z;
+        for (let c = p; c <= q; c++) {
+          for (const g of [g0, g1]) {
+            if (along === "x") es.set(g, y - 1, c, wall());
+            else es.set(c, y - 1, g, wall());
+          }
+        }
+      }
+      yield;
+    }
+  });
+}
+
+
+/**
+ * Fenster-Raster in eine Wand-Auswahl setzen (Wand = Box, die in X oder Z nur dünn ist).
+ * @param {import("./state.js").Session} ses
+ * @param {{w:number, h:number, gap:number, sill:number, block:string}} o
+ */
+export function opWindows(ses, o) {
+  const sel = need(ses);
+  if (!sel) return;
+  if (sel.kind !== "box") return err(ses.player, "Fenster-Raster geht nur auf eine Box-Auswahl (die Wand).");
+  const d = selDims(sel);
+  const along = d.x >= d.z ? "x" : "z";
+  let glass;
+  try {
+    glass = picker(parsePattern(o.block));
+  } catch (e) {
+    return err(ses.player, "Fensterblock ungültig: " + e);
+  }
+  const len = along === "x" ? d.x : d.z;
+  const step = o.w + o.gap;
+  const count = Math.floor((len - o.gap) / step);
+  if (count < 1) return err(ses.player, "Wand ist zu schmal für diese Fenstergröße.");
+  // Fenster mittig verteilen
+  const start = Math.floor((len - (count * step - o.gap)) / 2);
+  runEdit(ses.player, { label: "Fenster-Raster", region: { min: sel.min, max: sel.max }, useMask: false }, function* (es) {
+    for (let y = sel.min.y + o.sill; y + o.h - 1 <= sel.max.y; y += o.h + Math.max(1, o.gap)) {
+      for (let i = 0; i < count; i++) {
+        const s0 = start + i * step;
+        for (let a = s0; a < s0 + o.w; a++)
+          for (let dy = 0; dy < o.h; dy++) {
+            if (along === "x") for (let z = sel.min.z; z <= sel.max.z; z++) es.set(sel.min.x + a, y + dy, z, glass());
+            else for (let x = sel.min.x; x <= sel.max.x; x++) es.set(x, y + dy, sel.min.z + a, glass());
+          }
+      }
+      yield;
+    }
   });
 }
 

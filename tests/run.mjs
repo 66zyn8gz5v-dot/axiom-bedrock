@@ -705,6 +705,28 @@ console.log("Säule & Brückenpfeiler");
   ses.s.shape.type = "sphere";
 }
 
+console.log("Dach & Fenster");
+{
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("oak_planks");
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 8, y: 68, z: 4 });
+  await roundTrip("Satteldach", () => ops.opRoof(ses, { type: "gable", stairs: "spruce_stairs", overhang: 0 }));
+  ops.opRoof(ses, { type: "gable", stairs: "spruce_stairs", overhang: 0 });
+  await drain();
+  const st = dim._get(3, 69, 0);
+  check(st.type.id === "minecraft:spruce_stairs" && st.getAllStates().weirdo_direction === 2, "Satteldach: Traufe Nord steigt nach Süden");
+  check(dim._get(3, 71, 2).type.id === "minecraft:spruce_slab", "Satteldach: First als Stufe");
+  check(dim._get(0, 69, 2).type.id === "minecraft:oak_planks", "Satteldach: Giebel gefüllt");
+  await undo();
+  await roundTrip("Walmdach", () => ops.opRoof(ses, { type: "hip", stairs: "spruce_stairs", overhang: 1 }));
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 9, y: 70, z: 0 });
+  await roundTrip("Fenster-Raster", () => ops.opWindows(ses, { w: 2, h: 2, gap: 2, sill: 1, block: "glass_pane" }));
+  ops.opWindows(ses, { w: 2, h: 2, gap: 2, sill: 1, block: "glass_pane" });
+  await drain();
+  check(dim._get(2, 66, 0).type.id === "minecraft:glass_pane" && dim._get(7, 67, 0).type.id === "minecraft:glass_pane" && dim._get(4, 66, 0).type.id !== "minecraft:glass_pane", "Fenster-Raster: Fenster mit Abstand");
+  await undo();
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

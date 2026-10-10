@@ -39,6 +39,7 @@ Neue Ideen unten anhängen.
 - [x] v0.13: Stempel Wasserfall (Rinne in Felswand, Quelle oben, Becken unten)
 - [x] v0.14: Gespiegelte Kopie neben der Auswahl, Brücke entlang Pfadpunkten (Bogen, Belag, Geländer)
 - [x] v0.15: Säule mit Sockel & Kapitell (Formen), Stützpfeiler für Brücken
+- [x] v0.16: Dach aufsetzen (Sattel-/Walmdach mit Treppen, Überstand, Giebel), Fenster-Raster für Wände
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
@@ -49,8 +50,8 @@ Neue Ideen unten anhängen.
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
 ## Als Nächstes
-- [ ] **Dach über Auswahl**: Sattel- oder Walmdach automatisch passend auf eine Box-Auswahl setzen (mit Treppen)
-- [ ] **Fenster-Raster**: in einer Wand-Auswahl regelmäßig Fenster aussparen/einsetzen (Abstand, Größe)
+- [ ] **Haus-Rohbau**: aus einer Box-Auswahl Wände, Boden, Tür-Öffnung, Fenster und Dach in einem Schritt
+- [ ] **Dach**: Pultdach und Zeltdach, Dachrinne/Traufe mit umgedrehten Treppen
 - [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
 

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.16.0 – 10.10.2026 (nächtlicher Ausbau)
+- **Dach aufsetzen:** Grundriss eines Hauses als Box auswählen (bis zur Oberkante der Wände), dann Axiom-Menü →
+  Auswahl bearbeiten → „Dach aufsetzen“. Satteldach (First entlang der langen Seite, Giebel aus dem aktiven Muster)
+  oder Walmdach, mit frei wählbarer Treppenart und Dachüberstand
+- **Fenster-Raster:** eine Wand als Box auswählen → „Fenster-Raster“. Setzt gleichmäßig verteilte Fenster
+  (Breite, Höhe, Abstand, Brüstungshöhe, Fensterblock einstellbar)
+
 ## 0.15.0 – 09.10.2026 (nächtlicher Ausbau)
 - **Säule:** neue Form im Formen-Werkzeug. Auf den Boden zielen = Säule nach oben (Höhe über Radius Y); auf eine Decke
   oder Wand zielen = Säule bis hinunter zum Boden. Schaft aus dem aktiven Muster, Sockel & Kapitell aus Muster 2

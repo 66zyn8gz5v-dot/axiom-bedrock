@@ -133,6 +133,46 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Dach aufsetzen (Sattel-/Walmdach)",
+      run: async () => {
+        const c = ses.s.roof;
+        const r = await new Modal("Dach")
+          .dropdown(
+            "type",
+            "Dachform (Giebel aus aktivem Muster)",
+            [
+              ["gable", "Satteldach (First entlang der langen Seite)"],
+              ["hip", "Walmdach (alle Seiten geneigt)"],
+            ],
+            c.type
+          )
+          .text("stairs", "Treppenblock", "spruce_stairs", c.stairs)
+          .slider("overhang", "Dachüberstand", 0, 3, 1, c.overhang)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, { type: r.type, stairs: String(r.stairs) || "spruce_stairs", overhang: r.overhang });
+        markDirty(ses);
+        ops.opRoof(ses, c);
+      },
+    },
+    {
+      text: "Fenster-Raster (Wand-Auswahl)",
+      run: async () => {
+        const c = ses.s.windows;
+        const r = await new Modal("Fenster-Raster")
+          .slider("w", "Fensterbreite", 1, 8, 1, c.w)
+          .slider("h", "Fensterhöhe", 1, 8, 1, c.h)
+          .slider("gap", "Abstand zwischen Fenstern", 1, 8, 1, c.gap)
+          .slider("sill", "Höhe der Fensterbank über dem Boden", 0, 8, 1, c.sill)
+          .text("block", "Fensterblock", "glass_pane", c.block)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, { w: r.w, h: r.h, gap: r.gap, sill: r.sill, block: String(r.block) || "glass_pane" });
+        markDirty(ses);
+        ops.opWindows(ses, c);
+      },
+    },
+    {
       text: "Ausdünnen (Ruinen / Verfall)",
       run: async () => {
         const c = ses.s.thin;
