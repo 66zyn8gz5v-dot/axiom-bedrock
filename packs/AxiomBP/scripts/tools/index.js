@@ -10,6 +10,7 @@ import { builderTool } from "./builder.js";
 import { entityTool } from "./entity.js";
 import { rulerTool, tinkerTool, bulldozerTool, undoTool } from "./misc.js";
 import { mainMenu } from "../ui/main.js";
+import { guideTool } from "../ui/guide.js";
 
 /** @type {import("./registry.js").Tool} */
 export const menuTool = {
@@ -40,6 +41,7 @@ export const TOOL_LIST = [
   bulldozerTool,
   entityTool,
   undoTool,
+  guideTool,
 ];
 
 /** @type {Map<string, import("./registry.js").Tool>} */

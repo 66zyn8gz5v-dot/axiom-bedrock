@@ -18,6 +18,9 @@ npm run check   # Typprüfung
 npm test        # alle Werkzeuge inkl. Rückgängig/Wiederherstellen gegen die Attrappe
 npm run build   # erzeugt dist/AxiomBedrock.mcaddon (wird mit eingecheckt, damit der Nutzer es herunterladen kann)
 ```
+Das 3D-Handbuch (Item `axiom:guide`) wird aus `tools/guide.py` erzeugt (Seitenbilder + `ui/guide_pages.js`).
+Neue Funktionen kurz und kindgerecht dort ergänzen; Seiten dürfen nicht überlaufen (Build bricht sonst ab).
+
 Neue Werkzeuge: Modul in `packs/AxiomBP/scripts/tools/`, in `tools/index.js` eintragen, Item + Icon in
 `tools/build.py` / `tools/icons.py` ergänzen, Test in `tests/run.mjs` hinzufügen, README + ROADMAP aktualisieren.
 Versionsnummer in beiden `manifest.json` (Header, Module, Abhängigkeit) gemeinsam erhöhen.

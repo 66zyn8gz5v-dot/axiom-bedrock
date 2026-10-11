@@ -35,6 +35,10 @@ oder einen eigenen Bedrock-Server mit dem Add-on betreiben.
 
 ## Schnellstart
 
+> **Neu: das Axiom-Handbuch.** Beim Betreten bekommst du ein Buch. Benutze es – dann klappt ein großes 3D-Buch vor
+> dir auf, das alle Werkzeuge mit Bildern erklärt. **Schlagen** oder **Benutzen** auf das Buch = umblättern,
+> **Schleichen + Schlagen** = zurück, das Buch-Item nochmal benutzen = schließen. Ideal, um es Freunden zu zeigen.
+
 1. **Axiom-Menü** benutzen → **Werkzeuge holen → Alle Werkzeuge**.
 2. Mit der **Box-Auswahl** zweimal auf Blöcke zielen und benutzen → Bereich ist markiert (Partikel-Rahmen).
 3. Mit einem Axiom-Werkzeug einen Block **schlagen** → dieser Block wird dein aktiver Block (Pipette).
@@ -74,6 +78,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Blockzustand-Editor** | Ändert Zustände eines Blocks (Richtung, Achse, offen/zu, Stufe …). Schlagen = drehen. |
 | **Bulldozer** | Baut Blöcke auf große Entfernung sofort ab (einzeln oder im Radius). |
 | **Kreaturen** | Kreaturen, Rüstungsständer & Co. im Blick an-/abwählen (oder alle rund ums Blickziel bzw. in der Block-Auswahl) und dann verschieben, zum Blickziel setzen, zu dir holen, drehen, benennen, kopieren oder löschen. Schlagen = Auswahl leeren. |
+| **Axiom-Handbuch** | 3D-Buch mit allen Erklärungen und Bildern, das vor dir aufklappt (auch als Text im Hilfe-Menü). |
 | **Rückgängig** | Benutzen = Rückgängig, Schleichen + Benutzen = Wiederherstellen (40 Schritte pro Spieler). Im Menü „Verlauf“ kann man gezielt zu einem Schritt zurückspringen. |
 
 ### Auswahl bearbeiten (im Axiom-Menü)
@@ -129,7 +134,7 @@ Tageszeit, Wetter, Tageszyklus/Wetterwechsel, Mob-Spawning, Feuer, Mob-Griefing,
 Wie bei Axiom: bis zu 9 Hotbars speichern und mit einem Klick wechseln.
 
 ### Chat-Befehle (Handy/PC)
-`/axiom:menu` · `/axiom:undo` · `/axiom:redo` · `/axiom:tools`
+`/axiom:menu` · `/axiom:undo` · `/axiom:redo` · `/axiom:tools` · `/axiom:guide`
 
 ---
 

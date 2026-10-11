@@ -20,6 +20,7 @@ import { k3 } from "./core/vec.js";
 import { mainMenu } from "./ui/main.js";
 import { doUndo, renderSymmetry } from "./tools/misc.js";
 import { renderLines } from "./ui/notes.js";
+import { registerGuideEvents } from "./ui/guide.js";
 import { drawFrame, originAtTarget } from "./tools/builder.js";
 
 /** Blöcke, die man im Ersetzen-Modus weiterhin normal benutzen kann (Schleichen = trotzdem ersetzen). */
@@ -283,10 +284,22 @@ function tickPlayer(player) {
   }
 }
 
+registerGuideEvents();
+
 // ---------- Beitreten ----------
 world.afterEvents.playerSpawn.subscribe((ev) => {
   if (!ev.initialSpawn) return;
   const p = ev.player;
+  // Handbuch einmalig verteilen – auch an Spieler, die schon vor dieser Version dabei waren
+  if (!p.getDynamicProperty("axiom:guideGiven")) {
+    p.setDynamicProperty("axiom:guideGiven", true);
+    system.runTimeout(() => {
+      try {
+        p.getComponent("minecraft:inventory")?.container?.addItem(new ItemStack("axiom:guide", 1));
+      } catch {}
+      msg(p, "Du hast das §eAxiom-Handbuch§r bekommen – benutze es, dann klappt ein Buch mit allen Erklärungen vor dir auf.");
+    }, 60);
+  }
   if (p.getDynamicProperty("axiom:welcomed")) return;
   p.setDynamicProperty("axiom:welcomed", true);
   system.runTimeout(() => {
@@ -317,6 +330,10 @@ system.beforeEvents.startup.subscribe((ev) => {
     });
   cmd("axiom:menu", "Öffnet das Axiom-Menü", (p) => mainMenu(getSession(p)));
   cmd("axiom:undo", "Axiom: Rückgängig", (p) => doUndo(p, false));
+  cmd("axiom:guide", "Gibt dir das Axiom-Handbuch", (p) => {
+    p.getComponent("minecraft:inventory")?.container?.addItem(new ItemStack("axiom:guide", 1));
+    msg(p, "Axiom-Handbuch ins Inventar gelegt.");
+  });
   cmd("axiom:redo", "Axiom: Wiederherstellen", (p) => doUndo(p, true));
   cmd("axiom:tools", "Gibt dir alle Axiom-Werkzeuge", (p) => {
     const inv = p.getComponent("minecraft:inventory")?.container;

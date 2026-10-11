@@ -38,6 +38,7 @@ TOOLS = [
     ("bulldozer", "Bulldozer", "Bulldozer", True),
     ("entity", "Kreaturen", "Entities", False),
     ("undo", "Rückgängig", "Undo", False),
+    ("guide", "Axiom-Handbuch", "Axiom Guide Book", False),
 ]
 
 PARTICLES = {
@@ -199,7 +200,46 @@ def package():
     return out
 
 
+def build_guide_entity(pages):
+    """Client-Entität + Render-Controller für das 3D-Handbuch (eine Textur pro Doppelseite)."""
+    textures = {f"p{i}": f"textures/entity/axiom_guide/p{i}" for i in range(pages)}
+    write_json(
+        os.path.join(RP, "entity", "guide.entity.json"),
+        {
+            "format_version": "1.10.0",
+            "minecraft:client_entity": {
+                "description": {
+                    "identifier": "axiom:guide",
+                    "materials": {"default": "entity_alphatest"},
+                    "textures": textures,
+                    "geometry": {"default": "geometry.axiom_guide"},
+                    "animations": {"open": "animation.axiom_guide.open", "float": "animation.axiom_guide.float"},
+                    "scripts": {"animate": ["open", "float"]},
+                    "render_controllers": ["controller.render.axiom_guide"],
+                }
+            },
+        },
+    )
+    write_json(
+        os.path.join(RP, "render_controllers", "guide.render_controllers.json"),
+        {
+            "format_version": "1.8.0",
+            "render_controllers": {
+                "controller.render.axiom_guide": {
+                    "arrays": {"textures": {"Array.pages": [f"Texture.p{i}" for i in range(pages)]}},
+                    "geometry": "Geometry.default",
+                    "materials": [{"*": "Material.default"}],
+                    "textures": ["Array.pages[math.clamp(query.property('axiom:page'), 0, %d)]" % (pages - 1)],
+                }
+            },
+        },
+    )
+
+
 if __name__ == "__main__":
+    import guide
+
+    build_guide_entity(guide.render_all())
     build_items()
     build_textures()
     build_particles()

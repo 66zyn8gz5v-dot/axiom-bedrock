@@ -12,6 +12,7 @@ import { Modal, confirm, menu } from "./forms.js";
 import { maskMenu, patternMenu } from "./common.js";
 import { viewsMenu } from "./views.js";
 import { notesMenu } from "./notes.js";
+import { guideTextMenu, openGuide } from "./guide.js";
 import { selInfo } from "../tools/select.js";
 import { doUndo } from "../tools/misc.js";
 import { TOOL_LIST } from "../tools/index.js";
@@ -752,8 +753,12 @@ async function helpMenu(ses) {
       "§eSchleichen + Benutzen§r = Werkzeug-Einstellungen\n" +
       "§eSchlagen§r (rechter Trigger) auf Block = Pipette (Block als Muster übernehmen) bzw. Zusatzaktion\n\n" +
       "§lAblauf§r\n1. Mit Box-/Magischer/Pinsel-Auswahl etwas auswählen\n2. Im Axiom-Menü → Auswahl bearbeiten\n3. Kopieren → mit dem Baumeister einfügen\n4. Fehler? Rückgängig-Werkzeug benutzen\n\n" +
-      "§lChat-Befehle§r (PC/Handy): /axiom:menu, /axiom:undo, /axiom:redo, /axiom:tools\n\nWähle ein Werkzeug für Details:",
-    TOOL_LIST.map((t) => ({ text: t.name, run: () => menu(p, t.name, t.help, [{ text: "OK", run: () => helpMenu(ses) }]) }))
+      "§lChat-Befehle§r (PC/Handy): /axiom:menu, /axiom:undo, /axiom:redo, /axiom:tools, /axiom:guide\n\nWähle ein Werkzeug für Details:",
+    [
+      { text: "§lHandbuch lesen (Text)", run: () => guideTextMenu(p) },
+      { text: "§l3D-Handbuch öffnen", run: () => openGuide(p) },
+      ...TOOL_LIST.map((t) => ({ text: t.name, run: () => menu(p, t.name, t.help, [{ text: "OK", run: () => helpMenu(ses) }]) })),
+    ]
   );
 }
 

@@ -121,6 +121,12 @@ export class Entity {
   setRotation(r) {
     this.rotation = { ...r };
   }
+  getProperty(k) {
+    return (this.props ??= {})[k];
+  }
+  setProperty(k, v) {
+    (this.props ??= {})[k] = v;
+  }
   remove() {
     this.isValid = false;
     this.dimension.entities = this.dimension.entities.filter((e) => e !== this);
@@ -356,6 +362,9 @@ export class Player {
     this.messages.push(String(m));
   }
   spawnParticle() {}
+  playSound(s) {
+    this.sounds = (this.sounds ?? 0) + 1;
+  }
   getGameMode() {
     return this.gameMode;
   }

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.17.0 – 11.10.2026
+- **Axiom-Handbuch als 3D-Buch:** neues Item „Axiom-Handbuch“ (bekommt jeder Spieler automatisch einmal, sonst
+  `/axiom:guide` oder über „Werkzeuge holen“). Benutzen → ein großes Buch klappt mit Animation vor dir auf und
+  schwebt dort. 11 Doppelseiten mit Bildern: Steuerung, erste Schritte, alle Werkzeuge, ein Haus in 5 Minuten, Tipps
+- Umblättern: **Schlagen** oder **Benutzen** auf das Buch = vor, **Schleichen + Schlagen** = zurück, Item erneut
+  benutzen = schließen. Das Buch merkt sich die letzte Seite
+- Das Handbuch gibt es zusätzlich als Text im Axiom-Menü → Hilfe
+
 ## 0.16.0 – 10.10.2026 (nächtlicher Ausbau)
 - **Dach aufsetzen:** Grundriss eines Hauses als Box auswählen (bis zur Oberkante der Wände), dann Axiom-Menü →
   Auswahl bearbeiten → „Dach aufsetzen“. Satteldach (First entlang der langen Seite, Giebel aus dem aktiven Muster)

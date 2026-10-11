@@ -727,6 +727,41 @@ console.log("Dach & Fenster");
   await undo();
 }
 
+console.log("Handbuch");
+{
+  dim.entities = [];
+  player.location = { x: 0.5, y: 65, z: 0.5 };
+  player.view = { x: 0, y: 0, z: -1 };
+  await use("axiom:guide", G, { air: true });
+  const book = dim.entities.find((e) => e.typeId === "axiom:guide");
+  check(!!book && book.getProperty("axiom:page") === 0, "Handbuch öffnet sich als 3D-Buch");
+  check(book && Math.abs(book.location.z - -1.7) < 0.01, "Buch schwebt vor dem Spieler: " + JSON.stringify(book?.location));
+  world.afterEvents.entityHitEntity._fire({ hitEntity: book, damagingEntity: player });
+  check(book.getProperty("axiom:page") === 1, "Schlagen blättert vor");
+  const ev = { target: book, player, cancel: false };
+  world.beforeEvents.playerInteractWithEntity._fire(ev);
+  await drain();
+  check(ev.cancel && book.getProperty("axiom:page") === 2, "Benutzen auf dem Buch blättert vor");
+  player.isSneaking = true;
+  world.afterEvents.entityHitEntity._fire({ hitEntity: book, damagingEntity: player });
+  player.isSneaking = false;
+  check(book.getProperty("axiom:page") === 1, "Schleichen + Schlagen blättert zurück");
+  await use("axiom:guide", G, { air: true });
+  check(!book.isValid && !dim.entities.some((e) => e.typeId === "axiom:guide"), "Buch benutzen schließt es");
+  await use("axiom:guide", G, { air: true });
+  const book2 = dim.entities.find((e) => e.typeId === "axiom:guide");
+  check(book2?.getProperty("axiom:page") === 1, "Buch merkt sich die Seite");
+  for (let i = 0; i < 30; i++) world.afterEvents.entityHitEntity._fire({ hitEntity: book2, damagingEntity: player });
+  const { PAGE_COUNT } = await import("../packs/AxiomBP/scripts/ui/guide.js");
+  check(book2.getProperty("axiom:page") === PAGE_COUNT - 1, "Letzte Seite wird nicht überschritten");
+  await use("axiom:guide", G, { air: true });
+  answers.push({ selectText: "Hilfe" }, { selectText: "Handbuch lesen" }, { selectText: "Weiter" }, { selectText: "Zurück" }, { selectText: "Schließen" });
+  await use("axiom:menu", G);
+  check(answers.length === 0, "Handbuch als Text im Hilfe-Menü");
+  answers.length = 0;
+  dim.entities = [];
+}
+
 console.log("Fähigkeiten & Symmetrie");
 ses.s.symmetry = { x: true, z: true, center: { x: 0, y: 64, z: 0 } };
 Object.assign(ses.s.shape, { type: "cuboid", rx: 0, ry: 0, rz: 0, anchor: "center" });

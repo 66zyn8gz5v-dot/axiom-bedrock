@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "axiom:guide",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "p0": "textures/entity/axiom_guide/p0",
+        "p1": "textures/entity/axiom_guide/p1",
+        "p2": "textures/entity/axiom_guide/p2",
+        "p3": "textures/entity/axiom_guide/p3",
+        "p4": "textures/entity/axiom_guide/p4",
+        "p5": "textures/entity/axiom_guide/p5",
+        "p6": "textures/entity/axiom_guide/p6",
+        "p7": "textures/entity/axiom_guide/p7",
+        "p8": "textures/entity/axiom_guide/p8",
+        "p9": "textures/entity/axiom_guide/p9",
+        "p10": "textures/entity/axiom_guide/p10"
+      },
+      "geometry": {
+        "default": "geometry.axiom_guide"
+      },
+      "animations": {
+        "open": "animation.axiom_guide.open",
+        "float": "animation.axiom_guide.float"
+      },
+      "scripts": {
+        "animate": [
+          "open",
+          "float"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.axiom_guide"
+      ]
+    }
+  }
+}

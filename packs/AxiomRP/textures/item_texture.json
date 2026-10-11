@@ -52,6 +52,9 @@
     },
     "axiom_undo": {
       "textures": "textures/items/axiom_undo"
+    },
+    "axiom_guide": {
+      "textures": "textures/items/axiom_guide"
     }
   }
 }

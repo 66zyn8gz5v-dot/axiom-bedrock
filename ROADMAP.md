@@ -40,8 +40,10 @@ Neue Ideen unten anhängen.
 - [x] v0.14: Gespiegelte Kopie neben der Auswahl, Brücke entlang Pfadpunkten (Bogen, Belag, Geländer)
 - [x] v0.15: Säule mit Sockel & Kapitell (Formen), Stützpfeiler für Brücken
 - [x] v0.16: Dach aufsetzen (Sattel-/Walmdach mit Treppen, Überstand, Giebel), Fenster-Raster für Wände
+- [x] v0.17: 3D-Handbuch (klappt vor dem Spieler auf, 22 Seiten mit Bildern, umblättern), Textfassung im Hilfe-Menü
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
+- [ ] 3D-Handbuch: Seiten sind lesbar (nicht gespiegelt), Umblättern per Schlagen/Benutzen klappt, Buch ist hell genug
 - [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
 - [ ] Anmerkungen: Text schwebt sichtbar, die Entität selbst ist unsichtbar und lässt sich nicht verletzen
 - [ ] Spiegeln „Ost-West“ spiegelt wirklich Ost↔West (sonst `mirEnum` in core/clipboard.js tauschen)

@@ -1,0 +1,49 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.axiom_guide",
+        "texture_width": 1024,
+        "texture_height": 768,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [0, 0.75, 0]
+      },
+      "bones": [
+        { "name": "root", "pivot": [0, 0, 0] },
+        {
+          "name": "book",
+          "parent": "root",
+          "pivot": [0, 11, 0],
+          "cubes": [
+            {
+              "origin": [-16, 0, -0.5],
+              "size": [32, 22, 1],
+              "uv": {
+                "north": { "uv": [0, 0], "uv_size": [1024, 704] },
+                "south": { "uv": [0, 0], "uv_size": [1024, 704] },
+                "east": { "uv": [0, 710], "uv_size": [16, 16] },
+                "west": { "uv": [0, 710], "uv_size": [16, 16] },
+                "up": { "uv": [0, 710], "uv_size": [16, 16] },
+                "down": { "uv": [0, 710], "uv_size": [16, 16] }
+              }
+            },
+            {
+              "origin": [-17, -1, -0.25],
+              "size": [34, 24, 0.5],
+              "uv": {
+                "north": { "uv": [32, 710], "uv_size": [16, 16] },
+                "south": { "uv": [32, 710], "uv_size": [16, 16] },
+                "east": { "uv": [32, 710], "uv_size": [16, 16] },
+                "west": { "uv": [32, 710], "uv_size": [16, 16] },
+                "up": { "uv": [32, 710], "uv_size": [16, 16] },
+                "down": { "uv": [32, 710], "uv_size": [16, 16] }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

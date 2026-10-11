@@ -362,4 +362,23 @@ ICONS = {
         "................",
         "................",
     ],
+    # Aufgeschlagenes Buch (Handbuch)
+    "guide": [
+        "................",
+        "................",
+        "..PPPP....PPPP..",
+        ".Pnnnnp..pnnnnP.",
+        ".PngggnppngggnnP",
+        ".PnnnnnppnnnnnnP",
+        ".PngggnppngggnnP",
+        ".PnnnnnppnnnnnnP",
+        ".PngggnppngggnnP",
+        ".PnnnnnppnnnnnnP",
+        ".PnnnnnppnnnnnP.",
+        ".PPPPPPPPPPPPPP.",
+        "..PPPPPPPPPPPP..",
+        "................",
+        "................",
+        "................",
+    ],
 }

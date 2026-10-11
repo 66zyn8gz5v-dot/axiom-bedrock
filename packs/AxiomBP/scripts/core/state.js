@@ -63,6 +63,7 @@ export function defaultSettings() {
  *   lastAction: number,
  *   lastHit?: number,
  *   floodLast?: number,
+ *   guidePage?: number,
  *   bpPreview?: {size:{x:number,y:number,z:number}, until:number, name:string},
  *   entities?: import("@minecraft/server").Entity[],
  *   using: boolean,
