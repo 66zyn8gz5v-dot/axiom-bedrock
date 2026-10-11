@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.18.0 – 11.10.2026
+- **Schickeres Handbuch:** Lederumschlag mit goldener Ziernaht, Pergamentseiten, goldene Eckverzierungen und ein
+  Lesebändchen. Überschriften stehen auf lila Bannern in Pixel-Schrift, Werkzeuge in Inventar-Slots, Schritte mit
+  Edelstein-Nummern, Tasten als Minecraft-Knöpfe und Tipps in eigenen Kästen mit Glühbirne
+- **3D-Bilder aus Blöcken:** Auswahl-Rahmen, Kopieren, Kugel, Gelände mit Baum, Brücke über einen Fluss,
+  Pixel-Art-Herz und ein fertiges Haus – alles selbst gerendert im Minecraft-Stil
+
 ## 0.17.0 – 11.10.2026
 - **Axiom-Handbuch als 3D-Buch:** neues Item „Axiom-Handbuch“ (bekommt jeder Spieler automatisch einmal, sonst
   `/axiom:guide` oder über „Werkzeuge holen“). Benutzen → ein großes Buch klappt mit Animation vor dir auf und

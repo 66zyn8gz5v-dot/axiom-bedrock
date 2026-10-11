@@ -39,6 +39,8 @@ oder einen eigenen Bedrock-Server mit dem Add-on betreiben.
 > dir auf, das alle Werkzeuge mit Bildern erklärt. **Schlagen** oder **Benutzen** auf das Buch = umblättern,
 > **Schleichen + Schlagen** = zurück, das Buch-Item nochmal benutzen = schließen. Ideal, um es Freunden zu zeigen.
 
+![Handbuch-Seiten](docs/handbuch.png)
+
 1. **Axiom-Menü** benutzen → **Werkzeuge holen → Alle Werkzeuge**.
 2. Mit der **Box-Auswahl** zweimal auf Blöcke zielen und benutzen → Bereich ist markiert (Partikel-Rahmen).
 3. Mit einem Axiom-Werkzeug einen Block **schlagen** → dieser Block wird dein aktiver Block (Pipette).

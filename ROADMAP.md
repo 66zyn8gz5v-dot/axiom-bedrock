@@ -41,6 +41,7 @@ Neue Ideen unten anhängen.
 - [x] v0.15: Säule mit Sockel & Kapitell (Formen), Stützpfeiler für Brücken
 - [x] v0.16: Dach aufsetzen (Sattel-/Walmdach mit Treppen, Überstand, Giebel), Fenster-Raster für Wände
 - [x] v0.17: 3D-Handbuch (klappt vor dem Spieler auf, 22 Seiten mit Bildern, umblättern), Textfassung im Hilfe-Menü
+- [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder)
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] 3D-Handbuch: Seiten sind lesbar (nicht gespiegelt), Umblättern per Schlagen/Benutzen klappt, Buch ist hell genug
