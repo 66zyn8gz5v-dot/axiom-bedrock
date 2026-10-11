@@ -169,7 +169,7 @@ PAGES = [
          ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten."),
          ("p", "Stempel mit einem Klick: Berg · Krater · Vulkan · Hochplateau · Insel · Schlucht · Wasserfall"),
          ("img", "terrain"),
-         ("tip", "„Treppen an Stufenkanten“ macht Hügel begehbar.")],
+         ("tip", "Biom-Malen einschalten: Gras, Sand am Wasser, Stein an Hängen, Schnee auf Gipfeln.")],
     ),
     (
         [("h", "6. Pfad & Co."),
@@ -210,6 +210,7 @@ PAGES = [
          ("tip", "Alles lässt sich rückgängig machen – trau dich!"),
          ("p", "Die Leiste unten am Bildschirm zeigt dein Werkzeug und seine Einstellungen."),
          ("p", "Masken schützen Blöcke: „nur Luft ersetzen“ baut nur in leere Stellen."),
+         ("p", "Terrain-Modus „Treppen an Stufenkanten“ macht Hügel begehbar."),
          ("space", 20), ("center", "Viel Spaß beim Bauen!")],
     ),
 ]

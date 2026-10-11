@@ -646,6 +646,53 @@ console.log("Wasserfall");
   ses.s.terrain.mode = "raise";
 }
 
+console.log("Biom-Malen");
+{
+  dim.blocks.clear();
+  const top = (x, z) => {
+    for (let y = 140; y > 50; y--) {
+      const id = dim._get(x, y, z).type.id;
+      if (id !== "minecraft:air") return { y, id };
+    }
+    return { y: 0, id: "" };
+  };
+  Object.assign(ses.s.terrain, { mode: "mountain", radius: 8, strength: 5, falloff: true, biome: true, snowY: 76 });
+  await roundTrip("Biom-Malen: Berg", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const peak = top(0, 0);
+  check(peak.y >= 76 && peak.id === "minecraft:snow", "Biom-Malen: Schnee auf dem Gipfel (" + peak.y + " " + peak.id + ")");
+  let stone = 0;
+  let grass = 0;
+  for (let x = -8; x <= 8; x++)
+    for (let z = -8; z <= 8; z++) {
+      const t = top(x, z);
+      if (t.id === "minecraft:stone" || t.id === "minecraft:andesite") stone++;
+      if (t.id === "minecraft:grass_block") {
+        grass++;
+        if (dim._get(x, t.y - 1, z).type.id !== "minecraft:dirt") check(false, `Biom-Malen: Erde unter Gras bei ${x},${z}`);
+      }
+    }
+  check(stone > 0, "Biom-Malen: steile Hänge aus Stein (" + stone + ")");
+  check(grass > 0, "Biom-Malen: flache Stellen bleiben Gras (" + grass + ")");
+  check(dim._get(0, peak.y - 6, 0).type.id === "minecraft:stone", "Biom-Malen: Stein im Berginneren");
+  await undo();
+  check(top(0, 0).y === 64 && top(0, 0).id === "minecraft:grass_block", "Biom-Malen: Rückgängig stellt Boden wieder her");
+
+  // Nur Oberfläche: Sand am Wasser, Bauwerke bleiben
+  for (let x = 12; x <= 14; x++) for (let z = -2; z <= 2; z++) dim._set(x, 64, z, BlockPermutation.resolve("minecraft:water"));
+  dim._set(8, 64, 3, BlockPermutation.resolve("minecraft:oak_planks"));
+  Object.assign(ses.s.terrain, { mode: "biome", radius: 4 });
+  await roundTrip("Biom-Malen: nur Oberfläche", () => use("axiom:terrain", { x: 9, y: 64, z: 0 }));
+  await use("axiom:terrain", { x: 9, y: 64, z: 0 });
+  check(dim._get(11, 63, 0).type.id === "minecraft:sand" || dim._get(10, 64, 0).type.id === "minecraft:sand", "Biom-Malen: Sand am Wasser");
+  check(dim._get(10, 64, 0).type.id === "minecraft:sand", "Biom-Malen: Ufer wird Sand");
+  check(dim._get(6, 64, 0).type.id === "minecraft:grass_block", "Biom-Malen: weiter weg bleibt Gras");
+  check(dim._get(8, 64, 3).type.id === "minecraft:oak_planks", "Biom-Malen: Bauwerke bleiben unberührt");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, biome: false });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

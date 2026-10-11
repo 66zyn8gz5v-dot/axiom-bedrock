@@ -23,7 +23,30 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["canyon", "Stempel: Schlucht in Blickrichtung (ein Klick)"],
   ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
+  ["biome", "Nur Oberfläche anpassen (Gras, Sand, Stein, Schnee)"],
 ]);
+
+/** Natürliche Bodenblöcke, die das Biom-Malen umfärben darf (Bauwerke bleiben unberührt). */
+const NATURAL =
+  /^minecraft:(grass_block|grass|dirt|coarse_dirt|podzol|mycelium|dirt_with_roots|stone|andesite|diorite|granite|tuff|calcite|deepslate|sand|red_sand|gravel|snow|clay|mud|moss_block|cobblestone|mossy_cobblestone)$/;
+
+/**
+ * Passende Oberfläche für eine Spalte (Biom-Malen).
+ * @param {number} slope größter Höhenunterschied zu den Nachbarn
+ * @param {boolean} wet Wasser in der Nähe
+ * @param {number} y neue Höhe der Oberfläche
+ * @param {number} snowY Schneegrenze
+ * @param {number} x @param {number} z
+ * @returns {{top:string, sub:string}}
+ */
+export function surfaceFor(slope, wet, y, snowY, x, z) {
+  const rnd = ((x * 73856093) ^ (z * 19349663)) >>> 0;
+  if (y >= snowY) return { top: slope >= 6 ? "minecraft:stone" : "minecraft:snow", sub: "minecraft:stone" };
+  if (slope >= 3) return { top: rnd % 4 === 0 ? "minecraft:andesite" : "minecraft:stone", sub: "minecraft:stone" };
+  if (wet) return { top: "minecraft:sand", sub: "minecraft:sand" };
+  if (slope === 2 && rnd % 3 === 0) return { top: "minecraft:gravel", sub: "minecraft:dirt" };
+  return { top: "minecraft:grass_block", sub: "minecraft:dirt" };
+}
 
 /** Richtung zur höheren Nachbarspalte -> weirdo_direction (0 Ost, 1 West, 2 Süd, 3 Nord) */
 const STAIR_DIRS = /** @type {[number, number, number][]} */ ([
@@ -177,6 +200,10 @@ export const terrainTool = {
         }
         return p;
       };
+      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string}[]} */
+      const plan = [];
+      /** @type {Map<string, number>} */
+      const newH = new Map();
       for (let dx = -R; dx <= R; dx++) {
         for (let dz = -R; dz <= R; dz++) {
           const d = Math.sqrt(dx * dx + dz * dz);
@@ -275,33 +302,83 @@ export const terrainTool = {
               target = h - Math.round(c.strength * 4 * (1 - (across / w) ** 2) * (1 - (along / (R + 0.5)) ** 4));
               break;
             }
+            case "biome":
+              break;
             case "terrace": {
               const step = Math.max(2, c.strength);
               target = Math.round(h + (Math.floor(h / step) * step - h) * fall);
               break;
             }
           }
-          if (target === h && !topOverride) continue;
-          const topId = topOverride ?? es.id(x, h, z);
-          const belowId = es.id(x, h - 1, z);
-          const fillId = belowId && isSolidId(belowId) ? belowId : topId;
-          if (target > h) {
-            // Oberfläche nach oben verschieben: alte Oberfläche wird Füllmaterial
-            es.set(x, h, z, perm(fillId));
-            for (let y = h + 1; y < target; y++) es.set(x, y, z, perm(fillId));
-            es.set(x, target, z, perm(topId));
-          } else {
-            for (let y = h; y > target; y--) es.set(x, y, z, A);
-            es.set(x, target, z, perm(topId));
-          }
+          if (target === h && !topOverride && !c.biome) continue;
+          plan.push({ x, z, h, target, topOverride });
+          newH.set(x + "," + z, target);
         }
         yield;
+      }
+      if (c.mode === "stairs") return;
+      // Biom-Malen: Wasser in der Nähe merken, solange das Gelände noch unverändert ist
+      /** @type {Map<string, boolean>} */
+      const water = new Map();
+      const hasWater = (/** @type {number} */ x, /** @type {number} */ z) => {
+        const k = x + "," + z;
+        if (!water.has(k)) {
+          const g = H(x, z);
+          water.set(k, g !== null && es.id(x, g + 1, z).includes("water"));
+        }
+        return water.get(k);
+      };
+      /** @type {Map<string, {top:string, sub:string}>} */
+      const surf = new Map();
+      if (c.biome) {
+        const NH = (/** @type {number} */ x, /** @type {number} */ z) => newH.get(x + "," + z) ?? H(x, z);
+        for (const q of plan) {
+          let slope = 0;
+          for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const n = NH(q.x + ox, q.z + oz);
+            if (n !== null) slope = Math.max(slope, Math.abs(n - q.target));
+          }
+          let wet = false;
+          for (let ax = -2; ax <= 2 && !wet; ax++) for (let az = -2; az <= 2 && !wet; az++) wet = !!hasWater(q.x + ax, q.z + az);
+          surf.set(q.x + "," + q.z, surfaceFor(slope, wet, q.target, c.snowY, q.x, q.z));
+        }
+        yield;
+      }
+      let n = 0;
+      for (const { x, z, h, target, topOverride } of plan) {
+        const oldTop = es.id(x, h, z);
+        const sf = !topOverride && NATURAL.test(oldTop) ? surf.get(x + "," + z) : undefined;
+        const topId = topOverride ?? sf?.top ?? oldTop;
+        const belowId = es.id(x, h - 1, z);
+        const fillId = belowId && isSolidId(belowId) ? belowId : topId;
+        if (target > h) {
+          // Oberfläche nach oben verschieben: alte Oberfläche wird Füllmaterial
+          for (let y = h; y < target; y++) {
+            const fid = sf ? (target - y <= 3 ? sf.sub : "minecraft:stone") : fillId;
+            es.set(x, y, z, perm(fid));
+          }
+          es.set(x, target, z, perm(topId));
+        } else {
+          for (let y = h; y > target; y--) es.set(x, y, z, A);
+          if (es.id(x, target, z) !== topId) es.set(x, target, z, perm(topId));
+        }
+        if (sf) {
+          // Schicht unter der Oberfläche (Erde/Sand) – nur natürliche Blöcke umfärben
+          for (let k = 1; k <= 3; k++) {
+            const y = target - k;
+            if (y < h || target <= h) {
+              const id = es.id(x, y, z);
+              if (id !== sf.sub && NATURAL.test(id)) es.set(x, y, z, perm(sf.sub));
+            }
+          }
+        }
+        if (++n % 64 === 0) yield;
       }
     });
   },
   hud(ses) {
     const c = ses.s.terrain;
-    return `${TERRAIN_MODES.find((m) => m[0] === c.mode)?.[1]} · Radius ${c.radius} · Stärke ${c.strength}`;
+    return `${TERRAIN_MODES.find((m) => m[0] === c.mode)?.[1]} · Radius ${c.radius} · Stärke ${c.strength}${c.biome ? " · §aBiom" : ""}`;
   },
   async menu(ses) {
     const c = ses.s.terrain;
@@ -311,6 +388,8 @@ export const terrainTool = {
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
       .toggle("falloff", "Weicher Rand (zur Mitte stärker)", c.falloff)
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
+      .toggle("biome", "Biom-Malen: Oberfläche passend färben (Gras, Sand am Wasser, Stein an Hängen, Schnee oben)", c.biome)
+      .slider("snowY", "Biom-Malen: Schneegrenze (Höhe Y)", 60, 300, 5, Math.max(60, Math.min(300, c.snowY)))
       .show(ses.player);
     if (!r) return;
     Object.assign(c, r);

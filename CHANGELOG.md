@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.19.0 – 11.10.2026 (nächtlicher Ausbau: Terraform)
+- **Biom-Malen beim Terraformen:** Terrain → Schleichen + Benutzen → „Biom-Malen“ einschalten. Danach bekommt jedes
+  veränderte Gelände automatisch die passende Oberfläche: Gras mit 3 Schichten Erde darunter, Stein im Inneren
+  aufgeschütteter Berge, Sand am Wasser, Stein/Andesit an steilen Hängen, etwas Kies an mittleren Hängen und Schnee
+  über der Schneegrenze (Höhe Y im Menü einstellbar). Funktioniert mit allen Modi und Stempeln
+- **Neuer Modus „Nur Oberfläche anpassen“:** färbt vorhandenes Gelände im Pinsel um, ohne die Höhe zu verändern
+- Gebaute Blöcke (Holz, Ziegel …) werden vom Biom-Malen nicht verändert
+
 ## 0.18.1 – 11.10.2026
 - **Handbuch-Bilder mit Original-Minecraft-Texturen:** Gras, Erde, Stein, Bruchstein, Holz, Ziegel, Glas, Wasser,
   Sand, Gold, Quarz, Laub, Stamm und Wolle stammen jetzt aus dem offiziellen Vanilla-Ressourcenpaket
