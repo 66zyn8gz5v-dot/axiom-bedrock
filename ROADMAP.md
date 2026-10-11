@@ -1,6 +1,6 @@
 # Roadmap
 
-Plan für die nächsten Ausbaustufen. Jeder Abend (23 Uhr) nimmt sich die obersten offenen Punkte vor,
+Plan für die nächsten Ausbaustufen. Jede Nacht (23 Uhr und 0 Uhr) nimmt sich die obersten offenen Punkte vor,
 setzt sie um, testet (`npm run check`, `npm test`), baut (`npm run build`) und hakt sie hier ab.
 Neue Ideen unten anhängen.
 
@@ -52,10 +52,31 @@ Neue Ideen unten anhängen.
       die Pipette gibt es zusätzlich im Muster-Menü)
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
-## Als Nächstes
+## Als Nächstes (Schwerpunkt laut Nutzer: Terraform & Figuren einsetzen)
+Zwei Ausbau-Runden pro Nacht (23 Uhr und 0 Uhr). Die Punkte werden von oben nach unten abgearbeitet.
+
+### Terraform vertiefen
+- [ ] **Biom-Malen beim Terraformen**: Oberfläche automatisch passend (Gras oben, Erde darunter, Stein in der Tiefe,
+      Sand am Wasser, Schnee ab einstellbarer Höhe, Geröll an steilen Hängen)
+- [ ] **Erosion**: Regen-Erosion (Rinnen an Hängen) und Wind-/Schmelz-Erosion als Pinsel-Modi
+- [ ] **Stempel-Formen frei einstellbar**: Größe, Höhe, Zackigkeit, Drehung + Vorschau-Rahmen vor dem Setzen
+- [ ] **Neue Stempel**: Hügelkette entlang Pfadpunkten, Düne, Gletscher/Schneegipfel, Felsbogen, Höhleneingang, Klippe
+- [ ] **Gelände aus Auswahl**: ganze Box-Auswahl als Landschaft füllen (Rauschen mit Oktaven, Meereshöhe, Seen)
+- [ ] **Flüsse & Seen verbessern**: Flussbett mit Ufer-Sand, Seen auffüllen bis zum Überlauf
+- [ ] **Höhenkarten-Pinsel**: Formen „Spitz“, „Rund“, „Plateau“ für Anheben/Absenken, Stärke per Schleichen umkehren
+
+### Figuren einsetzen
+- [ ] **Figuren-Bibliothek**: fertige Objekte per Klick setzen – Bäume (Eiche, Fichte, Birke, Palme, Riesenbaum),
+      Felsen, Büsche, Laternen, Bänke, Brunnen, Statuen; Größe & Drehung einstellbar, zufällige Variation
+- [ ] **Figuren-Pinsel**: Figuren verstreut über eine Fläche malen (Wald, Felsenfeld), Dichte & Abstand einstellbar
+- [ ] **Eigene Figuren**: Blaupausen als Figur in die Bibliothek übernehmen
+- [ ] **Kreaturen setzen**: Tiere/Dorfbewohner/Rüstungsständer platzieren, ausrichten, ruhig stellen (keine KI-Bewegung,
+      wo per stabiler API möglich), Gruppen setzen
+- [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
+
+### Sonstiges
 - [ ] **Haus-Rohbau**: aus einer Box-Auswahl Wände, Boden, Tür-Öffnung, Fenster und Dach in einem Schritt
 - [ ] **Dach**: Pultdach und Zeltdach, Dachrinne/Traufe mit umgedrehten Treppen
-- [ ] **Kreaturen**: Kreaturen beim Kopieren/Einfügen mitnehmen testen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
 
 ## Ideen / später
