@@ -52,8 +52,8 @@ Neue Ideen unten anhängen.
       die Pipette gibt es zusätzlich im Muster-Menü)
 - [ ] Pinsel-Werkzeuge malen beim Gedrückthalten auch auf große Entfernung durchgehend
 
-## Als Nächstes (Schwerpunkt laut Nutzer: Terraform & Figuren einsetzen)
-Zwei Ausbau-Runden pro Nacht (23 Uhr und 0 Uhr). Die Punkte werden von oben nach unten abgearbeitet.
+## Als Nächstes (Schwerpunkt laut Nutzer: Terraform & Formen wie Zylinder, Dreieck, Pyramide)
+Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden von oben nach unten abgearbeitet.
 
 ### Terraform vertiefen
 - [ ] **Biom-Malen beim Terraformen**: Oberfläche automatisch passend (Gras oben, Erde darunter, Stein in der Tiefe,
@@ -65,16 +65,20 @@ Zwei Ausbau-Runden pro Nacht (23 Uhr und 0 Uhr). Die Punkte werden von oben nach
 - [ ] **Flüsse & Seen verbessern**: Flussbett mit Ufer-Sand, Seen auffüllen bis zum Überlauf
 - [ ] **Höhenkarten-Pinsel**: Formen „Spitz“, „Rund“, „Plateau“ für Anheben/Absenken, Stärke per Schleichen umkehren
 
-### Figuren einsetzen
-- [ ] **Figuren-Bibliothek**: fertige Objekte per Klick setzen – Bäume (Eiche, Fichte, Birke, Palme, Riesenbaum),
-      Felsen, Büsche, Laternen, Bänke, Brunnen, Statuen; Größe & Drehung einstellbar, zufällige Variation
-- [ ] **Figuren-Pinsel**: Figuren verstreut über eine Fläche malen (Wald, Felsenfeld), Dichte & Abstand einstellbar
-- [ ] **Eigene Figuren**: Blaupausen als Figur in die Bibliothek übernehmen
-- [ ] **Kreaturen setzen**: Tiere/Dorfbewohner/Rüstungsständer platzieren, ausrichten, ruhig stellen (keine KI-Bewegung,
-      wo per stabiler API möglich), Gruppen setzen
-- [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
+### Formen (Figuren) vertiefen
+- [ ] **Vorschau vor dem Setzen**: Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
+- [ ] **Neue Grundformen**: Dreieck/Keil (Rampe), Tetraeder (dreiseitige Pyramide), Oktaeder (Doppelpyramide),
+      Vieleck-Prisma (3–12 Ecken, z.B. Sechseck-Turm), Stufenpyramide (Zikkurat), Rohr/Röhre (liegend & stehend),
+      Scheibe/Kreisfläche, Kegelstumpf, Stern, Herz, Kreuz
+- [ ] **Freie Drehung & Neigung**: Formen in 15°-Schritten um alle Achsen drehen/kippen (z.B. schräger Zylinder)
+- [ ] **Form zwischen zwei Punkten**: Zylinder/Kegel/Pyramide von Punkt A nach Punkt B ziehen (wie Box-Auswahl)
+- [ ] **Form in die Auswahl einpassen**: Kugel, Zylinder, Pyramide usw. genau in die aktuelle Box-Auswahl setzen
+- [ ] **Hohl-Optionen**: Wandstärke je Form, offener Boden/Deckel, nur Umriss (Drahtgitter-Kanten)
+- [ ] **Material-Varianten**: Verlauf von unten nach oben (Muster 1 → 2), Rand anderer Block als Füllung
+- [ ] **Lieblingsformen speichern**: Form + Größe + Einstellungen als Vorlage merken und schnell wieder wählen
 
 ### Sonstiges
+- [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
 - [ ] **Haus-Rohbau**: aus einer Box-Auswahl Wände, Boden, Tür-Öffnung, Fenster und Dach in einem Schritt
 - [ ] **Dach**: Pultdach und Zeltdach, Dachrinne/Traufe mit umgedrehten Treppen
 - [ ] **Englische Menütexte** (Sprache umschaltbar)
