@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.20.0 – 12.10.2026 (nächtlicher Ausbau: Formen)
+- **Formen-Vorschau:** Mit dem Formen-Werkzeug in der Hand zeigt ein Umriss aus Partikeln genau, wo und wie groß die
+  Form gebaut wird (sehr große Formen als Rahmen). Neuer **Vorschau-Modus** (Schleichen + Benutzen → einschalten):
+  1. Benutzen merkt die Stelle (Umriss wird rot), 2. Benutzen baut dort, Schlagen bricht ab
+- **11 neue Formen:** Keil/Rampe, Dreieck-Pyramide (Tetraeder), Doppelpyramide (Oktaeder), Vieleck-Turm mit 3–12
+  Ecken (z.B. Sechseck), Stufenpyramide (Stufenhöhe einstellbar), Rohr/Walze liegend (mit „Hohl“ ein Rohr), Scheibe,
+  Kegelstumpf sowie Stern, Herz und Kreuz – die drei stehen immer quer vor dir, mit Radius Z als Dicke
+
 ## 0.19.0 – 11.10.2026 (nächtlicher Ausbau: Terraform)
 - **Biom-Malen beim Terraformen:** Terrain → Schleichen + Benutzen → „Biom-Malen“ einschalten. Danach bekommt jedes
   veränderte Gelände automatisch die passende Oberfläche: Gras mit 3 Schichten Erde darunter, Stein im Inneren

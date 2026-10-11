@@ -361,7 +361,9 @@ export class Player {
   sendMessage(m) {
     this.messages.push(String(m));
   }
-  spawnParticle() {}
+  spawnParticle() {
+    this.particles = (this.particles ?? 0) + 1;
+  }
   playSound(s) {
     this.sounds = (this.sounds ?? 0) + 1;
   }

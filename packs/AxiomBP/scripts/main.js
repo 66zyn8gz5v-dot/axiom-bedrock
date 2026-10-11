@@ -221,10 +221,8 @@ world.afterEvents.entityHitBlock.subscribe((ev) => {
   const ses = getSession(player);
   if (system.currentTick - (ses.lastHit ?? -100) < 4) return;
   ses.lastHit = system.currentTick;
-  if (tool.onHit && !player.isSneaking) {
-    tool.onHit(ses, ev.hitBlock);
-    return;
-  }
+  // onHit kann false zurückgeben, dann gilt weiter die Pipette
+  if (tool.onHit && !player.isSneaking && tool.onHit(ses, ev.hitBlock) !== false) return;
   // Pipette: Block als aktives Muster übernehmen
   const perm = ev.hitBlockPermutation;
   ses.s.pattern = [entryFromPermutation(perm)];

@@ -1,9 +1,11 @@
-// Formen-Werkzeug: Kugel, Halbkugel, Quader, Zylinder, Kegel, Pyramide, Torus, Bogen.
+// Formen-Werkzeug: Kugel, Quader, Zylinder, Kegel, Pyramiden, Torus, Bogen, Keil, Vieleck, Stern, Herz u.v.m.
 import { runEdit } from "../core/edit.js";
 import { formatPattern, isSolidId, picker } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
-import { markBlock } from "../core/selection.js";
-import { target, targetOrAir } from "../core/util.js";
+import { markBlock, spawn } from "../core/selection.js";
+import { drawFrame } from "./builder.js";
+import { system } from "@minecraft/server";
+import { msg, target, targetOrAir } from "../core/util.js";
 import { cardinal, v } from "../core/vec.js";
 import { Modal } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
@@ -20,11 +22,36 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["prism", "Prisma (Dach, entlang X)"],
   ["spiral", "Spirale (Wendelrampe)"],
   ["pillar", "Säule mit Sockel & Kapitell (bis zum Boden)"],
+  ["wedge", "Keil / Rampe (steigt von dir weg an)"],
+  ["tetra", "Dreieck-Pyramide (Tetraeder)"],
+  ["octa", "Doppelpyramide (Oktaeder)"],
+  ["polygon", "Vieleck-Turm (3–12 Ecken)"],
+  ["ziggurat", "Stufenpyramide"],
+  ["tube", "Rohr / Walze (liegend)"],
+  ["disk", "Scheibe (flacher Kreis)"],
+  ["frustum", "Kegelstumpf"],
+  ["star", "Stern (steht vor dir)"],
+  ["heart", "Herz (steht vor dir)"],
+  ["cross", "Kreuz / Plus (steht vor dir)"],
 ]);
 
 /**
+ * Punkt-in-Vieleck-Test (Strahlverfahren).
+ * @param {number} x @param {number} y @param {number[][]} poly
+ */
+function inPoly(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/**
  * Liefert Test-Funktion (dx,dy,dz) -> innerhalb? und die Ausdehnung.
- * @param {{type:string, rx:number, ry:number, rz:number, pitch?:number}} c
+ * @param {{type:string, rx:number, ry:number, rz:number, pitch?:number, sides?:number, step?:number}} c
  * @returns {{inside:(x:number,y:number,z:number)=>boolean, ext:{x:number,y:number,z:number}, yMin:number}}
  */
 export function shapeFn(c) {
@@ -113,6 +140,113 @@ export function shapeFn(c) {
         yMin: -c.ry,
       };
     }
+    case "wedge":
+      // Rampe: vorne (z = -rz) flach, hinten (z = +rz) volle Höhe 2·ry+1
+      return {
+        inside: (x, y, z) => Math.abs(x) <= c.rx && Math.abs(z) <= c.rz && y >= 0 && y <= Math.max(0, ((z + c.rz + 1) / (2 * c.rz + 1)) * (2 * c.ry + 1) - 1),
+        ext: v(c.rx, 2 * c.ry, c.rz),
+        yMin: 0,
+      };
+    case "tetra": {
+      // Dreieckige Grundfläche (Umkreisradius rx/rz), Spitze oben
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const f = (c.ry - y + 0.5) / (2 * c.ry + 1);
+          const X = x / rx;
+          const Z = z / rz - 0.25; // Dreieck mittig in den Hüllquader rücken
+          for (let k = 0; k < 3; k++) {
+            const a = Math.PI / 2 + (k * 2 * Math.PI) / 3;
+            if (X * Math.cos(a) + Z * Math.sin(a) > 0.5 * f + 0.06) return false;
+          }
+          return true;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "octa":
+      return { inside: (x, y, z) => Math.abs(x) / rx + Math.abs(y) / ry + Math.abs(z) / rz <= 1, ext: v(c.rx, c.ry, c.rz), yMin: -c.ry };
+    case "polygon": {
+      const n = Math.max(3, Math.min(12, c.sides ?? 6));
+      const ap = Math.cos(Math.PI / n);
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const X = x / rx;
+          const Z = z / rz;
+          for (let k = 0; k < n; k++) {
+            const a = (k * 2 * Math.PI) / n + Math.PI / 2;
+            if (X * Math.cos(a) + Z * Math.sin(a) > ap) return false;
+          }
+          return true;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "ziggurat": {
+      const st = Math.max(1, c.step ?? 2);
+      const H = 2 * c.ry + 1;
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const band = Math.floor((y + c.ry) / st) * st;
+          const f = 1 - band / H;
+          return Math.abs(x) <= c.rx * f + 0.5 && Math.abs(z) <= c.rz * f + 0.5;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "tube":
+      // Liegende Walze entlang X (mit „Hohl“ ein Rohr)
+      return { inside: (x, y, z) => Math.abs(x) <= c.rx && (y * y) / (ry * ry) + (z * z) / (rz * rz) <= 1, ext: v(c.rx, c.ry, c.rz), yMin: -c.ry };
+    case "disk":
+      return { inside: (x, y, z) => y === 0 && (x * x) / (rx * rx) + (z * z) / (rz * rz) <= 1, ext: v(c.rx, 0, c.rz), yMin: 0 };
+    case "frustum":
+      // Kegelstumpf: oben halb so breit wie unten
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const t = c.ry ? (y + c.ry) / (2 * c.ry) : 0;
+          const f = 1 - 0.5 * t;
+          return (x * x) / (rx * rx * f * f) + (z * z) / (rz * rz * f * f) <= 1;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    case "star": {
+      // Fünfzackiger Stern in der X-Y-Ebene, Dicke über Radius Z
+      /** @type {number[][]} */
+      const poly = [];
+      for (let k = 0; k < 10; k++) {
+        const a = Math.PI / 2 + (k * Math.PI) / 5;
+        const r = k % 2 ? 0.42 : 1;
+        poly.push([Math.cos(a) * r, Math.sin(a) * r]);
+      }
+      return { inside: (x, y, z) => Math.abs(z) <= c.rz && inPoly(x / rx, y / ry + 0.1, poly), ext: v(c.rx, c.ry, c.rz), yMin: -c.ry };
+    }
+    case "heart":
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(z) > c.rz) return false;
+          const X = (x / rx) * 1.15;
+          const Y = (y / ry) * 1.15 + 0.12;
+          const q = X * X + Y * Y - 1;
+          return q * q * q - X * X * Y * Y * Y <= 0;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    case "cross": {
+      const w = Math.max(0, Math.round(Math.min(c.rx, c.ry) / 4));
+      return {
+        inside: (x, y, z) => Math.abs(z) <= c.rz && ((Math.abs(x) <= c.rx && Math.abs(y) <= w) || (Math.abs(y) <= c.ry && Math.abs(x) <= w)),
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
     default:
       return { inside: (x, y, z) => (x * x) / (rx * rx) + (y * y) / (ry * ry) + (z * z) / (rz * rz) <= 1, ext: v(c.rx, c.ry, c.rz), yMin: -c.ry };
   }
@@ -131,6 +265,46 @@ export function orientedShape(ses, c) {
   const d = cardinal(ses.player.getViewDirection(), true);
   if (d.x === 0) return f;
   return { inside: (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => f.inside(z, y, x), ext: v(f.ext.z, f.ext.y, f.ext.x), yMin: f.yMin };
+}
+
+/** Größte Form (Blöcke im Hüllquader), für die noch ein genauer Partikel-Umriss berechnet wird. */
+const OUTLINE_MAX = 70000;
+const OUTLINE_BUDGET = 260;
+
+/**
+ * Randpunkte einer Form (Blöcke mit mindestens einer freien Seite), ausgedünnt auf ein Partikel-Budget.
+ * Wird zwischengespeichert, solange sich Form und Blickrichtung nicht ändern.
+ * @param {import("../core/state.js").Session} ses
+ * @returns {number[][] | null} null = zu groß, nur Rahmen zeichnen
+ */
+export function shapeOutline(ses) {
+  const c = ses.s.shape;
+  const d = c.look ? cardinal(ses.player.getViewDirection(), true) : v(0, 0, 1);
+  const key = JSON.stringify([c.type, c.rx, c.ry, c.rz, c.pitch, c.sides, c.step, c.look && d.x !== 0]);
+  if (ses.shapeOutline?.key === key) return ses.shapeOutline.pts.length ? ses.shapeOutline.pts : null;
+  const f = orientedShape(ses, c);
+  const e = f.ext;
+  /** @type {number[][]} */
+  let pts = [];
+  if ((2 * e.x + 1) * (2 * e.y + 1) * (2 * e.z + 1) <= OUTLINE_MAX) {
+    for (let x = -e.x; x <= e.x; x++)
+      for (let y = -e.y; y <= e.y; y++)
+        for (let z = -e.z; z <= e.z; z++) {
+          if (!f.inside(x, y, z)) continue;
+          if (f.inside(x + 1, y, z) && f.inside(x - 1, y, z) && f.inside(x, y + 1, z) && f.inside(x, y - 1, z) && f.inside(x, y, z + 1) && f.inside(x, y, z - 1))
+            continue;
+          pts.push([x, y, z]);
+        }
+    if (pts.length > OUTLINE_BUDGET) {
+      const stride = pts.length / OUTLINE_BUDGET;
+      /** @type {number[][]} */
+      const thin = [];
+      for (let i = 0; i < pts.length; i += stride) thin.push(pts[Math.floor(i)]);
+      pts = thin;
+    }
+  }
+  ses.shapeOutline = { key, pts };
+  return pts.length ? pts : null;
 }
 
 /** @param {import("../core/state.js").Session} ses */
@@ -194,7 +368,18 @@ export const shapeTool = {
     const c = { ...ses.s.shape };
     if (c.type === "pillar") return pillar(ses, c);
     const f = orientedShape(ses, c);
-    const ctr = center(ses);
+    let ctr = center(ses);
+    if (c.confirm) {
+      // Vorschau-Modus: 1. Klick merkt die Stelle, 2. Klick setzt die Form dort
+      const lock = ses.shapeLock;
+      if (!lock || system.currentTick > lock.until) {
+        ses.shapeLock = { ctr, until: system.currentTick + 20 * 30 };
+        msg(ses.player, "Vorschau: Form wird hier gesetzt – nochmal §ebenutzen§r zum Bauen, §eschlagen§r zum Abbrechen.");
+        return;
+      }
+      ctr = lock.ctr;
+      ses.shapeLock = undefined;
+    }
     const pick = picker(ses.s.pattern);
     const hollow = c.hollow;
     const th = Math.max(1, c.thick);
@@ -222,8 +407,26 @@ export const shapeTool = {
       }
     );
   },
+  onHit(ses) {
+    if (!ses.shapeLock) return false;
+    ses.shapeLock = undefined;
+    msg(ses.player, "Vorschau abgebrochen.");
+    return true;
+  },
   preview(ses) {
-    markBlock(ses.player, "axiom:marker", center(ses));
+    const c = ses.s.shape;
+    if (c.type === "pillar") return markBlock(ses.player, "axiom:marker", center(ses));
+    const lock = ses.shapeLock && system.currentTick <= ses.shapeLock.until ? ses.shapeLock : undefined;
+    const ctr = lock ? lock.ctr : center(ses);
+    const particle = lock ? "axiom:pos2" : "axiom:marker";
+    markBlock(ses.player, particle, ctr);
+    const pts = shapeOutline(ses);
+    if (!pts) {
+      const e = orientedShape(ses, c).ext;
+      drawFrame(ses.player, v(ctr.x - e.x, ctr.y - e.y, ctr.z - e.z), v(2 * e.x + 1, 2 * e.y + 1, 2 * e.z + 1), particle);
+      return;
+    }
+    for (const [x, y, z] of pts) spawn(ses.player, particle, v(ctr.x + x + 0.5, ctr.y + y + 0.5, ctr.z + z + 0.5));
   },
   hud(ses) {
     const c = ses.s.shape;
@@ -250,10 +453,14 @@ export const shapeTool = {
       )
       .toggle("look", "Nach Blickrichtung drehen (Bogen/Prisma stehen quer zu dir)", c.look)
       .slider("pitch", "Spirale: Höhe pro Umdrehung", 3, 40, 1, c.pitch)
+      .slider("sides", "Vieleck-Turm: Anzahl Ecken", 3, 12, 1, c.sides)
+      .slider("step", "Stufenpyramide: Stufenhöhe", 1, 8, 1, c.step)
+      .toggle("confirm", "Vorschau-Modus: 1. Benutzen zeigt die Form, 2. Benutzen baut sie", c.confirm)
       .toggle("pat", "Danach Block/Muster wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { look: r.look, pitch: r.pitch, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor });
+    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, confirm: r.confirm });
+    ses.shapeLock = undefined;
     markDirty(ses);
     if (r.pat) await patternMenu(ses);
   },

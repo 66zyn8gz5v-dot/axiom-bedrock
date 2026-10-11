@@ -43,6 +43,7 @@ Neue Ideen unten anhängen.
 - [x] v0.17: 3D-Handbuch (klappt vor dem Spieler auf, 22 Seiten mit Bildern, umblättern), Textfassung im Hilfe-Menü
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
+- [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] 3D-Handbuch: Seiten sind lesbar (nicht gespiegelt), Umblättern per Schlagen/Benutzen klappt, Buch ist hell genug
@@ -67,8 +68,8 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [ ] **Höhenkarten-Pinsel**: Formen „Spitz“, „Rund“, „Plateau“ für Anheben/Absenken, Stärke per Schleichen umkehren
 
 ### Formen (Figuren) vertiefen
-- [ ] **Vorschau vor dem Setzen**: Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
-- [ ] **Neue Grundformen**: Dreieck/Keil (Rampe), Tetraeder (dreiseitige Pyramide), Oktaeder (Doppelpyramide),
+- [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
+- [x] **Neue Grundformen** (v0.20): Dreieck/Keil (Rampe), Tetraeder (dreiseitige Pyramide), Oktaeder (Doppelpyramide),
       Vieleck-Prisma (3–12 Ecken, z.B. Sechseck-Turm), Stufenpyramide (Zikkurat), Rohr/Röhre (liegend & stehend),
       Scheibe/Kreisfläche, Kegelstumpf, Stern, Herz, Kreuz
 - [ ] **Freie Drehung & Neigung**: Formen in 15°-Schritten um alle Achsen drehen/kippen (z.B. schräger Zylinder)

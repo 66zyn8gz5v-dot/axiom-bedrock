@@ -128,7 +128,7 @@ for (const rot of [0, 90, 180, 270])
   }
 
 console.log("Formen");
-for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral"]) {
+for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross"]) {
   Object.assign(ses.s.shape, { type, rx: 4, ry: 3, rz: 4, hollow: type === "sphere", thick: 1, anchor: "center" });
   await roundTrip("Form " + type, () => use("axiom:shape", G));
 }
@@ -716,6 +716,101 @@ console.log("Erosion");
   await roundTrip("Erosion: Schmelzen", () => use("axiom:terrain", G));
   await undo();
   Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2 });
+  dim.blocks.clear();
+}
+
+console.log("Formen-Vorschau");
+{
+  dim.blocks.clear();
+  const { shapeTool, shapeOutline, shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, hollow: false, anchor: "center", look: false, confirm: false });
+  ses.shapeOutline = undefined;
+  const pts = shapeOutline(ses);
+  const f = shapeFn(ses.s.shape);
+  check(!!pts && pts.length > 20 && pts.length <= 260, "Vorschau: Umriss der Kugel (" + pts?.length + " Punkte)");
+  check(!!pts && pts.every(([x, y, z]) => f.inside(x, y, z) && !(f.inside(x + 1, y, z) && f.inside(x - 1, y, z) && f.inside(x, y + 1, z) && f.inside(x, y - 1, z) && f.inside(x, y, z + 1) && f.inside(x, y, z - 1))), "Vorschau: nur Randblöcke");
+  player.rayHit = { pos: G, face: "Up" };
+  player.particles = 0;
+  shapeTool.preview(ses);
+  check(player.particles > 20, "Vorschau: Partikel werden gezeigt (" + player.particles + ")");
+  Object.assign(ses.s.shape, { rx: 60, ry: 60, rz: 60 });
+  check(shapeOutline(ses) === null, "Vorschau: riesige Form nur als Rahmen");
+  player.particles = 0;
+  shapeTool.preview(ses);
+  check(player.particles > 20, "Vorschau: Rahmen bei riesiger Form");
+
+  // Vorschau-Modus: erst zeigen, dann bauen
+  Object.assign(ses.s.shape, { type: "cuboid", rx: 1, ry: 1, rz: 1, confirm: true });
+  const snap = dim.snapshot();
+  await use("axiom:shape", { x: 10, y: 66, z: 10 });
+  check(eqSnap(snap, dim.snapshot()) && !!ses.shapeLock, "Vorschau-Modus: 1. Benutzen baut noch nichts");
+  await use("axiom:shape", { x: -10, y: 66, z: -10 });
+  check(dim._get(10, 66, 10).type.id !== "minecraft:air" && dim._get(-10, 66, -10).type.id === "minecraft:air", "Vorschau-Modus: 2. Benutzen baut an der gemerkten Stelle");
+  check(!ses.shapeLock, "Vorschau-Modus: danach wieder frei");
+  await undo();
+  await use("axiom:shape", { x: 10, y: 66, z: 10 });
+  const before = formatPattern(ses.s.pattern);
+  await hit("axiom:shape", G);
+  check(!ses.shapeLock, "Vorschau-Modus: Schlagen bricht ab");
+  check(before === formatPattern(ses.s.pattern), "Vorschau-Modus: Abbrechen ändert das Muster nicht");
+  await hit("axiom:shape", G);
+  check(formatPattern(ses.s.pattern).includes("grass"), "Formen: ohne Vorschau ist Schlagen wieder Pipette");
+  ses.s.pattern = parsePattern(before);
+  Object.assign(ses.s.shape, { confirm: false, look: true });
+  dim.blocks.clear();
+}
+
+console.log("Neue Grundformen");
+{
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const count = (c) => {
+    const f = shapeFn(c);
+    const e = f.ext;
+    let n = 0;
+    for (let x = -e.x; x <= e.x; x++) for (let y = -e.y; y <= e.y; y++) for (let z = -e.z; z <= e.z; z++) if (f.inside(x, y, z)) n++;
+    return n;
+  };
+  const wedge = shapeFn({ type: "wedge", rx: 2, ry: 3, rz: 4 });
+  check(wedge.inside(0, 0, -4) && !wedge.inside(0, 2, -4) && wedge.inside(0, 6, 4), "Keil: vorne flach, hinten hoch");
+  const oct = shapeFn({ type: "octa", rx: 4, ry: 4, rz: 4 });
+  check(oct.inside(0, 4, 0) && oct.inside(4, 0, 0) && !oct.inside(3, 3, 0), "Oktaeder: Spitzen, keine Ecken");
+  const hex = shapeFn({ type: "polygon", rx: 6, ry: 2, rz: 6, sides: 6 });
+  const sq = shapeFn({ type: "polygon", rx: 6, ry: 2, rz: 6, sides: 4 });
+  check(hex.inside(0, 0, 5) && sq.inside(4, 0, 4) && !sq.inside(6, 0, 6) && !hex.inside(6, 0, 3), "Vieleck: Sechseck & Quadrat");
+  check(count({ type: "polygon", rx: 6, ry: 0, rz: 6, sides: 3 }) < count({ type: "polygon", rx: 6, ry: 0, rz: 6, sides: 8 }), "Vieleck: mehr Ecken = mehr Fläche");
+  const zig = shapeFn({ type: "ziggurat", rx: 6, ry: 4, rz: 6, step: 2 });
+  check(zig.inside(6, -4, 0) && zig.inside(6, -3, 0) && !zig.inside(6, -2, 0), "Stufenpyramide: Stufen 2 hoch");
+  const tet = shapeFn({ type: "tetra", rx: 7, ry: 4, rz: 7 });
+  check(tet.inside(0, -4, 0) && tet.inside(0, 4, 2) && !tet.inside(0, 4, -3) && !tet.inside(7, -4, -7), "Tetraeder: Grundfläche & Spitze");
+  check(count({ type: "tetra", rx: 7, ry: 4, rz: 7 }) < count({ type: "pyramid", rx: 7, ry: 4, rz: 7 }), "Tetraeder kleiner als Pyramide");
+  const disk = shapeFn({ type: "disk", rx: 5, ry: 3, rz: 5 });
+  check(disk.inside(5, 0, 0) && !disk.inside(0, 1, 0), "Scheibe: nur eine Lage");
+  const fr = shapeFn({ type: "frustum", rx: 6, ry: 3, rz: 6 });
+  check(fr.inside(6, -3, 0) && !fr.inside(6, 3, 0) && fr.inside(3, 3, 0), "Kegelstumpf: oben halb so breit");
+  const tube = shapeFn({ type: "tube", rx: 6, ry: 2, rz: 2 });
+  check(tube.inside(6, 0, 0) && !tube.inside(0, 3, 0) && tube.inside(-6, 2, 0), "Rohr: liegt entlang X");
+  const heart = shapeFn({ type: "heart", rx: 7, ry: 7, rz: 0 });
+  check(heart.inside(-4, 5, 0) && heart.inside(4, 5, 0) && !heart.inside(0, 6, 0) && heart.inside(0, -6, 0), "Herz: zwei Bögen oben, Spitze unten");
+  const star = shapeFn({ type: "star", rx: 8, ry: 8, rz: 0 });
+  check(star.inside(0, 6, 0) && !star.inside(3, 5, 0) && star.inside(0, 0, 0), "Stern: Zacke oben, Lücke daneben");
+  const cr = shapeFn({ type: "cross", rx: 5, ry: 5, rz: 0 });
+  check(cr.inside(5, 0, 0) && cr.inside(0, 5, 0) && !cr.inside(4, 4, 0), "Kreuz: Arme ohne Ecken");
+  // Herz steht vor dem Spieler: mit Blickrichtung Ost wird die Ebene gedreht
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "heart", rx: 4, ry: 4, rz: 0, hollow: false, anchor: "center", look: true });
+  const oldView = player.view;
+  player.view = { x: 1, y: 0, z: 0 };
+  await use("axiom:shape", { x: 0, y: 70, z: 0 });
+  let xs = 0;
+  let zs = 0;
+  for (const k of dim.blocks.keys()) {
+    const [x, , z] = k.split(",").map(Number);
+    if (x !== 0) xs++;
+    if (z !== 0) zs++;
+  }
+  check(xs === 0 && zs > 0, "Herz: steht quer zur Blickrichtung");
+  player.view = oldView;
+  await undo();
   dim.blocks.clear();
 }
 

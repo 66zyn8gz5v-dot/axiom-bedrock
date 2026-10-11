@@ -151,9 +151,9 @@ PAGES = [
     ),
     (
         [("h", "4. Formen"),
-         ("tool", "shape", "Formen", "Kugel, Kuppel, Quader, Zylinder, Kegel, Pyramide, Ring, Bogen, Dach, Spirale, Säule."),
+         ("tool", "shape", "Formen", "22 Formen: Kugel, Zylinder, Kegel, Pyramide, Keil, Sechseck-Turm, Rohr, Stern, Herz …"),
          ("p", "Schleichen + Benutzen: Form, Größe, hohl oder voll."),
-         ("p", "Benutzen setzt die Form dort, wo du hinschaust – auch in der Luft."),
+         ("p", "Benutzen setzt die Form dort, wo du hinschaust – auch in der Luft. Der Umriss aus Partikeln zeigt sie vorher."),
          ("img", "sphere")],
         [("h", "Modellieren"),
          ("tool", "sculpt", "Modellieren", "Wie Knete: gedrückt halten und formen."),
