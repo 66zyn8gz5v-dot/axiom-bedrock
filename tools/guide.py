@@ -216,7 +216,7 @@ PAGES = [
 
 
 # Szenen-Größe je Bild (Pixel pro Block in halber Auflösung)
-SCENE_U = {"selection": 11, "house": 8, "terrain": 8, "bridge": 8, "heart": 11, "sphere": 6, "copy": 7}
+SCENE_U = {"selection": 22, "house": 16, "terrain": 16, "bridge": 16, "heart": 22, "sphere": 12, "copy": 14}
 
 
 class Spread:
@@ -423,14 +423,14 @@ def render_page(sp, x0, blocks, page_no):
                 sp.full.append(lambda img, d, yy=yy: controller(d, x, yy, width))
                 y += 165
             else:
+                # Szene in voller Auflösung, damit die Original-Texturen scharf bleiben
                 sc = bookart.scene(b[1], SCENE_U.get(b[1]))
-                sx = (x0 + PAGE_W // 2) // 2 - sc.size[0] // 2
+                sx = x0 + PAGE_W // 2 - sc.size[0] // 2
                 # Schatten unter der Szene
-                sh = sp.da
-                cy = y // 2 + sc.size[1] - 6
-                sh.ellipse([sx + 8, cy - 4, sx + sc.size[0] - 8, cy + 6], fill=(205, 186, 150))
-                sp.art.alpha_composite(sc, (sx, y // 2))
-                y += sc.size[1] * 2 + 10
+                cy = (y + sc.size[1] - 12) // 2
+                sp.da.ellipse([(sx + 16) // 2, cy - 4, (sx + sc.size[0] - 16) // 2, cy + 6], fill=(205, 186, 150))
+                sp.paste(sc, (sx, y))
+                y += sc.size[1] + 10
         elif kind == "ctrl":
             for key, text in b[1]:
                 bw = mc_button(sp, x, y, key)

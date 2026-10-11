@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.18.1 – 11.10.2026
+- **Handbuch-Bilder mit Original-Minecraft-Texturen:** Gras, Erde, Stein, Bruchstein, Holz, Ziegel, Glas, Wasser,
+  Sand, Gold, Quarz, Laub, Stamm und Wolle stammen jetzt aus dem offiziellen Vanilla-Ressourcenpaket
+  (Mojang/bedrock-samples). Die Szenen werden in voller Auflösung gezeichnet, damit jeder Pixel der Textur zu sehen ist
+
 ## 0.18.0 – 11.10.2026
 - **Schickeres Handbuch:** Lederumschlag mit goldener Ziernaht, Pergamentseiten, goldene Eckverzierungen und ein
   Lesebändchen. Überschriften stehen auf lila Bannern in Pixel-Schrift, Werkzeuge in Inventar-Slots, Schritte mit

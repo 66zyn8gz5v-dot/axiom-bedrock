@@ -1,8 +1,10 @@
 """Grafik-Bausteine für das Handbuch: Block-Texturen, isometrische 3D-Szenen und Buch-Verzierungen.
 
-Alles wird prozedural erzeugt (keine fremden Bilder), im Stil von Minecraft-Pixelgrafik.
+Die Blöcke nutzen die Original-Texturen aus dem Vanilla-Ressourcenpaket (Mojang/bedrock-samples, in tools/vanilla);
+Szenen und Verzierungen werden daraus prozedural zusammengesetzt.
 """
 import math
+import os
 import random
 
 from PIL import Image, ImageDraw
@@ -27,98 +29,53 @@ def _noise_tex(base, var, seed, specks=None):
     return img
 
 
-def _planks(base, seed):
-    rnd = random.Random(seed)
-    img = Image.new("RGBA", (16, 16))
-    for y in range(16):
-        for x in range(16):
-            d = rnd.randint(-8, 8)
-            if y % 4 == 3:
-                d -= 35
-            c = tuple(max(0, min(255, base[i] + d)) for i in range(3))
-            img.putpixel((x, y), c + (255,))
-    for row in range(4):
-        x = (row * 7 + 3) % 16
-        for y in range(row * 4, row * 4 + 3):
-            p = img.getpixel((x, y))
-            img.putpixel((x, y), tuple(max(0, v - 30) for v in p[:3]) + (255,))
+VANILLA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vanilla")
+
+
+def _v(name, tint=None):
+    """Original-Textur aus dem Vanilla-Ressourcenpaket (tools/vanilla, aus Mojang/bedrock-samples)."""
+    img = Image.open(os.path.join(VANILLA, name)).convert("RGBA")
+    img = img.crop((0, 0, 16, 16))  # animierte Texturen: erstes Bild
+    if tint:
+        px = img.load()
+        for y in range(16):
+            for x in range(16):
+                r, g, b, a = px[x, y]
+                px[x, y] = (r * tint[0] // 255, g * tint[1] // 255, b * tint[2] // 255, a)
     return img
 
 
-def _bricks(seed):
-    img = _noise_tex((150, 75, 60), 10, seed)
-    d = ImageDraw.Draw(img)
-    for y in range(0, 16, 4):
-        d.line([0, y + 3, 15, y + 3], fill=(200, 190, 175, 255))
-        off = 0 if (y // 4) % 2 == 0 else 4
-        for x in range(off, 16, 8):
-            d.line([x, y, x, y + 2], fill=(200, 190, 175, 255))
-    return img
-
-
-def _glass():
-    img = Image.new("RGBA", (16, 16), (200, 235, 250, 70))
-    d = ImageDraw.Draw(img)
-    d.rectangle([0, 0, 15, 15], outline=(230, 250, 255, 230))
-    d.line([3, 3, 6, 3], fill=(255, 255, 255, 200))
-    d.line([3, 4, 3, 6], fill=(255, 255, 255, 200))
-    return img
+def _opaque(img, bg):
+    """Löcher (z.B. bei Laub) mit dunkler Farbe füllen, damit die Szene nicht durchscheint."""
+    out = Image.new("RGBA", img.size, bg + (255,))
+    out.alpha_composite(img)
+    return out
 
 
 def _water():
-    img = _noise_tex((50, 95, 210), 12, 9)
-    img.putalpha(170)
-    return img
-
-
-def _grass_side():
-    img = _noise_tex((134, 96, 67), 12, 4)
-    rnd = random.Random(5)
-    for x in range(16):
-        h = 3 + rnd.randint(0, 2)
-        for y in range(h):
-            g = 110 + rnd.randint(-15, 15)
-            img.putpixel((x, y), (70, g + 40, 45, 255))
-    return img
-
-
-def _leaves():
-    img = _noise_tex((60, 130, 50), 25, 11)
-    rnd = random.Random(12)
-    for _ in range(28):
-        img.putpixel((rnd.randrange(16), rnd.randrange(16)), (30, 80, 25, 255))
-    return img
-
-
-def _log_side():
-    img = Image.new("RGBA", (16, 16))
-    rnd = random.Random(13)
-    for y in range(16):
-        for x in range(16):
-            base = 95 if x % 4 else 70
-            d = rnd.randint(-8, 8)
-            img.putpixel((x, y), (base + d, int(base * 0.68) + d, int(base * 0.4) + d, 255))
+    img = _v("water_still_grey.png", (68, 120, 228))
+    img.putalpha(190)
     return img
 
 
 TEX = {
-    "grass": (_noise_tex((95, 160, 70), 18, 1, [((70, 130, 50), 20)]), _grass_side()),
-    "dirt": (_noise_tex((134, 96, 67), 14, 2),) * 2,
-    "stone": (_noise_tex((128, 128, 128), 14, 3, [((100, 100, 100), 25)]),) * 2,
-    "cobble": (_noise_tex((115, 115, 115), 30, 6, [((80, 80, 80), 40)]),) * 2,
-    "planks": (_planks((170, 130, 80), 7),) * 2,
-    "dark": (_planks((90, 60, 40), 8),) * 2,
-    "roof": (_planks((150, 60, 50), 14),) * 2,
-    "bricks": (_bricks(10),) * 2,
-    "glass": (_glass(),) * 2,
+    "grass": (_v("grass_carried.png"), _v("grass_side_carried.png")),
+    "dirt": (_v("dirt.png"),) * 2,
+    "stone": (_v("stone.png"),) * 2,
+    "cobble": (_v("cobblestone.png"),) * 2,
+    "planks": (_v("planks_oak.png"),) * 2,
+    "dark": (_v("planks_spruce.png"),) * 2,
+    "roof": (_v("planks_big_oak.png"),) * 2,
+    "bricks": (_v("brick.png"),) * 2,
+    "glass": (_v("glass.png"),) * 2,
     "water": (_water(),) * 2,
-    "sand": (_noise_tex((222, 210, 160), 10, 15),) * 2,
-    "gold": (_noise_tex((245, 205, 60), 18, 16, [((255, 240, 150), 18)]),) * 2,
-    "quartz": (_noise_tex((236, 232, 226), 6, 17),) * 2,
-    "leaves": (_leaves(),) * 2,
-    "log": (_noise_tex((150, 115, 70), 10, 18), _log_side()),
-    "red": (_noise_tex((200, 40, 45), 14, 20),) * 2,
-    "purple": (_noise_tex((160, 90, 210), 14, 19),) * 2,
+    "sand": (_v("sand.png"),) * 2,
+    "gold": (_v("gold_block.png"),) * 2,
+    "quartz": (_v("quartz_block_side.png"),) * 2,
+    "leaves": (_opaque(_v("leaves_oak_carried.tga"), (40, 82, 24)),) * 2,
+    "log": (_v("log_oak_top.png"), _v("log_oak.png")),
+    "red": (_v("wool_colored_red.png"),) * 2,
+    "purple": (_v("purpur_block.png"),) * 2,
 }
 
 # ---------------------------------------------------------------------------
@@ -220,13 +177,13 @@ def scene(name, u=None):
             for p in corners:
                 for q in corners:
                     if sum(p[i] != q[i] for i in range(3)) == 1 and p < q:
-                        n = 10
+                        n = 14
                         for k in range(n + 1):
                             s = [p[i] + (q[i] - p[i]) * k / n for i in range(3)]
                             pt = Q(*s)
-                            d.rectangle([pt[0] - 1, pt[1] - 1, pt[0] + 1, pt[1] + 1], fill=(250, 90, 250))
+                            d.rectangle([pt[0] - 2, pt[1] - 2, pt[0] + 2, pt[1] + 2], fill=(250, 90, 250))
             for p, c in ((Q(1, 1, 3), (70, 230, 70)), (Q(3, 3, 1), (80, 150, 255))):
-                d.rectangle([p[0] - 3, p[1] - 3, p[0] + 3, p[1] + 3], fill=c, outline=(20, 20, 30))
+                d.rectangle([p[0] - 6, p[1] - 6, p[0] + 6, p[1] + 6], fill=c, outline=(20, 20, 30), width=2)
 
         return render_scene(B, u=u or 11, extra=extra)
     if name == "house":
@@ -327,8 +284,8 @@ def scene(name, u=None):
 
         def extra(d, Q):
             a, b = Q(3.2, 4, 1.5), Q(5.6, 4, 1.5)
-            d.line([a, b], fill=(250, 220, 60), width=4)
-            d.polygon([(b[0] + 6, b[1] + 3), (b[0] - 6, b[1] - 6), (b[0] - 2, b[1] + 8)], fill=(250, 220, 60))
+            d.line([a, b], fill=(250, 220, 60), width=7)
+            d.polygon([(b[0] + 12, b[1] + 6), (b[0] - 10, b[1] - 12), (b[0] - 4, b[1] + 16)], fill=(250, 220, 60))
 
         return render_scene(B, u=u or 9, extra=extra)
     raise KeyError(name)
