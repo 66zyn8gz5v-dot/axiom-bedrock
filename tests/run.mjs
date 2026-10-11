@@ -693,6 +693,32 @@ console.log("Biom-Malen");
   dim.blocks.clear();
 }
 
+console.log("Erosion");
+{
+  const { rainErosion } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  // Reine Rechnung: schräge Ebene + Mulde – Tropfen tragen oben ab und lagern unten ab
+  let seed = 1;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const Hs = (x, z) => (x <= -5 ? 60 : 60 + x + 5);
+  const er = rainErosion(Hs, 0, 0, 6, 4, rnd);
+  check(er.size > 0, "Erosion: Regen verändert einen Hang (" + er.size + ")");
+  check([...er].some(([k, v]) => v < Hs(...k.split(",").map(Number))), "Erosion: Regen trägt Boden ab");
+  check([...er].every(([k, v]) => Math.abs(v - Hs(...k.split(",").map(Number))) <= 4), "Erosion: höchstens Stärke-abhängig tief");
+  const flat = rainErosion(() => 64, 0, 0, 6, 4, rnd);
+  check(flat.size === 0, "Erosion: flaches Land bleibt unverändert");
+
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "mountain", radius: 8, strength: 4, biome: false });
+  await use("axiom:terrain", G);
+  ses.s.terrain.mode = "rain";
+  await roundTrip("Erosion: Regen", () => use("axiom:terrain", G));
+  ses.s.terrain.mode = "melt";
+  await roundTrip("Erosion: Schmelzen", () => use("axiom:terrain", G));
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

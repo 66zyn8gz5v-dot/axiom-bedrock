@@ -42,7 +42,7 @@ Neue Ideen unten anhängen.
 - [x] v0.16: Dach aufsetzen (Sattel-/Walmdach mit Treppen, Überstand, Giebel), Fenster-Raster für Wände
 - [x] v0.17: 3D-Handbuch (klappt vor dem Spieler auf, 22 Seiten mit Bildern, umblättern), Textfassung im Hilfe-Menü
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
-- [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“
+- [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
 - [ ] 3D-Handbuch: Seiten sind lesbar (nicht gespiegelt), Umblättern per Schlagen/Benutzen klappt, Buch ist hell genug
@@ -59,7 +59,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 ### Terraform vertiefen
 - [x] **Biom-Malen beim Terraformen** (v0.19): Oberfläche automatisch passend (Gras oben, Erde darunter, Stein in der Tiefe,
       Sand am Wasser, Schnee ab einstellbarer Höhe, Geröll an steilen Hängen)
-- [ ] **Erosion**: Regen-Erosion (Rinnen an Hängen) und Wind-/Schmelz-Erosion als Pinsel-Modi
+- [x] **Erosion** (v0.19): Regen-Erosion (Rinnen an Hängen) und Wind-/Schmelz-Erosion als Pinsel-Modi
 - [ ] **Stempel-Formen frei einstellbar**: Größe, Höhe, Zackigkeit, Drehung + Vorschau-Rahmen vor dem Setzen
 - [ ] **Neue Stempel**: Hügelkette entlang Pfadpunkten, Düne, Gletscher/Schneegipfel, Felsbogen, Höhleneingang, Klippe
 - [ ] **Gelände aus Auswahl**: ganze Box-Auswahl als Landschaft füllen (Rauschen mit Oktaven, Meereshöhe, Seen)

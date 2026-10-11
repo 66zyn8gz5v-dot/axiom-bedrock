@@ -24,6 +24,8 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
   ["biome", "Nur Oberfläche anpassen (Gras, Sand, Stein, Schnee)"],
+  ["rain", "Erosion: Regen (Rinnen an Hängen)"],
+  ["melt", "Erosion: Wind/Schmelzen (Kanten abrunden)"],
 ]);
 
 /** Natürliche Bodenblöcke, die das Biom-Malen umfärben darf (Bauwerke bleiben unberührt). */
@@ -150,6 +152,69 @@ function waterfall(ses, t, c) {
   });
 }
 
+/**
+ * Regen-Erosion: Tropfen laufen den steilsten Weg bergab, tragen dabei Boden ab und lagern ihn in Senken ab.
+ * Ergebnis: neue Höhe je Spalte (nur geänderte Spalten).
+ * @param {(x:number, z:number) => number|null} H Höhenkarte
+ * @param {number} cx @param {number} cz @param {number} R @param {number} strength
+ * @param {() => number} [rand]
+ */
+export function rainErosion(H, cx, cz, R, strength, rand = Math.random) {
+  /** @type {Map<string, number>} */
+  const cur = new Map();
+  const get = (/** @type {number} */ x, /** @type {number} */ z) => {
+    const k = x + "," + z;
+    if (cur.has(k)) return /** @type {number} */ (cur.get(k));
+    return H(x, z);
+  };
+  const inside = (/** @type {number} */ x, /** @type {number} */ z) => (x - cx) ** 2 + (z - cz) ** 2 <= (R + 0.5) ** 2;
+  const drops = Math.round(R * R * 0.6 * strength);
+  const cap = Math.max(1, Math.ceil(strength / 2));
+  for (let i = 0; i < drops; i++) {
+    let x = cx + Math.round((rand() * 2 - 1) * R);
+    let z = cz + Math.round((rand() * 2 - 1) * R);
+    if (!inside(x, z)) continue;
+    let load = 0;
+    for (let step = 0; step < R * 3; step++) {
+      const h = get(x, z);
+      if (h === null) break;
+      let bx = 0;
+      let bz = 0;
+      let bh = h;
+      for (let ax = -1; ax <= 1; ax++)
+        for (let az = -1; az <= 1; az++) {
+          if (!ax && !az) continue;
+          const nh = get(x + ax, z + az);
+          if (nh !== null && nh < bh) {
+            bh = nh;
+            bx = ax;
+            bz = az;
+          }
+        }
+      if (bh >= h) {
+        // Senke: mitgenommenen Boden ablagern
+        if (load > 0) cur.set(x + "," + z, h + 1);
+        break;
+      }
+      if (!inside(x + bx, z + bz)) break;
+      // Nur an Hängen abtragen (mind. 1 Block Gefälle), nie tiefer als der nächste Schritt
+      if (load < cap && h - 1 >= bh) {
+        cur.set(x + "," + z, h - 1);
+        load++;
+      }
+      x += bx;
+      z += bz;
+    }
+  }
+  /** @type {Map<string, number>} */
+  const out = new Map();
+  for (const [k, v] of cur) {
+    const [x, z] = k.split(",").map(Number);
+    if (H(x, z) !== v) out.set(k, v);
+  }
+  return out;
+}
+
 /** @type {import("./registry.js").Tool} */
 export const terrainTool = {
   id: "axiom:terrain",
@@ -200,6 +265,8 @@ export const terrainTool = {
         }
         return p;
       };
+      /** @type {Map<string, number>|null} */
+      const eroded = c.mode === "rain" ? rainErosion(H, ctr.x, ctr.z, R, c.strength) : null;
       /** @type {{x:number, z:number, h:number, target:number, topOverride?:string}[]} */
       const plan = [];
       /** @type {Map<string, number>} */
@@ -304,6 +371,25 @@ export const terrainTool = {
             }
             case "biome":
               break;
+            case "rain":
+              target = eroded?.get(x + "," + z) ?? h;
+              break;
+            case "melt": {
+              // Spitzen und Grate abtragen, Löcher füllen – je nachdem, wie viele Nachbarn tiefer/höher liegen
+              let lower = 0;
+              let higher = 0;
+              for (let ax = -1; ax <= 1; ax++)
+                for (let az = -1; az <= 1; az++) {
+                  if (!ax && !az) continue;
+                  const hh = H(x + ax, z + az);
+                  if (hh === null) continue;
+                  if (hh < h) lower++;
+                  else if (hh > h) higher++;
+                }
+              if (lower >= 5 && Math.random() < 0.35 + c.strength * 0.065) target = h - 1;
+              else if (higher >= 6 && Math.random() < 0.35 + c.strength * 0.065) target = h + 1;
+              break;
+            }
             case "terrace": {
               const step = Math.max(2, c.strength);
               target = Math.round(h + (Math.floor(h / step) * step - h) * fall);

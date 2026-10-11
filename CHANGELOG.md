@@ -7,6 +7,9 @@
   über der Schneegrenze (Höhe Y im Menü einstellbar). Funktioniert mit allen Modi und Stempeln
 - **Neuer Modus „Nur Oberfläche anpassen“:** färbt vorhandenes Gelände im Pinsel um, ohne die Höhe zu verändern
 - Gebaute Blöcke (Holz, Ziegel …) werden vom Biom-Malen nicht verändert
+- **Erosion (zwei neue Terrain-Modi):** „Erosion: Regen“ – Regentropfen laufen den steilsten Weg bergab, waschen
+  Rinnen aus und lagern den Boden in Senken ab (Stärke = wie viel ein Tropfen mitnimmt). „Erosion: Wind/Schmelzen“ –
+  rundet Spitzen und scharfe Grate ab und füllt kleine Löcher. Beide als Pinsel: gedrückt halten über einem Berg
 
 ## 0.18.1 – 11.10.2026
 - **Handbuch-Bilder mit Original-Minecraft-Texturen:** Gras, Erde, Stein, Bruchstein, Holz, Ziegel, Glas, Wasser,

@@ -166,7 +166,7 @@ PAGES = [
          ("p", "Gute Modi: Oberfläche · Nach Neigung (oben Gras, Hänge Stein) · Rauschen (2 Blöcke gemischt) · "
                "Streuen (Blumen) · Flutfüllung (See füllen)")],
         [("h", "Terrain"),
-         ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten."),
+         ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten – und Erosion durch Regen oder Wind."),
          ("p", "Stempel mit einem Klick: Berg · Krater · Vulkan · Hochplateau · Insel · Schlucht · Wasserfall"),
          ("img", "terrain"),
          ("tip", "Biom-Malen einschalten: Gras, Sand am Wasser, Stein an Hängen, Schnee auf Gipfeln.")],
