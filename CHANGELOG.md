@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.23.0 – 12.10.2026 (nächtlicher Ausbau: Terraform)
+- **Drei neue Terrain-Stempel:** **Düne** (aus Sand, flach ansteigend und hinter dem Kamm steil abfallend – mit
+  Streckung entsteht ein langer Dünenzug), **Schneegipfel** (hoher spitzer Berg: unten Gras, an den Flanken Fels,
+  oben Schnee) und **Klippe** (senkrechte Felswand quer vor dir, dahinter erhöhtes Land, davor bleibt alles)
+
 ## 0.22.0 – 12.10.2026 (nächtlicher Ausbau: Terraform)
 - **Stempel frei einstellbar:** Terrain → Schleichen + Benutzen. Neu: **Zackigkeit** (0 = glatt und gleichmäßig,
   10 = wild zerklüftet), **Drehung** (in 15°-Schritten, 0 = in Blickrichtung) und **Streckung** (rund bis dreimal so

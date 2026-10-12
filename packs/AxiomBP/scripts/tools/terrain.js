@@ -22,6 +22,9 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["mesa", "Stempel: Hochplateau (ein Klick)"],
   ["island", "Stempel: Insel mit Strand (ein Klick)"],
   ["canyon", "Stempel: Schlucht in Blickrichtung (ein Klick)"],
+  ["dune", "Stempel: Sanddüne (flach vorne, steil hinten)"],
+  ["snowpeak", "Stempel: Schneegipfel (Fels & Schnee oben)"],
+  ["cliff", "Stempel: Klippe (Felswand quer vor dir)"],
   ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
   ["biome", "Nur Oberfläche anpassen (Gras, Sand, Stein, Schnee)"],
@@ -30,7 +33,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
 ]);
 
 /** Stempel (ein Klick): Form über Zackigkeit, Drehung und Streckung einstellbar. */
-export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon"];
+export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff"];
 
 /**
  * Längsachse eines Stempels: Blickrichtung (waagerecht), um `rot` Grad gedreht.
@@ -284,7 +287,7 @@ export const terrainTool = {
       };
       /** @type {Map<string, number>|null} */
       const eroded = c.mode === "rain" ? rainErosion(H, ctr.x, ctr.z, R, c.strength) : null;
-      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string}[]} */
+      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string, fillOverride?:string}[]} */
       const plan = [];
       /** @type {Map<string, number>} */
       const newH = new Map();
@@ -316,6 +319,8 @@ export const terrainTool = {
           const fall = c.falloff ? Math.max(0, Math.cos((Math.min(d, R) / (R + 0.5)) * (Math.PI / 2))) : 1;
           /** @type {string|undefined} */
           let topOverride;
+          /** @type {string|undefined} */
+          let fillOverride;
           let target = h;
           switch (c.mode) {
             case "raise":
@@ -387,6 +392,32 @@ export const terrainTool = {
               target = h - Math.round(c.strength * 4 * (1 - (ac / w) ** 2) * (1 - (Math.abs(along) / (RR + 0.5)) ** 4));
               break;
             }
+            case "dune": {
+              // Windseite flach ansteigend, Leeseite steil (Kamm bei 40 % der Länge)
+              const u = along / (RR + 0.5);
+              const prof = u < 0.4 ? (u + 1) / 1.4 : Math.max(0, (1 - u) / 0.6);
+              const side = Math.max(0, 1 - (across / (R + 0.5)) ** 2);
+              target = h + Math.round(c.strength * 2.2 * prof * side);
+              topOverride = fillOverride = "minecraft:sand";
+              break;
+            }
+            case "snowpeak": {
+              // Hoher, spitzer Gipfel: unten Gras, Mitte Fels, oben Schnee
+              const f = Math.max(0, 1 - d / (R + 0.5));
+              target = h + Math.round(c.strength * 5.5 * Math.pow(f, 1.35));
+              fillOverride = "minecraft:stone";
+              if (f > 0.55) topOverride = "minecraft:snow";
+              else if (f > 0.3) topOverride = "minecraft:stone";
+              break;
+            }
+            case "cliff": {
+              // Senkrechte Felswand quer zur Blickrichtung: dahinter erhöht, davor bleibt alles
+              if (along < 0) break;
+              const edge = Math.min(1, (R + 0.5 - Math.abs(across)) / 2);
+              target = h + Math.round(c.strength * 4 * Math.max(0, edge));
+              fillOverride = "minecraft:stone";
+              break;
+            }
             case "biome":
               break;
             case "rain":
@@ -420,7 +451,7 @@ export const terrainTool = {
             target = h + Math.round((target - h) * Math.max(0, 1 + n * c.jag * 0.12));
           }
           if (target === h && !topOverride && !c.biome) continue;
-          plan.push({ x, z, h, target, topOverride });
+          plan.push({ x, z, h, target, topOverride, fillOverride });
           newH.set(x + "," + z, target);
         }
         yield;
@@ -454,12 +485,12 @@ export const terrainTool = {
         yield;
       }
       let n = 0;
-      for (const { x, z, h, target, topOverride } of plan) {
+      for (const { x, z, h, target, topOverride, fillOverride } of plan) {
         const oldTop = es.id(x, h, z);
         const sf = !topOverride && NATURAL.test(oldTop) ? surf.get(x + "," + z) : undefined;
         const topId = topOverride ?? sf?.top ?? oldTop;
         const belowId = es.id(x, h - 1, z);
-        const fillId = belowId && isSolidId(belowId) ? belowId : topId;
+        const fillId = fillOverride ?? (belowId && isSolidId(belowId) ? belowId : topId);
         if (target > h) {
           // Oberfläche nach oben verschieben: alte Oberfläche wird Füllmaterial
           for (let y = h; y < target; y++) {

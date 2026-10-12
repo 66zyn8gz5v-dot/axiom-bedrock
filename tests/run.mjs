@@ -924,6 +924,44 @@ console.log("Stempel einstellbar");
   dim.blocks.clear();
 }
 
+console.log("Neue Stempel");
+{
+  const topB = (x, z) => {
+    for (let y = 140; y > 50; y--) {
+      const id = dim._get(x, y, z).type.id;
+      if (id !== "minecraft:air") return { y, id };
+    }
+    return { y: 0, id: "" };
+  };
+  const oldView = player.view;
+  player.view = { x: 1, y: 0, z: 0 };
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "dune", radius: 6, strength: 4, falloff: false, biome: false, jag: 0, rot: 0, stretch: 10 });
+  await roundTrip("Stempel Düne", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const crest = topB(2, 0);
+  check(crest.id === "minecraft:sand" && crest.y > 66, "Düne: Sandkamm (" + crest.y + ")");
+  check(topB(-4, 0).y < crest.y && topB(5, 0).y < crest.y && crest.y - topB(5, 0).y > topB(-1, 0).y - topB(-4, 0).y - 1, "Düne: flach vorne, steil hinten");
+  check(dim._get(2, crest.y - 2, 0).type.id === "minecraft:sand", "Düne: innen Sand");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "snowpeak", radius: 7 });
+  await roundTrip("Stempel Schneegipfel", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  check(topB(0, 0).id === "minecraft:snow" && topB(0, 0).y > 80, "Schneegipfel: Schnee oben");
+  check(topB(4, 0).id === "minecraft:stone", "Schneegipfel: Fels an der Flanke");
+  check(topB(7, 0).id === "minecraft:grass_block", "Schneegipfel: unten Gras");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "cliff", radius: 6, strength: 3 });
+  await roundTrip("Stempel Klippe", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  check(topB(3, 0).y >= 64 + 12 && topB(-3, 0).y === 64, "Klippe: hinten hoch, vorne unverändert");
+  check(dim._get(3, 70, 0).type.id === "minecraft:stone", "Klippe: Felswand aus Stein");
+  await undo();
+  player.view = oldView;
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, falloff: true, jag: 3 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
