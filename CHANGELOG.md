@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.22.0 – 12.10.2026 (nächtlicher Ausbau: Terraform)
+- **Stempel frei einstellbar:** Terrain → Schleichen + Benutzen. Neu: **Zackigkeit** (0 = glatt und gleichmäßig,
+  10 = wild zerklüftet), **Drehung** (in 15°-Schritten, 0 = in Blickrichtung) und **Streckung** (rund bis dreimal so
+  lang – z.B. ein Bergkamm, eine lange Insel oder ein langes Plateau). Größe = Radius, Höhe = Stärke
+- **Stempel-Vorschau:** Mit einem Stempel-Modus zeigt ein Partikel-Oval am Blickziel, wo und wie groß der Stempel
+  wird; bei gestreckten Stempeln und der Schlucht zeigt eine blaue Linie die Längsrichtung
+
 ## 0.21.0 – 12.10.2026
 - **Editor-Modus (wie bei der Axiom-Mod, nur einfacher):** Axiom-Menü → „Editor-Modus an“ oder `/axiom:editor`.
   Die Hotbar wird zur Werkzeugleiste: Tasten 1–8 = Box-Auswahl, Formen, Terrain, Modellieren, Maler, Baumeister,

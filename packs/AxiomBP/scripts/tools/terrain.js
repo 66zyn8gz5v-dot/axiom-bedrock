@@ -5,6 +5,7 @@ import { air, isSolidId } from "../core/pattern.js";
 import { fbm } from "../core/noise.js";
 import { markDirty } from "../core/state.js";
 import { err, now, target } from "../core/util.js";
+import { spawn } from "../core/selection.js";
 import { Modal } from "../ui/forms.js";
 import { strokeId } from "./registry.js";
 
@@ -27,6 +28,21 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["rain", "Erosion: Regen (Rinnen an Hängen)"],
   ["melt", "Erosion: Wind/Schmelzen (Kanten abrunden)"],
 ]);
+
+/** Stempel (ein Klick): Form über Zackigkeit, Drehung und Streckung einstellbar. */
+export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon"];
+
+/**
+ * Längsachse eines Stempels: Blickrichtung (waagerecht), um `rot` Grad gedreht.
+ * @param {{x:number, z:number}} vd Blickrichtung @param {number} rot Grad
+ */
+export function stampAxis(vd, rot) {
+  const vl = Math.hypot(vd.x, vd.z) || 1;
+  const fx = vd.x / vl;
+  const fz = vd.z / vl;
+  const a = (rot * Math.PI) / 180;
+  return { ax: fx * Math.cos(a) - fz * Math.sin(a), az: fx * Math.sin(a) + fz * Math.cos(a) };
+}
 
 /** Natürliche Bodenblöcke, die das Biom-Malen umfärben darf (Bauwerke bleiben unberührt). */
 const NATURAL =
@@ -225,7 +241,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if (["mountain", "crater", "volcano", "mesa", "island", "canyon", "waterfall"].includes(c.mode)) {
+    if ([...STAMP_MODES, "waterfall"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -234,10 +250,11 @@ export const terrainTool = {
     if (c.mode === "waterfall") return waterfall(ses, t, c);
     const ctr = t.pos;
     const R = c.radius;
-    const vd = ses.player.getViewDirection();
-    const vl = Math.hypot(vd.x, vd.z) || 1;
-    const fx = vd.x / vl;
-    const fz = vd.z / vl;
+    // Stempel: Längsachse (Blickrichtung + Drehung) und Streckung → ovaler Grundriss
+    const stamp = STAMP_MODES.includes(c.mode);
+    const el = stamp ? Math.max(1, (c.stretch ?? 10) / 10) : 1;
+    const { ax, az } = stampAxis(ses.player.getViewDirection(), stamp ? (c.rot ?? 0) : 0);
+    const RR = Math.ceil(R * el);
     const seed = 77.37;
     runEdit(ses.player, { label: "Terrain", stroke: strokeId(ses, "terrain"), symmetry: true }, function* (es) {
       const A = air();
@@ -251,8 +268,8 @@ export const terrainTool = {
         return hm.get(k) ?? null;
       };
       const pad = c.mode === "smooth" ? 2 : c.mode === "stairs" ? 1 : 0;
-      for (let dx = -R - pad; dx <= R + pad; dx++) {
-        for (let dz = -R - pad; dz <= R + pad; dz++) H(ctr.x + dx, ctr.z + dz);
+      for (let dx = -RR - pad; dx <= RR + pad; dx++) {
+        for (let dz = -RR - pad; dz <= RR + pad; dz++) H(ctr.x + dx, ctr.z + dz);
         yield;
       }
       /** @type {Map<string, BlockPermutation>} */
@@ -271,9 +288,11 @@ export const terrainTool = {
       const plan = [];
       /** @type {Map<string, number>} */
       const newH = new Map();
-      for (let dx = -R; dx <= R; dx++) {
-        for (let dz = -R; dz <= R; dz++) {
-          const d = Math.sqrt(dx * dx + dz * dz);
+      for (let dx = -RR; dx <= RR; dx++) {
+        for (let dz = -RR; dz <= RR; dz++) {
+          const along = dx * ax + dz * az;
+          const across = -dx * az + dz * ax;
+          const d = stamp ? Math.hypot(along / el, across) : Math.sqrt(dx * dx + dz * dz);
           if (d > R + 0.5) continue;
           const x = ctr.x + dx;
           const z = ctr.z + dz;
@@ -328,7 +347,7 @@ export const terrainTool = {
             case "mountain": {
               // Spitze Bergform mit etwas Rauschen
               const f = Math.max(0, 1 - d / (R + 0.5));
-              target = h + Math.round(c.strength * 4 * Math.pow(f, 1.6) * (1 + 0.35 * fbm(x / 7 + seed, 0.3, z / 7, 2)));
+              target = h + Math.round(c.strength * 4 * Math.pow(f, 1.6));
               break;
             }
             case "crater": {
@@ -361,12 +380,11 @@ export const terrainTool = {
               break;
             }
             case "canyon": {
-              // Langgezogene Schlucht entlang der Blickrichtung
-              const across = Math.abs(dx * fz - dz * fx);
-              const along = Math.abs(dx * fx + dz * fz);
+              // Langgezogene Schlucht entlang der Längsachse (Blickrichtung + Drehung)
+              const ac = Math.abs(across);
               const w = Math.max(1.5, R * 0.35);
-              if (across > w) break;
-              target = h - Math.round(c.strength * 4 * (1 - (across / w) ** 2) * (1 - (along / (R + 0.5)) ** 4));
+              if (ac > w) break;
+              target = h - Math.round(c.strength * 4 * (1 - (ac / w) ** 2) * (1 - (Math.abs(along) / (RR + 0.5)) ** 4));
               break;
             }
             case "biome":
@@ -395,6 +413,11 @@ export const terrainTool = {
               target = Math.round(h + (Math.floor(h / step) * step - h) * fall);
               break;
             }
+          }
+          // Zackigkeit: Höhenänderung der Stempel mit Rauschen verformen (0 = glatt)
+          if (stamp && target !== h && c.jag) {
+            const n = fbm(x / 6 + 31.7, 0.7, z / 6 + 5.3, 3);
+            target = h + Math.round((target - h) * Math.max(0, 1 + n * c.jag * 0.12));
           }
           if (target === h && !topOverride && !c.biome) continue;
           plan.push({ x, z, h, target, topOverride });
@@ -462,6 +485,28 @@ export const terrainTool = {
       }
     });
   },
+  preview(ses) {
+    const c = ses.s.terrain;
+    if (!STAMP_MODES.includes(c.mode)) return;
+    const t = target(ses.player, ses.s);
+    if (!t) return;
+    // Umriss des Stempels (Oval) und Längsachse als Partikel
+    const el = Math.max(1, (c.stretch ?? 10) / 10);
+    const { ax, az } = stampAxis(ses.player.getViewDirection(), c.rot ?? 0);
+    const R = c.radius + 0.5;
+    const y = t.pos.y + 1.2;
+    const cx = t.pos.x + 0.5;
+    const cz = t.pos.z + 0.5;
+    const n = Math.min(96, Math.max(24, Math.round(R * el * 6)));
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const u = Math.cos(a) * R * el;
+      const w = Math.sin(a) * R;
+      spawn(ses.player, "axiom:marker", { x: cx + u * ax - w * az, y, z: cz + u * az + w * ax });
+    }
+    if (el > 1 || c.mode === "canyon")
+      for (let k = -4; k <= 4; k++) spawn(ses.player, "axiom:pos2", { x: cx + (k / 4) * R * el * ax, y, z: cz + (k / 4) * R * el * az });
+  },
   hud(ses) {
     const c = ses.s.terrain;
     return `${TERRAIN_MODES.find((m) => m[0] === c.mode)?.[1]} · Radius ${c.radius} · Stärke ${c.strength}${c.biome ? " · §aBiom" : ""}`;
@@ -474,6 +519,9 @@ export const terrainTool = {
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
       .toggle("falloff", "Weicher Rand (zur Mitte stärker)", c.falloff)
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
+      .slider("jag", "Stempel: Zackigkeit (0 = glatt)", 0, 10, 1, c.jag)
+      .slider("rot", "Stempel: Drehung in Grad (0 = Blickrichtung)", 0, 345, 15, c.rot)
+      .slider("stretch", "Stempel: Streckung (10 = rund, 30 = dreimal so lang)", 10, 30, 2, c.stretch)
       .toggle("biome", "Biom-Malen: Oberfläche passend färben (Gras, Sand am Wasser, Stein an Hängen, Schnee oben)", c.biome)
       .slider("snowY", "Biom-Malen: Schneegrenze (Höhe Y)", 60, 300, 5, Math.max(60, Math.min(300, c.snowY)))
       .show(ses.player);

@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.22: Terrain-Stempel einstellbar (Zackigkeit, Drehung, Streckung) mit Vorschau-Umriss
 - [x] v0.21: Editor-Modus (Hotbar als Werkzeugleiste 1–9), Übersicht mit allen Werkzeugen, Vogelperspektive
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
@@ -64,7 +65,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Biom-Malen beim Terraformen** (v0.19): Oberfläche automatisch passend (Gras oben, Erde darunter, Stein in der Tiefe,
       Sand am Wasser, Schnee ab einstellbarer Höhe, Geröll an steilen Hängen)
 - [x] **Erosion** (v0.19): Regen-Erosion (Rinnen an Hängen) und Wind-/Schmelz-Erosion als Pinsel-Modi
-- [ ] **Stempel-Formen frei einstellbar**: Größe, Höhe, Zackigkeit, Drehung + Vorschau-Rahmen vor dem Setzen
+- [x] **Stempel-Formen frei einstellbar** (v0.22): Größe, Höhe, Zackigkeit, Drehung + Vorschau-Rahmen vor dem Setzen
 - [ ] **Neue Stempel**: Hügelkette entlang Pfadpunkten, Düne, Gletscher/Schneegipfel, Felsbogen, Höhleneingang, Klippe
 - [ ] **Gelände aus Auswahl**: ganze Box-Auswahl als Landschaft füllen (Rauschen mit Oktaven, Meereshöhe, Seen)
 - [ ] **Flüsse & Seen verbessern**: Flussbett mit Ufer-Sand, Seen auffüllen bis zum Überlauf

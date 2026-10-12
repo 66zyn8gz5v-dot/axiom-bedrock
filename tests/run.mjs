@@ -874,6 +874,56 @@ console.log("Editor-Modus & Übersicht");
   player.location = { x: 0, y: 65, z: 0 };
 }
 
+console.log("Stempel einstellbar");
+{
+  const { stampAxis, terrainTool } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const a0 = stampAxis({ x: 1, y: 0, z: 0 }, 0);
+  const a90 = stampAxis({ x: 1, y: 0, z: 0 }, 90);
+  check(Math.abs(a0.ax - 1) < 1e-9 && Math.abs(a90.ax) < 1e-9 && Math.abs(Math.abs(a90.az) - 1) < 1e-9, "Stempel: Drehung der Längsachse");
+  const top = (x, z) => {
+    for (let y = 140; y > 50; y--) if (dim._get(x, y, z).type.id !== "minecraft:air") return y;
+    return 0;
+  };
+  const oldView = player.view;
+  player.view = { x: 1, y: 0, z: 0 };
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "mesa", radius: 4, strength: 2, falloff: false, biome: false, jag: 0, rot: 0, stretch: 30 });
+  await roundTrip("Stempel gestreckt", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  check(top(10, 0) > 64 && top(-10, 0) > 64 && top(0, 8) === 64, "Stempel: Streckung macht ihn in Blickrichtung länger");
+  await undo();
+  ses.s.terrain.rot = 90;
+  await use("axiom:terrain", G);
+  check(top(0, 10) > 64 && top(10, 0) === 64, "Stempel: Drehung um 90°");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "mountain", radius: 6, strength: 4, rot: 0, stretch: 10, jag: 0 });
+  await use("axiom:terrain", G);
+  const sym = [[3, 0], [0, 3], [-3, 0], [0, -3], [2, 2], [-2, -2]].map(([x, z]) => top(x, z));
+  check(sym.slice(0, 4).every((h) => h === sym[0]) && sym[4] === sym[5], "Stempel: Zackigkeit 0 = glatt & gleichmäßig");
+  await undo();
+  ses.s.terrain.jag = 10;
+  await use("axiom:terrain", G);
+  const ring = [];
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    ring.push(top(Math.round(Math.cos(a) * 3), Math.round(Math.sin(a) * 3)));
+  }
+  check(new Set(ring).size > 2, "Stempel: Zackigkeit 10 = unregelmäßig (" + [...new Set(ring)].join(",") + ")");
+  await undo();
+  // Vorschau-Umriss
+  player.rayHit = { pos: G, face: "Up" };
+  player.particles = 0;
+  terrainTool.preview(ses);
+  check(player.particles >= 24, "Stempel: Vorschau-Umriss (" + player.particles + ")");
+  ses.s.terrain.mode = "raise";
+  player.particles = 0;
+  terrainTool.preview(ses);
+  check(player.particles === 0, "Pinsel-Modi: kein Stempel-Umriss");
+  player.view = oldView;
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, falloff: true, jag: 3, rot: 0, stretch: 10 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

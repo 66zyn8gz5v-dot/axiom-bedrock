@@ -167,7 +167,7 @@ PAGES = [
                "Streuen (Blumen) · Flutfüllung (See füllen)")],
         [("h", "Terrain"),
          ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten – und Erosion durch Regen oder Wind."),
-         ("p", "Stempel mit einem Klick: Berg · Krater · Vulkan · Hochplateau · Insel · Schlucht · Wasserfall"),
+         ("p", "Stempel mit einem Klick: Berg · Krater · Vulkan · Hochplateau · Insel · Schlucht · Wasserfall. Ein Umriss zeigt sie vorher; Zackigkeit, Drehung & Länge sind einstellbar."),
          ("img", "terrain"),
          ("tip", "Biom-Malen einschalten: Gras, Sand am Wasser, Stein an Hängen, Schnee auf Gipfeln.")],
     ),
