@@ -814,6 +814,66 @@ console.log("Neue Grundformen");
   dim.blocks.clear();
 }
 
+console.log("Editor-Modus & Übersicht");
+{
+  const ed = await import("../packs/AxiomBP/scripts/ui/editor.js");
+  const inv = player.inventory;
+  for (let i = 0; i < 9; i++) inv.setItem(i, undefined);
+  inv.setItem(0, new ItemStack("minecraft:dirt", 5));
+  inv.setItem(3, new ItemStack("minecraft:diamond_sword", 1));
+  ed.toggleEditor(ses);
+  check(ed.isEditor(ses), "Editor: an");
+  check(ed.DEFAULT_BAR.every((id, i) => inv.getItem(i)?.typeId === id) && inv.getItem(8)?.typeId === "axiom:menu", "Editor: Werkzeugleiste 1–8 + Übersicht auf 9");
+  check(inv.getItem(1)?.lockMode === "slot", "Editor: Werkzeuge sind festgesetzt");
+  check(typeof player.getDynamicProperty("axiom:editorSave") === "string", "Editor: Notfall-Kopie der Hotbar");
+  // Übersicht: Werkzeug auf die gewählte Taste legen
+  player.selectedSlotIndex = 4;
+  answers.push({ selectText: "Text" });
+  await ed.overviewMenu(ses);
+  await drain();
+  check(inv.getItem(4)?.typeId === "axiom:text" && ses.s.editorBar[4] === "axiom:text", "Übersicht: Werkzeug auf Taste 5 gelegt");
+  // Platz 9 bleibt die Übersicht
+  player.selectedSlotIndex = 8;
+  answers.push({ selectText: "Formen" });
+  await ed.overviewMenu(ses);
+  await drain();
+  check(inv.getItem(8)?.typeId === "axiom:menu" && player.selectedSlotIndex === 1, "Übersicht: Platz 9 bleibt, springt zur Taste mit dem Werkzeug");
+  // Menü-Item im Editor öffnet die Übersicht
+  const { shown } = await import("@minecraft/server-ui");
+  const n0 = shown.length;
+  system.currentTick += 40;
+  player.selectedSlotIndex = 8;
+  world.afterEvents.itemUse._fire({ source: player, itemStack: inv.getItem(8) });
+  await drain();
+  await new Promise((r) => setTimeout(r, 20));
+  check(shown.slice(n0).some((f) => String(f.form._title).includes("Übersicht")), "Editor: Menü-Item öffnet die Übersicht ");
+  // Vogelperspektive
+  ed.setBirdsEye(ses, true);
+  check(player.camera.last?.preset === "minecraft:free" && player.camera.last.opts.rotation.x === 90, "Vogelperspektive: Kamera von oben");
+  player.location = { x: 10, y: 70, z: 0 };
+  ed.updateBirdsEye(ses);
+  check(player.camera.last.opts.location.x === 10 && player.camera.last.opts.location.y === 94, "Vogelperspektive: folgt dem Spieler");
+  // Ausschalten: Hotbar zurück, Kamera normal
+  ed.toggleEditor(ses);
+  check(!ed.isEditor(ses) && inv.getItem(0)?.typeId === "minecraft:dirt" && inv.getItem(0).amount === 5 && inv.getItem(3)?.typeId === "minecraft:diamond_sword", "Editor aus: Hotbar wiederhergestellt");
+  check(player.camera.last === null && !ses.birdsEye, "Editor aus: Vogelperspektive beendet");
+  check(player.getDynamicProperty("axiom:editorSave") === undefined, "Editor aus: Notfall-Kopie gelöscht");
+  // Spiel im Editor-Modus beendet → beim Beitreten Hotbar zurück
+  player.setDynamicProperty("axiom:editorSave", JSON.stringify([{ id: "minecraft:stone", n: 3, name: "Lieblingsstein" }, null, null, null, null, null, null, null, null]));
+  inv.setItem(0, new ItemStack("axiom:shape", 1));
+  ed.restoreAfterJoin(player);
+  check(inv.getItem(0)?.typeId === "minecraft:stone" && inv.getItem(0).amount === 3 && inv.getItem(0).nameTag === "Lieblingsstein", "Editor: Hotbar nach Neustart wiederhergestellt");
+  // Hauptmenü bietet Übersicht & Editor-Modus
+  answers.push({ selectText: "Editor-Modus an" });
+  const { mainMenu } = await import("../packs/AxiomBP/scripts/ui/main.js");
+  await mainMenu(ses);
+  await drain();
+  check(ed.isEditor(ses), "Hauptmenü: Editor-Modus einschalten");
+  ed.toggleEditor(ses);
+  for (let i = 0; i < 9; i++) inv.setItem(i, undefined);
+  player.location = { x: 0, y: 65, z: 0 };
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

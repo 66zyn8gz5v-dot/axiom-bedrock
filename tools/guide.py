@@ -112,7 +112,7 @@ PAGES = [
     ),
     (
         [("h", "1. Erste Schritte"),
-         ("tool", "menu", "Axiom-Menü", "Benutzen → „Werkzeuge holen“ → „Alle Werkzeuge“."),
+         ("tool", "menu", "Axiom-Menü", "Benutzen → „Editor-Modus an“: Tasten 1–8 = Werkzeuge, Taste 9 = Übersicht mit allen Werkzeugen."),
          ("steps", ["Box-Auswahl nehmen", "Auf Ecke 1 zielen + benutzen", "Auf Ecke 2 zielen + benutzen",
                     "Menü → Auswahl bearbeiten → Füllen"]),
          ("tip", "Fehler? Einfach das Rückgängig-Werkzeug benutzen.")],

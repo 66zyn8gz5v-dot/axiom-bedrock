@@ -35,6 +35,12 @@ oder einen eigenen Bedrock-Server mit dem Add-on betreiben.
 
 ## Schnellstart
 
+> **Neu: Editor-Modus (wie bei Axiom).** Axiom-Menü → „Editor-Modus an“ (oder `/axiom:editor`): Deine Hotbar wird zur
+> Werkzeugleiste – Tasten **1–8** = Werkzeuge, **9** = **Übersicht** mit allen Werkzeugen (mit Bildern, nach Gruppen)
+> und den wichtigsten Aktionen. In der Übersicht ein Werkzeug antippen = es auf die gewählte Taste legen. Dort gibt es
+> auch die **Vogelperspektive** (Kamera schaut von oben auf deinen Bau). Ausschalten gibt dir deine Hotbar zurück.
+> Ideal mit Tastatur & Maus: Rechtsklick = Benutzen, Linksklick = Schlagen, Shift = Schleichen.
+
 > **Neu: das Axiom-Handbuch.** Beim Betreten bekommst du ein Buch. Benutze es – dann klappt ein großes 3D-Buch vor
 > dir auf, das alle Werkzeuge mit Bildern erklärt. **Schlagen** oder **Benutzen** auf das Buch = umblättern,
 > **Schleichen + Schlagen** = zurück, das Buch-Item nochmal benutzen = schließen. Ideal, um es Freunden zu zeigen.
@@ -136,7 +142,7 @@ Tageszeit, Wetter, Tageszyklus/Wetterwechsel, Mob-Spawning, Feuer, Mob-Griefing,
 Wie bei Axiom: bis zu 9 Hotbars speichern und mit einem Klick wechseln.
 
 ### Chat-Befehle (Handy/PC)
-`/axiom:menu` · `/axiom:undo` · `/axiom:redo` · `/axiom:tools` · `/axiom:guide`
+`/axiom:menu` · `/axiom:editor` · `/axiom:overview` · `/axiom:undo` · `/axiom:redo` · `/axiom:tools` · `/axiom:guide`
 
 ---
 

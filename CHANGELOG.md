@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.21.0 – 12.10.2026
+- **Editor-Modus (wie bei der Axiom-Mod, nur einfacher):** Axiom-Menü → „Editor-Modus an“ oder `/axiom:editor`.
+  Die Hotbar wird zur Werkzeugleiste: Tasten 1–8 = Box-Auswahl, Formen, Terrain, Modellieren, Maler, Baumeister,
+  Pfad, Rückgängig; Taste 9 = Übersicht. Die Werkzeuge sind festgesetzt (nicht verschiebbar). Ausschalten legt deine
+  vorherige Hotbar wieder zurück (wird das Spiel im Editor-Modus beendet, kommt sie beim nächsten Beitreten zurück)
+- **Übersicht:** alle Werkzeuge mit Bildern in Gruppen (Auswählen, Bauen, Gelände, Sonstiges) plus Aktionen
+  (Auswahl bearbeiten, Muster, Rückgängig/Wiederherstellen, Vogelperspektive, Hauptmenü). Werkzeug antippen = auf die
+  gewählte Taste legen (im Editor) bzw. in die Hand nehmen. Auch über `/axiom:overview` oder das Hauptmenü
+- **Vogelperspektive:** Kamera schwebt 12, 24 oder 48 Blöcke über dir und schaut nach unten – zum Überblicken großer
+  Bauten; sie folgt dir beim Laufen
+
 ## 0.20.0 – 12.10.2026 (nächtlicher Ausbau: Formen)
 - **Formen-Vorschau:** Mit dem Formen-Werkzeug in der Hand zeigt ein Umriss aus Partikeln genau, wo und wie groß die
   Form gebaut wird (sehr große Formen als Rahmen). Neuer **Vorschau-Modus** (Schleichen + Benutzen → einschalten):

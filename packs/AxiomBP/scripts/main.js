@@ -11,6 +11,7 @@ import {
   Player,
 } from "@minecraft/server";
 import { TOOLS, TOOL_LIST } from "./tools/index.js";
+import { overviewMenu, restoreAfterJoin, toggleEditor, updateBirdsEye } from "./ui/editor.js";
 import { getSession, flushAll, dropSession, markDirty, worldFlag } from "./core/state.js";
 import { entryFromPermutation, formatPattern } from "./core/pattern.js";
 import { renderSelection, markBlock } from "./core/selection.js";
@@ -263,6 +264,7 @@ function tickPlayer(player) {
       } catch {}
       if (ses.nextCorner === 2 && ses.corner1) markBlock(player, "axiom:pos1", ses.corner1);
     }
+    if (ses.birdsEye && tick % 10 === 0) updateBirdsEye(ses);
     // Blaupausen-Vorschau (zeitlich begrenzt, unabhängig vom Werkzeug)
     if (ses.bpPreview) {
       if (system.currentTick > ses.bpPreview.until) ses.bpPreview = undefined;
@@ -288,6 +290,7 @@ registerGuideEvents();
 world.afterEvents.playerSpawn.subscribe((ev) => {
   if (!ev.initialSpawn) return;
   const p = ev.player;
+  restoreAfterJoin(p);
   // Handbuch einmalig verteilen – auch an Spieler, die schon vor dieser Version dabei waren
   if (!p.getDynamicProperty("axiom:guideGiven")) {
     p.setDynamicProperty("axiom:guideGiven", true);
@@ -328,6 +331,8 @@ system.beforeEvents.startup.subscribe((ev) => {
     });
   cmd("axiom:menu", "Öffnet das Axiom-Menü", (p) => mainMenu(getSession(p)));
   cmd("axiom:undo", "Axiom: Rückgängig", (p) => doUndo(p, false));
+  cmd("axiom:editor", "Axiom: Editor-Modus an/aus (Werkzeugleiste 1–9)", (p) => toggleEditor(getSession(p)));
+  cmd("axiom:overview", "Axiom: Übersicht aller Werkzeuge", (p) => overviewMenu(getSession(p)));
   cmd("axiom:guide", "Gibt dir das Axiom-Handbuch", (p) => {
     p.getComponent("minecraft:inventory")?.container?.addItem(new ItemStack("axiom:guide", 1));
     msg(p, "Axiom-Handbuch ins Inventar gelegt.");

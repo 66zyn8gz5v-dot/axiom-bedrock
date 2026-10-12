@@ -10,6 +10,7 @@ import { getHistory, clearHistory } from "../core/history.js";
 import * as ops from "../core/selops.js";
 import { Modal, confirm, menu } from "./forms.js";
 import { maskMenu, patternMenu } from "./common.js";
+import { isEditor, overviewMenu, toggleEditor } from "./editor.js";
 import { viewsMenu } from "./views.js";
 import { notesMenu } from "./notes.js";
 import { guideTextMenu, openGuide } from "./guide.js";
@@ -27,6 +28,8 @@ export async function mainMenu(ses) {
     "§l§dAxiom",
     `Muster: §e${formatPattern(ses.s.pattern)}§r\nMaske: §e${describeMask(ses.s.mask)}§r\nAuswahl: ${selInfo(ses)}\nZwischenablage: ${clip ? `${clip.size.x}×${clip.size.y}×${clip.size.z}` : "§7leer"}§r\nVerlauf: ${h.undo.length} zurück / ${h.redo.length} vor`,
     [
+      { text: "§lÜbersicht (alle Werkzeuge)", icon: "textures/items/axiom_menu", run: () => overviewMenu(ses) },
+      { text: isEditor(ses) ? "§cEditor-Modus aus" : "§aEditor-Modus an (Werkzeugleiste 1–9)", run: () => toggleEditor(ses) },
       { text: "Werkzeuge holen", icon: "textures/items/axiom_menu", run: () => toolsMenu(ses) },
       { text: "Block / Muster wählen", icon: "textures/blocks/stone", run: () => patternMenu(ses) },
       { text: "Maske", run: () => maskMenu(ses) },
@@ -42,6 +45,11 @@ export async function mainMenu(ses) {
       { text: "Hilfe", run: () => helpMenu(ses) },
     ]
   );
+}
+
+/** Einzelnes Untermenü direkt öffnen (für die Übersicht). @param {import("../core/state.js").Session} ses @param {"selection"|"pattern"} which */
+export function openSection(ses, which) {
+  return which === "selection" ? selectionMenu(ses) : patternMenu(ses);
 }
 
 // ---------- Werkzeuge ----------
@@ -752,8 +760,9 @@ async function helpMenu(ses) {
       "§eBenutzen§r (linker Trigger) = Werkzeug-Aktion\n" +
       "§eSchleichen + Benutzen§r = Werkzeug-Einstellungen\n" +
       "§eSchlagen§r (rechter Trigger) auf Block = Pipette (Block als Muster übernehmen) bzw. Zusatzaktion\n\n" +
+      "§lEditor-Modus§r (Axiom-Menü → Editor-Modus an, oder /axiom:editor)\nDie Hotbar wird zur Werkzeugleiste: Tasten 1–8 = Werkzeuge, 9 = Übersicht. Mit Tastatur & Maus: Rechtsklick = Benutzen, Linksklick = Schlagen, Shift = Schleichen. Ausschalten gibt deine Hotbar zurück.\n\n" +
       "§lAblauf§r\n1. Mit Box-/Magischer/Pinsel-Auswahl etwas auswählen\n2. Im Axiom-Menü → Auswahl bearbeiten\n3. Kopieren → mit dem Baumeister einfügen\n4. Fehler? Rückgängig-Werkzeug benutzen\n\n" +
-      "§lChat-Befehle§r (PC/Handy): /axiom:menu, /axiom:undo, /axiom:redo, /axiom:tools, /axiom:guide\n\nWähle ein Werkzeug für Details:",
+      "§lChat-Befehle§r (PC/Handy): /axiom:menu, /axiom:editor, /axiom:overview, /axiom:undo, /axiom:redo, /axiom:tools, /axiom:guide\n\nWähle ein Werkzeug für Details:",
     [
       { text: "§lHandbuch lesen (Text)", run: () => guideTextMenu(p) },
       { text: "§l3D-Handbuch öffnen", run: () => openGuide(p) },

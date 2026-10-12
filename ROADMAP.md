@@ -44,8 +44,11 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.21: Editor-Modus (Hotbar als Werkzeugleiste 1–9), Übersicht mit allen Werkzeugen, Vogelperspektive
 
 ## Im Spiel prüfen (Rückmeldung vom Nutzer nötig)
+- [ ] Editor-Modus: Werkzeuge auf 1–9, Übersicht zeigt Überschriften & Icons, Hotbar kommt beim Ausschalten zurück
+- [ ] Vogelperspektive: Kamera von oben folgt flüssig, Ausschalten stellt normale Sicht her
 - [ ] 3D-Handbuch: Seiten sind lesbar (nicht gespiegelt), Umblättern per Schlagen/Benutzen klappt, Buch ist hell genug
 - [ ] Treppen-Werkzeug: Treppen steigen zur höheren Stufe hin an (sonst Richtungstabelle STAIR_DIRS anpassen)
 - [ ] Anmerkungen: Text schwebt sichtbar, die Entität selbst ist unsichtbar und lässt sich nicht verletzen

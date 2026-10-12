@@ -26,16 +26,24 @@ export async function showForm(player, form) {
  * @param {import("@minecraft/server").Player} player
  * @param {string} title
  * @param {string} body
- * @param {{text:string, icon?:string, run:()=>any}[]} buttons
+ * @param {{text?:string, icon?:string, header?:string, run?:()=>any}[]} buttons  (Einträge mit header = Zwischenüberschrift)
  * @returns {Promise<boolean>} ob etwas gewählt wurde
  */
 export async function menu(player, title, body, buttons) {
   const f = new ActionFormData().title(title);
   if (body) f.body(body);
-  for (const b of buttons) f.button(b.text, b.icon);
+  // Einträge mit „header“ sind Zwischenüberschriften (keine Knöpfe)
+  const btns = [];
+  for (const b of buttons) {
+    if (b.header !== undefined) f.header(b.header);
+    else {
+      f.button(b.text ?? "", b.icon);
+      btns.push(b);
+    }
+  }
   const r = await showForm(player, f);
   if (!r || r.canceled || r.selection === undefined) return false;
-  await buttons[r.selection].run();
+  await btns[r.selection]?.run?.();
   return true;
 }
 

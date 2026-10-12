@@ -28,6 +28,8 @@ export function defaultSettings() {
     extrude: { mode: "push", sameType: true, limit: 4096 },
     path: { radius: 1, smooth: true, hollow: false, flat: false, support: false },
     /** Gespeicherte Muster-Paletten: Name -> Muster */
+    /** Werkzeugleiste im Editor-Modus (Platz 1–8) */
+    editorBar: /** @type {string[]} */ ([]),
     palettes: /** @type {Record<string, {id:string, states?:Record<string, string|number|boolean>, w:number}[]>} */ ({}),
     text: { text: "AXIOM", scale: 1, orient: "wall", spacing: 1, mode: "text", pixel: "rr.rr/rrrrr/.rrr./..r..", legend: "r=red_wool" },
     river: { width: 3, depth: 3, bed: "sand" },
@@ -64,6 +66,7 @@ export function defaultSettings() {
  *   lastHit?: number,
  *   floodLast?: number,
  *   guidePage?: number,
+ *   birdsEye?: {height:number},
  *   bpPreview?: {size:{x:number,y:number,z:number}, until:number, name:string},
  *   shapeLock?: {ctr:{x:number,y:number,z:number}, until:number},
  *   shapeOutline?: {key:string, pts:number[][]},

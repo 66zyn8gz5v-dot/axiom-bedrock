@@ -364,6 +364,19 @@ export class Player {
   spawnParticle() {
     this.particles = (this.particles ?? 0) + 1;
   }
+  get camera() {
+    if (!this._camera)
+      this._camera = {
+        last: null,
+        setCamera(preset, opts) {
+          this.last = { preset, opts };
+        },
+        clear() {
+          this.last = null;
+        },
+      };
+    return this._camera;
+  }
   playSound(s) {
     this.sounds = (this.sounds ?? 0) + 1;
   }
