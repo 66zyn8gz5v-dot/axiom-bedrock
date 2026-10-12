@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.24.0 – 13.10.2026 (nächtlicher Ausbau: Formen)
+- **Formen frei drehen & kippen:** Formen → Schleichen + Benutzen → „Drehen“, „Nach vorne kippen“, „Zur Seite neigen“
+  in 15°-Schritten. So entstehen z.B. schräge Zylinder, liegende Kegel, eine Raute aus einem Quader oder ein
+  gekippter Ring. Der Partikel-Umriss zeigt die gedrehte Form vorher an
+- **Form in die Auswahl einpassen:** Platzierung „In die Auswahl einpassen“ wählen, eine Box-Auswahl machen und
+  benutzen – die Form füllt die Auswahl genau aus (Größe = Auswahl, auch bei gerader Breite mittig). Kuppel, Bogen,
+  Prisma und Keil stehen dabei auf dem Boden der Auswahl; „Hohl“ funktioniert auch
+
 ## 0.23.0 – 12.10.2026 (nächtlicher Ausbau: Terraform)
 - **Drei neue Terrain-Stempel:** **Düne** (aus Sand, flach ansteigend und hinter dem Kamm steil abfallend – mit
   Streckung entsteht ein langer Dünenzug), **Schneegipfel** (hoher spitzer Berg: unten Gras, an den Flanken Fels,

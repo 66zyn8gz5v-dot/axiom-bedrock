@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.24: Formen drehen/kippen/neigen, Form in Auswahl einpassen
 - [x] v0.23: Stempel Düne, Schneegipfel, Klippe
 - [x] v0.22: Terrain-Stempel einstellbar (Zackigkeit, Drehung, Streckung) mit Vorschau-Umriss
 - [x] v0.21: Editor-Modus (Hotbar als Werkzeugleiste 1–9), Übersicht mit allen Werkzeugen, Vogelperspektive
@@ -78,9 +79,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Neue Grundformen** (v0.20): Dreieck/Keil (Rampe), Tetraeder (dreiseitige Pyramide), Oktaeder (Doppelpyramide),
       Vieleck-Prisma (3–12 Ecken, z.B. Sechseck-Turm), Stufenpyramide (Zikkurat), Rohr/Röhre (liegend & stehend),
       Scheibe/Kreisfläche, Kegelstumpf, Stern, Herz, Kreuz
-- [ ] **Freie Drehung & Neigung**: Formen in 15°-Schritten um alle Achsen drehen/kippen (z.B. schräger Zylinder)
+- [x] **Freie Drehung & Neigung** (v0.24): Formen in 15°-Schritten um alle Achsen drehen/kippen (z.B. schräger Zylinder)
 - [ ] **Form zwischen zwei Punkten**: Zylinder/Kegel/Pyramide von Punkt A nach Punkt B ziehen (wie Box-Auswahl)
-- [ ] **Form in die Auswahl einpassen**: Kugel, Zylinder, Pyramide usw. genau in die aktuelle Box-Auswahl setzen
+- [x] **Form in die Auswahl einpassen** (v0.24): Kugel, Zylinder, Pyramide usw. genau in die aktuelle Box-Auswahl setzen
 - [ ] **Hohl-Optionen**: Wandstärke je Form, offener Boden/Deckel, nur Umriss (Drahtgitter-Kanten)
 - [ ] **Material-Varianten**: Verlauf von unten nach oben (Muster 1 → 2), Rand anderer Block als Füllung
 - [ ] **Lieblingsformen speichern**: Form + Größe + Einstellungen als Vorlage merken und schnell wieder wählen

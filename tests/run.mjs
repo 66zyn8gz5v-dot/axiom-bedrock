@@ -962,6 +962,68 @@ console.log("Neue Stempel");
   dim.blocks.clear();
 }
 
+console.log("Formen drehen & einpassen");
+{
+  const { shapeFn, rotateShape, fitShape } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const count = (f) => {
+    const e = f.ext;
+    let n = 0;
+    for (let x = -e.x; x <= e.x; x++) for (let y = -e.y; y <= e.y; y++) for (let z = -e.z; z <= e.z; z++) if (f.inside(x, y, z)) n++;
+    return n;
+  };
+  const cyl = shapeFn({ type: "cylinder", rx: 2, ry: 6, rz: 2 });
+  const lying = rotateShape(cyl, 0, 90, 0);
+  check(lying.inside(0, 0, 6) && !lying.inside(0, 6, 0) && lying.ext.z >= 6 && lying.ext.y <= 3, "Drehen: gekippter Zylinder liegt");
+  const side = rotateShape(cyl, 0, 0, 90);
+  check(side.inside(6, 0, 0) && !side.inside(0, 6, 0), "Drehen: zur Seite geneigt");
+  const wedge = shapeFn({ type: "wedge", rx: 2, ry: 3, rz: 4 });
+  check(count(rotateShape(wedge, 90, 0, 0)) === count(wedge) && count(rotateShape(wedge, 180, 0, 0)) === count(wedge), "Drehen: 90°/180° behalten die Blockzahl");
+  const sq = shapeFn({ type: "cuboid", rx: 4, ry: 0, rz: 4 });
+  const dia = rotateShape(sq, 45, 0, 0);
+  check(!sq.inside(5, 0, 0) && dia.inside(5, 0, 0) && !dia.inside(4, 0, 4), "Drehen: 45° macht aus dem Quadrat eine Raute");
+  check(rotateShape(sq, 0, 0, 0) === sq, "Drehen: 0° ändert nichts");
+  // Einpassen in eine Auswahl (gerade Größe → halbzahlige Mitte)
+  const fit = fitShape({ type: "sphere", rx: 1, ry: 1, rz: 1 }, { min: { x: 0, y: 0, z: 0 }, max: { x: 9, y: 5, z: 9 } });
+  const q0 = fit.at(0, 2, 4);
+  const q9 = fit.at(9, 2, 4);
+  check(fit.f.inside(q0.x, q0.y, q0.z) === fit.f.inside(q9.x, q9.y, q9.z) && fit.f.inside(q0.x, q0.y, q0.z), "Einpassen: Kugel berührt beide Seiten gleich");
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 70, z: 0 }, { x: 9, y: 75, z: 7 });
+  Object.assign(ses.s.shape, { type: "sphere", anchor: "sel", hollow: false, yaw: 0, tilt: 0, roll: 0 });
+  await roundTrip("Form in Auswahl", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  let out = 0;
+  const hit = { x0: false, x9: false, y0: false, y5: false, z0: false, z7: false };
+  for (const k of dim.blocks.keys()) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (dim._get(x, y, z).type.id === "minecraft:air") continue;
+    if (y < 65) continue;
+    if (x < 0 || x > 9 || y < 70 || y > 75 || z < 0 || z > 7) out++;
+    if (x === 0) hit.x0 = true;
+    if (x === 9) hit.x9 = true;
+    if (y === 70) hit.y0 = true;
+    if (y === 75) hit.y5 = true;
+    if (z === 0) hit.z0 = true;
+    if (z === 7) hit.z7 = true;
+  }
+  check(out === 0 && Object.values(hit).every(Boolean), "Einpassen: Ellipsoid füllt die Auswahl genau aus " + JSON.stringify(hit));
+  await undo();
+  ses.s.shape.type = "hemisphere";
+  await use("axiom:shape", G);
+  check(dim._get(4, 70, 3).type.id !== "minecraft:air" && dim._get(4, 75, 3).type.id !== "minecraft:air" && dim._get(0, 75, 0).type.id === "minecraft:air", "Einpassen: Kuppel steht auf dem Boden der Auswahl");
+  await undo();
+  const m0 = player.messages.length;
+  ses.sel = null;
+  await use("axiom:shape", G);
+  check(player.messages.slice(m0).some((m) => m.includes("Auswahl")), "Einpassen: ohne Auswahl kommt ein Hinweis");
+  Object.assign(ses.s.shape, { type: "sphere", anchor: "center" });
+  // Gedrehte Form bauen + Rückgängig
+  Object.assign(ses.s.shape, { type: "cylinder", rx: 2, ry: 5, rz: 2, tilt: 45, look: false });
+  await roundTrip("Gekippter Zylinder", () => use("axiom:shape", { x: 0, y: 80, z: 0 }));
+  Object.assign(ses.s.shape, { tilt: 0, look: true, rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

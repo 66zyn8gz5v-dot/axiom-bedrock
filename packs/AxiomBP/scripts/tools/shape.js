@@ -2,10 +2,10 @@
 import { runEdit } from "../core/edit.js";
 import { formatPattern, isSolidId, picker } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
-import { markBlock, spawn } from "../core/selection.js";
+import { markBlock, selContains, spawn } from "../core/selection.js";
 import { drawFrame } from "./builder.js";
 import { system } from "@minecraft/server";
-import { msg, target, targetOrAir } from "../core/util.js";
+import { err, msg, target, targetOrAir } from "../core/util.js";
 import { cardinal, v } from "../core/vec.js";
 import { Modal } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
@@ -260,11 +260,82 @@ export function shapeFn(c) {
  * @returns {ReturnType<typeof shapeFn>}
  */
 export function orientedShape(ses, c) {
-  const f = shapeFn(c);
-  if (!c.look) return f;
-  const d = cardinal(ses.player.getViewDirection(), true);
-  if (d.x === 0) return f;
-  return { inside: (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => f.inside(z, y, x), ext: v(f.ext.z, f.ext.y, f.ext.x), yMin: f.yMin };
+  let f = shapeFn(c);
+  if (c.look) {
+    const d = cardinal(ses.player.getViewDirection(), true);
+    if (d.x !== 0) {
+      const g = f;
+      f = { inside: (x, y, z) => g.inside(z, y, x), ext: v(g.ext.z, g.ext.y, g.ext.x), yMin: g.yMin };
+    }
+  }
+  return rotateShape(f, c.yaw ?? 0, c.tilt ?? 0, c.roll ?? 0);
+}
+
+/**
+ * Form frei drehen: um die senkrechte Achse (yaw), nach vorne kippen (tilt, um X) und seitlich neigen (roll, um Z).
+ * Jeder Weltblock wird in die Form zurückgedreht und dort getestet – so entstehen keine Löcher.
+ * @param {ReturnType<typeof shapeFn>} f @param {number} yaw @param {number} tilt @param {number} roll Grad
+ * @returns {ReturnType<typeof shapeFn>}
+ */
+export function rotateShape(f, yaw, tilt, roll) {
+  if (!yaw && !tilt && !roll) return f;
+  const r = Math.PI / 180;
+  const [cy, sy, cx, sx, cz, sz] = [Math.cos(yaw * r), Math.sin(yaw * r), Math.cos(tilt * r), Math.sin(tilt * r), Math.cos(roll * r), Math.sin(roll * r)];
+  // M = Ry · Rx · Rz (lokal → Welt); zurück mit der Transponierten
+  const M = [
+    [cy * cz + sy * sx * sz, -cy * sz + sy * sx * cz, sy * cx],
+    [cx * sz, cx * cz, -sx],
+    [-sy * cz + cy * sx * sz, sy * sz + cy * sx * cz, cy * cx],
+  ];
+  const e = f.ext;
+  let mx = 0;
+  let my = 0;
+  let mz = 0;
+  for (const px of [-e.x, e.x])
+    for (const py of [f.yMin, e.y])
+      for (const pz of [-e.z, e.z]) {
+        mx = Math.max(mx, Math.abs(M[0][0] * px + M[0][1] * py + M[0][2] * pz));
+        my = Math.max(my, Math.abs(M[1][0] * px + M[1][1] * py + M[1][2] * pz));
+        mz = Math.max(mz, Math.abs(M[2][0] * px + M[2][1] * py + M[2][2] * pz));
+      }
+  return {
+    inside: (x, y, z) =>
+      f.inside(
+        Math.round(M[0][0] * x + M[1][0] * y + M[2][0] * z),
+        Math.round(M[0][1] * x + M[1][1] * y + M[2][1] * z),
+        Math.round(M[0][2] * x + M[1][2] * y + M[2][2] * z)
+      ),
+    ext: v(Math.ceil(mx), Math.ceil(my), Math.ceil(mz)),
+    yMin: -Math.ceil(my),
+  };
+}
+
+/** Formen, die unten bei y = 0 beginnen: Anteil von Radius Y an der Höhe (zum Einpassen in eine Auswahl). */
+const BASE_SHAPES = /** @type {Record<string, number>} */ ({ hemisphere: 1, arch: 1, prism: 0.5, wedge: 0.5, disk: 0 });
+
+/**
+ * Form genau in eine Auswahl einpassen: Radien aus der Auswahlgröße, Mitte = Mitte der Auswahl.
+ * @param {import("../core/state.js").Settings["shape"]} c
+ * @param {{min:{x:number,y:number,z:number}, max:{x:number,y:number,z:number}}} sel
+ * @returns {{f: ReturnType<typeof shapeFn>, at: (x:number, y:number, z:number) => {x:number,y:number,z:number}}}
+ */
+export function fitShape(c, sel) {
+  const sx = sel.max.x - sel.min.x + 1;
+  const sy = sel.max.y - sel.min.y + 1;
+  const sz = sel.max.z - sel.min.z + 1;
+  const c2 = { ...c, rx: (sx - 1) / 2, ry: (sy - 1) / 2, rz: (sz - 1) / 2 };
+  const base = c.type in BASE_SHAPES;
+  if (base && BASE_SHAPES[c.type]) c2.ry = (sy - 1) * BASE_SHAPES[c.type];
+  if (c.type === "torus") {
+    c2.ry = Math.min(c2.ry, (Math.min(sx, sz) - 3) / 4);
+    c2.rx = Math.max(0, (Math.min(sx, sz) - 1) / 2 - c2.ry - 1);
+  }
+  const f = shapeFn(c2);
+  const mx = (sel.min.x + sel.max.x) / 2;
+  const my = base ? sel.min.y : (sel.min.y + sel.max.y) / 2;
+  const mz = (sel.min.z + sel.max.z) / 2;
+  // Weltblock → Formkoordinate (bei gerader Größe halbzahlig)
+  return { f, at: (x, y, z) => v(x - mx, y - my, z - mz) };
 }
 
 /** Größte Form (Blöcke im Hüllquader), für die noch ein genauer Partikel-Umriss berechnet wird. */
@@ -280,7 +351,7 @@ const OUTLINE_BUDGET = 260;
 export function shapeOutline(ses) {
   const c = ses.s.shape;
   const d = c.look ? cardinal(ses.player.getViewDirection(), true) : v(0, 0, 1);
-  const key = JSON.stringify([c.type, c.rx, c.ry, c.rz, c.pitch, c.sides, c.step, c.look && d.x !== 0]);
+  const key = JSON.stringify([c.type, c.rx, c.ry, c.rz, c.pitch, c.sides, c.step, c.look && d.x !== 0, c.yaw, c.tilt, c.roll]);
   if (ses.shapeOutline?.key === key) return ses.shapeOutline.pts.length ? ses.shapeOutline.pts : null;
   const f = orientedShape(ses, c);
   const e = f.ext;
@@ -359,6 +430,36 @@ function pillar(ses, c) {
   });
 }
 
+/**
+ * Form in die aktuelle Auswahl einpassen und bauen.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildInSelection(ses, c) {
+  const sel = ses.sel;
+  if (!sel) return err(ses.player, "Zum Einpassen erst eine Auswahl machen (z.B. Box-Auswahl).");
+  const { f, at } = fitShape(c, sel);
+  const pick = picker(ses.s.pattern);
+  const th = Math.max(1, c.thick);
+  const In = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
+    const q = at(x, y, z);
+    return selContains(sel, x, y, z) && f.inside(q.x, q.y, q.z);
+  };
+  const edge = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) =>
+    !In(x + th, y, z) || !In(x - th, y, z) || !In(x, y + th, z) || !In(x, y - th, z) || !In(x, y, z + th) || !In(x, y, z - th);
+  runEdit(ses.player, { label: "Form in Auswahl: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: sel.min, max: sel.max } }, function* (es) {
+    let n = 0;
+    for (let x = sel.min.x; x <= sel.max.x; x++)
+      for (let z = sel.min.z; z <= sel.max.z; z++)
+        for (let y = sel.min.y; y <= sel.max.y; y++) {
+          if (!In(x, y, z)) continue;
+          if (c.hollow && !edge(x, y, z)) continue;
+          es.set(x, y, z, pick());
+          if (++n % 256 === 0) yield;
+        }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const shapeTool = {
   id: "axiom:shape",
@@ -367,6 +468,7 @@ export const shapeTool = {
   onUse(ses) {
     const c = { ...ses.s.shape };
     if (c.type === "pillar") return pillar(ses, c);
+    if (c.anchor === "sel") return buildInSelection(ses, c);
     const f = orientedShape(ses, c);
     let ctr = center(ses);
     if (c.confirm) {
@@ -416,6 +518,7 @@ export const shapeTool = {
   preview(ses) {
     const c = ses.s.shape;
     if (c.type === "pillar") return markBlock(ses.player, "axiom:marker", center(ses));
+    if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     const lock = ses.shapeLock && system.currentTick <= ses.shapeLock.until ? ses.shapeLock : undefined;
     const ctr = lock ? lock.ctr : center(ses);
     const particle = lock ? "axiom:pos2" : "axiom:marker";
@@ -430,7 +533,7 @@ export const shapeTool = {
   },
   hud(ses) {
     const c = ses.s.shape;
-    return `${SHAPES.find((s) => s[0] === c.type)?.[1]} ${c.rx * 2 + 1}×${c.ry * 2 + 1}×${c.rz * 2 + 1}${c.hollow ? " hohl" : ""} · §e${formatPattern(ses.s.pattern)}`;
+    return `${SHAPES.find((s) => s[0] === c.type)?.[1]} ${c.rx * 2 + 1}×${c.ry * 2 + 1}×${c.rz * 2 + 1}${c.hollow ? " hohl" : ""}${c.yaw || c.tilt || c.roll ? ` · ↻${c.yaw ?? 0}/${c.tilt ?? 0}/${c.roll ?? 0}°` : ""}${c.anchor === "sel" ? " · in Auswahl" : ""} · §e${formatPattern(ses.s.pattern)}`;
   },
   async menu(ses) {
     const c = ses.s.shape;
@@ -448,10 +551,14 @@ export const shapeTool = {
         [
           ["center", "Mittelpunkt am Blickziel"],
           ["base", "Auf dem Boden stehend"],
+          ["sel", "In die Auswahl einpassen (Größe = Auswahl)"],
         ],
         c.anchor
       )
       .toggle("look", "Nach Blickrichtung drehen (Bogen/Prisma stehen quer zu dir)", c.look)
+      .slider("yaw", "Drehen (Grad, um die senkrechte Achse)", 0, 345, 15, c.yaw ?? 0)
+      .slider("tilt", "Nach vorne kippen (Grad)", 0, 345, 15, c.tilt ?? 0)
+      .slider("roll", "Zur Seite neigen (Grad)", 0, 345, 15, c.roll ?? 0)
       .slider("pitch", "Spirale: Höhe pro Umdrehung", 3, 40, 1, c.pitch)
       .slider("sides", "Vieleck-Turm: Anzahl Ecken", 3, 12, 1, c.sides)
       .slider("step", "Stufenpyramide: Stufenhöhe", 1, 8, 1, c.step)
@@ -459,7 +566,7 @@ export const shapeTool = {
       .toggle("pat", "Danach Block/Muster wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, confirm: r.confirm });
+    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll });
     ses.shapeLock = undefined;
     markDirty(ses);
     if (r.pat) await patternMenu(ses);

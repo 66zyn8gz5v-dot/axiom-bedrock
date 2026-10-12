@@ -20,7 +20,7 @@ export function defaultSettings() {
     showSel: true,
     magic: { mode: "same", limit: 20000, diagonal: false },
     brushSel: { radius: 2 },
-    shape: { type: "sphere", rx: 5, ry: 5, rz: 5, hollow: false, thick: 1, anchor: "center", look: true, pitch: 12, confirm: false, sides: 6, step: 2 },
+    shape: { type: "sphere", rx: 5, ry: 5, rz: 5, hollow: false, thick: 1, anchor: "center", look: true, pitch: 12, confirm: false, sides: 6, step: 2, yaw: 0, tilt: 0, roll: 0 },
     sculpt: { mode: "add", radius: 4, noise: false },
     painter: { mode: "surface", radius: 4, depth: 1, scale: 8, threshold: 0, density: 8, slopeDeg: 40, floodLimit: 20000 },
     scatter: { count: 10, spacing: 6, rotate: true },
