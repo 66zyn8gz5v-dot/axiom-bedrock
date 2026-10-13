@@ -431,6 +431,98 @@ function pillar(ses, c) {
 }
 
 /**
+ * Welche Blöcke einer Form werden gesetzt? Voll, hohl (mit Wandstärke, Boden/Deckel offen) oder nur die Kanten.
+ * @param {(x:number, y:number, z:number) => boolean} In liegt der Block in der Form?
+ * @param {{hollow:boolean, thick:number, open?:string, wire?:boolean}} c
+ * @returns {(x:number, y:number, z:number) => boolean}
+ */
+export function keepFn(In, c) {
+  const th = Math.max(1, c.thick);
+  if (c.wire) {
+    // Drahtgitter: Block liegt an mindestens zwei Seiten (verschiedene Achsen) am Rand
+    return (x, y, z) => {
+      const ax = !In(x + 1, y, z) || !In(x - 1, y, z) ? 1 : 0;
+      const ay = !In(x, y + 1, z) || !In(x, y - 1, z) ? 1 : 0;
+      const az = !In(x, y, z + 1) || !In(x, y, z - 1) ? 1 : 0;
+      return ax + ay + az >= 2;
+    };
+  }
+  if (!c.hollow) return () => true;
+  const openBottom = c.open === "bottom" || c.open === "both";
+  const openTop = c.open === "top" || c.open === "both";
+  return (x, y, z) =>
+    !In(x + th, y, z) ||
+    !In(x - th, y, z) ||
+    !In(x, y, z + th) ||
+    !In(x, y, z - th) ||
+    (!openTop && !In(x, y + th, z)) ||
+    (!openBottom && !In(x, y - th, z));
+}
+
+/**
+ * Form zwischen zwei Punkten: Achse (Höhe) der Form läuft von A nach B, Radius X/Z bleibt.
+ * @param {import("../core/state.js").Settings["shape"]} c
+ * @param {{x:number,y:number,z:number}} A @param {{x:number,y:number,z:number}} B
+ */
+export function shapeBetween(c, A, B) {
+  const d = v(B.x - A.x, B.y - A.y, B.z - A.z);
+  const L = Math.hypot(d.x, d.y, d.z);
+  const a = L ? v(d.x / L, d.y / L, d.z / L) : v(0, 1, 0);
+  // Senkrechte Richtungen zur Achse
+  let e1 = Math.abs(a.y) > 0.9 ? v(1, 0, 0) : v(-a.z, 0, a.x);
+  const n1 = Math.hypot(e1.x, e1.y, e1.z);
+  e1 = v(e1.x / n1, e1.y / n1, e1.z / n1);
+  const e2 = v(a.y * e1.z - a.z * e1.y, a.z * e1.x - a.x * e1.z, a.x * e1.y - a.y * e1.x);
+  const type = c.type === "tube" ? "cylinder" : c.type;
+  const f = shapeFn({ ...c, type, ry: L / 2 });
+  const M = v((A.x + B.x) / 2, (A.y + B.y) / 2, (A.z + B.z) / 2);
+  const r = Math.max(c.rx, c.rz) + 1;
+  return {
+    min: v(Math.floor(Math.min(A.x, B.x) - r), Math.floor(Math.min(A.y, B.y) - r), Math.floor(Math.min(A.z, B.z) - r)),
+    max: v(Math.ceil(Math.max(A.x, B.x) + r), Math.ceil(Math.max(A.y, B.y) + r), Math.ceil(Math.max(A.z, B.z) + r)),
+    In: (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
+      const px = x - M.x;
+      const py = y - M.y;
+      const pz = z - M.z;
+      return f.inside(px * e1.x + py * e1.y + pz * e1.z, px * a.x + py * a.y + pz * a.z, px * e2.x + py * e2.y + pz * e2.z);
+    },
+  };
+}
+
+/** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
+const NO_AB = ["pillar", "disk", "spiral", "torus"];
+
+/**
+ * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildBetween(ses, c) {
+  if (NO_AB.includes(c.type)) return err(ses.player, "Diese Form geht nicht zwischen zwei Punkten – nimm z.B. Zylinder, Kegel, Pyramide oder Quader.");
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.pos : t.adjacent;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, `Punkt A gesetzt: §e${p.x} ${p.y} ${p.z}§r – jetzt auf Punkt B zielen und benutzen (Schlagen bricht ab).`);
+  }
+  const A = ses.shapeA;
+  ses.shapeA = undefined;
+  const g = shapeBetween(c, A, p);
+  const keep = keepFn(g.In, c);
+  const pick = picker(ses.s.pattern);
+  runEdit(ses.player, { label: "Form A→B: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: g.min, max: g.max } }, function* (es) {
+    let n = 0;
+    for (let x = g.min.x; x <= g.max.x; x++)
+      for (let z = g.min.z; z <= g.max.z; z++)
+        for (let y = g.min.y; y <= g.max.y; y++) {
+          if (!g.In(x, y, z) || !keep(x, y, z)) continue;
+          es.set(x, y, z, pick());
+          if (++n % 256 === 0) yield;
+        }
+  });
+}
+
+/**
  * Form in die aktuelle Auswahl einpassen und bauen.
  * @param {import("../core/state.js").Session} ses
  * @param {import("../core/state.js").Settings["shape"]} c
@@ -440,20 +532,17 @@ function buildInSelection(ses, c) {
   if (!sel) return err(ses.player, "Zum Einpassen erst eine Auswahl machen (z.B. Box-Auswahl).");
   const { f, at } = fitShape(c, sel);
   const pick = picker(ses.s.pattern);
-  const th = Math.max(1, c.thick);
   const In = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
     const q = at(x, y, z);
     return selContains(sel, x, y, z) && f.inside(q.x, q.y, q.z);
   };
-  const edge = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) =>
-    !In(x + th, y, z) || !In(x - th, y, z) || !In(x, y + th, z) || !In(x, y - th, z) || !In(x, y, z + th) || !In(x, y, z - th);
+  const keep = keepFn(In, c);
   runEdit(ses.player, { label: "Form in Auswahl: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: sel.min, max: sel.max } }, function* (es) {
     let n = 0;
     for (let x = sel.min.x; x <= sel.max.x; x++)
       for (let z = sel.min.z; z <= sel.max.z; z++)
         for (let y = sel.min.y; y <= sel.max.y; y++) {
-          if (!In(x, y, z)) continue;
-          if (c.hollow && !edge(x, y, z)) continue;
+          if (!In(x, y, z) || !keep(x, y, z)) continue;
           es.set(x, y, z, pick());
           if (++n % 256 === 0) yield;
         }
@@ -469,6 +558,7 @@ export const shapeTool = {
     const c = { ...ses.s.shape };
     if (c.type === "pillar") return pillar(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
+    if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
     let ctr = center(ses);
     if (c.confirm) {
@@ -483,11 +573,7 @@ export const shapeTool = {
       ses.shapeLock = undefined;
     }
     const pick = picker(ses.s.pattern);
-    const hollow = c.hollow;
-    const th = Math.max(1, c.thick);
-    // Eine Form ist "hohl", wenn ein Nachbar im Abstand th außerhalb liegt
-    const edge = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) =>
-      !f.inside(x + th, y, z) || !f.inside(x - th, y, z) || !f.inside(x, y + th, z) || !f.inside(x, y - th, z) || !f.inside(x, y, z + th) || !f.inside(x, y, z - th);
+    const keep = keepFn(f.inside, c);
     const e = f.ext;
     runEdit(
       ses.player,
@@ -501,8 +587,7 @@ export const shapeTool = {
         for (let x = -e.x; x <= e.x; x++)
           for (let z = -e.z; z <= e.z; z++)
             for (let y = -e.y; y <= e.y; y++) {
-              if (!f.inside(x, y, z)) continue;
-              if (hollow && !edge(x, y, z)) continue;
+              if (!f.inside(x, y, z) || !keep(x, y, z)) continue;
               es.set(ctr.x + x, ctr.y + y, ctr.z + z, pick());
               if (++n % 256 === 0) yield;
             }
@@ -510,6 +595,11 @@ export const shapeTool = {
     );
   },
   onHit(ses) {
+    if (ses.shapeA) {
+      ses.shapeA = undefined;
+      msg(ses.player, "Punkt A verworfen.");
+      return true;
+    }
     if (!ses.shapeLock) return false;
     ses.shapeLock = undefined;
     msg(ses.player, "Vorschau abgebrochen.");
@@ -519,6 +609,22 @@ export const shapeTool = {
     const c = ses.s.shape;
     if (c.type === "pillar") return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
+    if (c.anchor === "ab") {
+      // Punkt A und Linie zum Blickziel
+      const t = targetOrAir(ses.player, ses.s);
+      const B = t.hit ? t.pos : t.adjacent;
+      markBlock(ses.player, "axiom:marker", B);
+      const A = ses.shapeA;
+      if (!A) return;
+      markBlock(ses.player, "axiom:pos1", A);
+      const L = Math.hypot(B.x - A.x, B.y - A.y, B.z - A.z);
+      const n = Math.min(60, Math.ceil(L * 2));
+      for (let i = 0; i <= n; i++) {
+        const k = i / Math.max(1, n);
+        spawn(ses.player, "axiom:pos2", v(A.x + 0.5 + (B.x - A.x) * k, A.y + 0.5 + (B.y - A.y) * k, A.z + 0.5 + (B.z - A.z) * k));
+      }
+      return;
+    }
     const lock = ses.shapeLock && system.currentTick <= ses.shapeLock.until ? ses.shapeLock : undefined;
     const ctr = lock ? lock.ctr : center(ses);
     const particle = lock ? "axiom:pos2" : "axiom:marker";
@@ -546,12 +652,25 @@ export const shapeTool = {
       .toggle("hollow", "Hohl", c.hollow)
       .slider("thick", "Wandstärke (wenn hohl)", 1, 8, 1, c.thick)
       .dropdown(
+        "open",
+        "Hohl: offen lassen",
+        [
+          ["none", "Nichts (rundum zu)"],
+          ["bottom", "Boden offen"],
+          ["top", "Deckel offen"],
+          ["both", "Boden & Deckel offen (Röhre)"],
+        ],
+        c.open ?? "none"
+      )
+      .toggle("wire", "Nur Kanten (Drahtgitter) – gut für Quader, Pyramide, Prisma", c.wire ?? false)
+      .dropdown(
         "anchor",
         "Platzierung",
         [
           ["center", "Mittelpunkt am Blickziel"],
           ["base", "Auf dem Boden stehend"],
           ["sel", "In die Auswahl einpassen (Größe = Auswahl)"],
+          ["ab", "Von Punkt A nach Punkt B ziehen (2× benutzen)"],
         ],
         c.anchor
       )
@@ -566,7 +685,7 @@ export const shapeTool = {
       .toggle("pat", "Danach Block/Muster wählen", false)
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll });
+    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll });
     ses.shapeLock = undefined;
     markDirty(ses);
     if (r.pat) await patternMenu(ses);

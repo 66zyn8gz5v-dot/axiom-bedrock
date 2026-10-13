@@ -1075,6 +1075,56 @@ console.log("Felsbogen, Höhle, Hügelkette");
   dim.blocks.clear();
 }
 
+console.log("Formen A→B, offen & Drahtgitter");
+{
+  const { shapeFn, shapeBetween, keepFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const base = { rx: 1, ry: 1, rz: 1, hollow: false, thick: 1 };
+  const g = shapeBetween({ ...base, type: "cylinder" }, { x: 0, y: 70, z: 0 }, { x: 10, y: 70, z: 0 });
+  check(g.In(0, 70, 0) && g.In(10, 70, 0) && g.In(5, 71, 0) && !g.In(5, 73, 0) && !g.In(12, 70, 0), "A→B: liegender Zylinder zwischen den Punkten");
+  const dg = shapeBetween({ ...base, type: "cylinder" }, { x: 0, y: 70, z: 0 }, { x: 8, y: 78, z: 0 });
+  let gaps = 0;
+  for (let k = 0; k <= 8; k++) if (!dg.In(k, 70 + k, 0)) gaps++;
+  check(gaps === 0 && !dg.In(8, 70, 0), "A→B: schräger Zylinder ohne Lücken");
+  const cone = shapeBetween({ ...base, type: "cone", rx: 3, rz: 3 }, { x: 0, y: 70, z: 0 }, { x: 0, y: 70, z: 10 });
+  check(cone.In(2, 70, 1) && !cone.In(2, 70, 9) && cone.In(0, 70, 10), "A→B: Kegel – breit bei A, Spitze bei B");
+  // Hohl mit offenem Boden & Deckel, Drahtgitter
+  const cub = shapeFn({ type: "cuboid", rx: 2, ry: 2, rz: 2 });
+  const tube = keepFn(cub.inside, { hollow: true, thick: 1, open: "both" });
+  const capped = keepFn(cub.inside, { hollow: true, thick: 1, open: "none" });
+  const bottomOpen = keepFn(cub.inside, { hollow: true, thick: 1, open: "bottom" });
+  check(!tube(0, 2, 0) && !tube(0, -2, 0) && tube(2, 0, 0) && capped(0, 2, 0) && capped(0, -2, 0), "Hohl: Boden & Deckel offen = Röhre");
+  check(!bottomOpen(0, -2, 0) && bottomOpen(0, 2, 0), "Hohl: nur Boden offen");
+  const wire = keepFn(cub.inside, { hollow: false, thick: 1, wire: true });
+  let wn = 0;
+  for (let x = -2; x <= 2; x++) for (let y = -2; y <= 2; y++) for (let z = -2; z <= 2; z++) if (cub.inside(x, y, z) && wire(x, y, z)) wn++;
+  check(wn === 44, "Drahtgitter: Quader 5×5×5 hat 44 Kantenblöcke (" + wn + ")");
+  // Werkzeug: zweimal benutzen
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "cylinder", rx: 1, ry: 1, rz: 1, anchor: "ab", hollow: false, wire: false, open: "none", yaw: 0, tilt: 0, roll: 0 });
+  const snap = dim.snapshot();
+  await use("axiom:shape", { x: 0, y: 70, z: 0 });
+  check(eqSnap(snap, dim.snapshot()) && !!ses.shapeA, "A→B: erster Klick setzt nur Punkt A");
+  await hit("axiom:shape", G);
+  check(!ses.shapeA, "A→B: Schlagen verwirft Punkt A");
+  await use("axiom:shape", { x: 0, y: 70, z: 0 });
+  await roundTrip("Form A→B", () => use("axiom:shape", { x: 0, y: 70, z: 8 }));
+  await use("axiom:shape", { x: 0, y: 70, z: 0 });
+  await use("axiom:shape", { x: 0, y: 70, z: 8 });
+  check(dim._get(0, 70, 4).type.id !== "minecraft:air" && dim._get(0, 70, 0).type.id !== "minecraft:air" && dim._get(0, 70, 8).type.id !== "minecraft:air", "A→B: Zylinder gebaut");
+  await undo();
+  ses.s.shape.type = "torus";
+  const m0 = player.messages.length;
+  await use("axiom:shape", { x: 0, y: 70, z: 0 });
+  check(player.messages.slice(m0).some((m) => m.includes("zwei Punkten")), "A→B: Torus wird abgelehnt");
+  Object.assign(ses.s.shape, { type: "sphere", anchor: "center", rx: 4, ry: 4, rz: 4 });
+  ses.shapeA = undefined;
+  // Drahtgitter-Quader im Spiel
+  Object.assign(ses.s.shape, { type: "cuboid", rx: 2, ry: 2, rz: 2, wire: true, look: false });
+  await roundTrip("Drahtgitter-Quader", () => use("axiom:shape", { x: 0, y: 80, z: 0 }));
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, wire: false, look: true });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

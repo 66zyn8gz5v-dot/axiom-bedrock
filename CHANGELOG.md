@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.26.0 – 14.10.2026 (nächtlicher Ausbau: Formen)
+- **Form von Punkt A nach Punkt B:** Formen → Platzierung „Von Punkt A nach Punkt B ziehen“. 1. Benutzen setzt
+  Punkt A, 2. Benutzen setzt Punkt B und baut – die Form (Zylinder, Kegel, Kegelstumpf, Pyramide, Quader, Vieleck,
+  Kugel …) läuft genau von A nach B, auch schräg. Radius X/Z bestimmt die Dicke, Kegelspitze zeigt zu B. Eine Linie
+  aus Partikeln zeigt die Strecke, Schlagen verwirft Punkt A
+- **Hohl: offen lassen:** Boden offen, Deckel offen oder beides (Röhre, z.B. für Brunnen oder Turmschächte)
+- **Nur Kanten (Drahtgitter):** baut nur die Kanten einer Form – z.B. ein Quader-Gerüst oder die Kanten einer
+  Pyramide
+
 ## 0.25.0 – 13.10.2026 (nächtlicher Ausbau: Terraform)
 - **Felsbogen:** neuer Stempel – ein natürlicher Bogen aus Stein, Andesit und Bruchstein steht quer vor dir
   (Radius = halbe Spannweite, Stärke = Dicke, Zackigkeit = raue Kanten); die Füße reichen bis zum Boden
