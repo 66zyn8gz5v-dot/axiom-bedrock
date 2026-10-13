@@ -1024,6 +1024,57 @@ console.log("Formen drehen & einpassen");
   dim.blocks.clear();
 }
 
+console.log("Felsbogen, Höhle, Hügelkette");
+{
+  const topB = (x, z) => {
+    for (let y = 140; y > 50; y--) {
+      const id = dim._get(x, y, z).type.id;
+      if (id !== "minecraft:air") return { y, id };
+    }
+    return { y: 0, id: "" };
+  };
+  const rock = (id) => ["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone"].includes(id);
+  const oldView = player.view;
+  player.view = { x: 1, y: 0, z: 0 };
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "rockarch", radius: 6, strength: 2, jag: 0, rot: 0, stretch: 10, biome: false });
+  await roundTrip("Felsbogen", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  check(rock(dim._get(0, 71, 0).type.id) && dim._get(0, 66, 0).type.id === "minecraft:air", "Felsbogen: Bogen oben, darunter frei");
+  check(rock(dim._get(6, 65, 0).type.id) && rock(dim._get(-6, 65, 0).type.id), "Felsbogen: Füße stehen auf dem Boden");
+  check(dim._get(0, 71, 4).type.id === "minecraft:air", "Felsbogen: steht quer (schmal in Z)");
+  await undo();
+  // Höhle: in einen Steinhang (Wand) graben
+  ses.sel = boxSel(dim.id, { x: 3, y: 65, z: -6 }, { x: 20, y: 75, z: 6 });
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  Object.assign(ses.s.terrain, { mode: "cave", radius: 5, strength: 3 });
+  await roundTrip("Höhleneingang", () => use("axiom:terrain", { x: 3, y: 66, z: 0 }, { face: "West" }));
+  await use("axiom:terrain", { x: 3, y: 66, z: 0 }, { face: "West" });
+  check(dim._get(5, 66, 0).type.id === "minecraft:air" && dim._get(9, 65, 0).type.id === "minecraft:air", "Höhle: Stollen führt in den Hang");
+  check(dim._get(5, 75, 0).type.id === "minecraft:stone" && dim._get(5, 66, 6).type.id === "minecraft:stone", "Höhle: Decke & Seitenwände bleiben");
+  await undo();
+  dim.blocks.clear();
+  // Hügelkette entlang der Pfadpunkte
+  Object.assign(ses.s.terrain, { mode: "ridge", radius: 4, strength: 3, jag: 0 });
+  ses.pathPoints = [];
+  const m0 = player.messages.length;
+  await use("axiom:terrain", G);
+  check(player.messages.slice(m0).some((m) => m.includes("Pfad")), "Hügelkette: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -15, y: 65, z: 0 }, { x: 0, y: 65, z: 5 }, { x: 15, y: 65, z: 0 }];
+  await roundTrip("Hügelkette", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const mid = topB(0, 5);
+  check(mid.y >= 64 + 10 && mid.id === "minecraft:grass_block", "Hügelkette: Kamm in der Mitte (" + mid.y + ")");
+  check(topB(-15, 0).y < mid.y - 5 && topB(0, -5).y === 64, "Hügelkette: Enden flach, daneben unverändert");
+  check(dim._get(0, mid.y - 6, 5).type.id === "minecraft:stone", "Hügelkette: innen Stein");
+  await undo();
+  ses.pathPoints = [];
+  player.view = oldView;
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, jag: 3 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

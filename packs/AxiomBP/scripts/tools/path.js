@@ -314,6 +314,24 @@ export const pathTool = {
         },
       },
       {
+        text: "Hügelkette entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.terrain;
+          const r = await new Modal("Hügelkette")
+            .slider("radius", "Breite (Radius)", 2, 32, 1, c.radius)
+            .slider("strength", "Höhe (×4 Blöcke)", 1, 10, 1, c.strength)
+            .slider("jag", "Zackigkeit (0 = glatt)", 0, 10, 1, c.jag)
+            .toggle("biome", "Biom-Malen (Gras, Fels an Hängen, Schnee oben)", c.biome)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { ridge } = await import("./terrain.js");
+          ridge(ses, c);
+        },
+      },
+      {
         text: "Lasso: Fläche innerhalb der Punkte auswählen",
         run: async () => {
           if (ses.pathPoints.length < 3) return err(ses.player, "Für das Lasso mindestens 3 Punkte setzen.");

@@ -5,7 +5,9 @@ import { air, isSolidId } from "../core/pattern.js";
 import { fbm } from "../core/noise.js";
 import { markDirty } from "../core/state.js";
 import { err, now, target } from "../core/util.js";
+import { v } from "../core/vec.js";
 import { spawn } from "../core/selection.js";
+import { samplePath } from "./path.js";
 import { Modal } from "../ui/forms.js";
 import { strokeId } from "./registry.js";
 
@@ -25,6 +27,9 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["dune", "Stempel: Sanddüne (flach vorne, steil hinten)"],
   ["snowpeak", "Stempel: Schneegipfel (Fels & Schnee oben)"],
   ["cliff", "Stempel: Klippe (Felswand quer vor dir)"],
+  ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
+  ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
+  ["ridge", "Hügelkette entlang der Pfad-Punkte"],
   ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
   ["biome", "Nur Oberfläche anpassen (Gras, Sand, Stein, Schnee)"],
@@ -33,7 +38,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
 ]);
 
 /** Stempel (ein Klick): Form über Zackigkeit, Drehung und Streckung einstellbar. */
-export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff"];
+export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff", "rockarch", "cave"];
 
 /**
  * Längsachse eines Stempels: Blickrichtung (waagerecht), um `rot` Grad gedreht.
@@ -234,6 +239,183 @@ export function rainErosion(H, cx, cz, R, strength, rand = Math.random) {
   return out;
 }
 
+/** Felsblöcke gemischt (Stein, Andesit, Bruchstein) – fest pro Position. @param {number} x @param {number} y @param {number} z */
+function rockId(x, y, z) {
+  const h = ((x * 73856093) ^ (y * 19349663) ^ (z * 83492791)) >>> 0;
+  return h % 7 === 0 ? "minecraft:cobblestone" : h % 4 === 0 ? "minecraft:andesite" : "minecraft:stone";
+}
+
+/** @type {Map<string, BlockPermutation>} */
+const permCache = new Map();
+/** @param {string} id */
+function permOf(id) {
+  let p = permCache.get(id);
+  if (!p) {
+    p = BlockPermutation.resolve(id);
+    permCache.set(id, p);
+  }
+  return p;
+}
+
+/**
+ * Felsbogen: halber Ring aus Fels, steht senkrecht entlang der Längsachse; die Füße reichen bis zum Boden.
+ * Radius = halbe Spannweite, Stärke = Dicke, Zackigkeit = raue Kanten.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function rockArch(ses, t, c) {
+  const { ax, az } = stampAxis(ses.player.getViewDirection(), c.rot ?? 0);
+  const R = Math.max(2, c.radius);
+  const r = Math.max(1, Math.round(c.strength * 0.7));
+  const base = t.pos;
+  runEdit(ses.player, { label: "Felsbogen", symmetry: true }, function* (es) {
+    /** @type {Map<string, number>} unterste gesetzte Höhe je Spalte (für die Füße) */
+    const feet = new Map();
+    const span = R + r + 1;
+    for (let dx = -span; dx <= span; dx++) {
+      for (let dz = -span; dz <= span; dz++) {
+        const u = dx * ax + dz * az;
+        const w = -dx * az + dz * ax;
+        if (Math.abs(w) > r + 1) continue;
+        for (let y = 0; y <= R + r + 1; y++) {
+          const x = base.x + dx;
+          const z = base.z + dz;
+          const rough = c.jag ? fbm(x / 3 + 11.3, (base.y + y) / 3, z / 3, 2) * c.jag * 0.12 : 0;
+          const q = Math.hypot(u, y) - R;
+          if (q * q + w * w > (r + 0.5 + rough) ** 2) continue;
+          es.set(x, base.y + 1 + y, z, permOf(rockId(x, base.y + y, z)));
+          if (y <= 1) feet.set(x + "," + z, base.y + 1 + y);
+        }
+      }
+      yield;
+    }
+    // Füße bis zum Boden verlängern
+    for (const [k, y0] of feet) {
+      const [x, z] = k.split(",").map(Number);
+      for (let y = y0 - 1; y > y0 - 40; y--) {
+        const id = es.id(x, y, z);
+        if (id && isSolidId(id)) break;
+        es.set(x, y, z, permOf(rockId(x, y, z)));
+      }
+    }
+  });
+}
+
+/**
+ * Höhleneingang: Stollen in Blickrichtung in den Hang graben, leicht abfallend, mit rauen Wänden.
+ * Radius = Länge/Breite, Stärke = Höhe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function cave(ses, t, c) {
+  const { ax, az } = stampAxis(ses.player.getViewDirection(), c.rot ?? 0);
+  const len = Math.max(4, Math.round(c.radius * 2 * Math.max(1, (c.stretch ?? 10) / 10)));
+  const wide = Math.max(1.5, c.radius * 0.35);
+  const high = Math.max(2, 1 + c.strength * 0.8);
+  const start = t.face === "Up" ? v(t.pos.x, t.pos.y + 1, t.pos.z) : t.adjacent;
+  runEdit(ses.player, { label: "Höhleneingang", symmetry: true }, function* (es) {
+    const A = air();
+    for (let i = 0; i <= len; i++) {
+      // Eingang etwas größer, nach hinten schmaler und abfallend
+      const k = i / len;
+      const mouth = i < 3 ? 1.25 : 1;
+      const cx = start.x + ax * i;
+      const cz = start.z + az * i;
+      const cy = start.y - i * 0.25;
+      const ww = wide * mouth * (1 - 0.3 * k);
+      const hh = high * mouth * (1 - 0.25 * k);
+      const reach = Math.ceil(Math.max(ww, hh)) + 1;
+      for (let a = -reach; a <= reach; a++)
+        for (let y = -1; y <= reach; y++) {
+          const x = Math.round(cx - az * a);
+          const z = Math.round(cz + ax * a);
+          const yy = Math.round(cy + y);
+          const rough = c.jag ? fbm(x / 3 + 7.1, yy / 3, z / 3, 2) * c.jag * 0.08 : 0;
+          // Querschnitt: unten flach, oben gewölbt
+          const ey = y < 0 ? 0 : y / hh;
+          if ((a / ww) ** 2 + ey ** 2 > 1 + rough) continue;
+          const id = es.id(x, yy, z);
+          if (id && isSolidId(id)) es.set(x, yy, z, A);
+        }
+      yield;
+    }
+  });
+}
+
+/**
+ * Hügelkette entlang der Pfad-Punkte: Kamm folgt der Kurve, Enden laufen flach aus.
+ * Radius = Breite, Stärke = Höhe, Zackigkeit = unregelmäßige Gipfel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+export function ridge(ses, c) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte setzen – die Hügelkette folgt ihnen.");
+  const samples = samplePath(ses.pathPoints, true);
+  const acc = [0];
+  for (let i = 1; i < samples.length; i++) acc.push(acc[i - 1] + Math.hypot(samples[i].x - samples[i - 1].x, samples[i].z - samples[i - 1].z));
+  const total = acc[acc.length - 1] || 1;
+  const R = Math.max(2, c.radius);
+  const peak = c.strength * 4;
+  runEdit(ses.player, { label: "Hügelkette", symmetry: true }, function* (es) {
+    /** @type {Map<string, number>} gewünschte Erhöhung je Spalte */
+    const lift = new Map();
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i];
+      const along = acc[i] / total;
+      const taper = Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, along))), 0.5);
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const x = Math.round(s.x + dx);
+          const z = Math.round(s.z + dz);
+          const d = Math.hypot(x + 0.5 - (s.x + 0.5), z + 0.5 - (s.z + 0.5));
+          if (d > R + 0.5) continue;
+          const f = Math.max(0, 1 - d / (R + 0.5));
+          let hgt = peak * taper * Math.pow(f, 1.3);
+          if (c.jag) hgt *= Math.max(0, 1 + fbm(x / 7 + 3.3, 0.4, z / 7 + 9.1, 3) * c.jag * 0.12);
+          const k = x + "," + z;
+          if (hgt > (lift.get(k) ?? 0)) lift.set(k, hgt);
+        }
+      if (i % 8 === 0) yield;
+    }
+    // Boden suchen und Spalten anheben
+    const top = Math.round(Math.max(...samples.map((p) => p.y))) + 24;
+    /** @type {Map<string, number>} */
+    const ground = new Map();
+    for (const k of lift.keys()) {
+      const [x, z] = k.split(",").map(Number);
+      const g = groundY(es, x, z, top, 64);
+      if (g !== null) ground.set(k, g);
+    }
+    yield;
+    let n = 0;
+    for (const [k, l] of lift) {
+      const add = Math.round(l);
+      const g = ground.get(k);
+      if (!add || g === undefined) continue;
+      const [x, z] = k.split(",").map(Number);
+      const target = g + add;
+      let topId = es.id(x, g, z);
+      let sub = "minecraft:dirt";
+      if (c.biome && NATURAL.test(topId)) {
+        let slope = 0;
+        for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nk = x + ox + "," + (z + oz);
+          const ng = ground.get(nk);
+          if (ng !== undefined) slope = Math.max(slope, Math.abs(ng + Math.round(lift.get(nk) ?? 0) - target));
+        }
+        const sf = surfaceFor(slope, false, target, c.snowY, x, z);
+        topId = sf.top;
+        sub = sf.sub;
+      }
+      for (let y = g; y < target; y++) es.set(x, y, z, permOf(target - y <= 3 ? sub : "minecraft:stone"));
+      es.set(x, target, z, permOf(topId));
+      if (++n % 64 === 0) yield;
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const terrainTool = {
   id: "axiom:terrain",
@@ -244,13 +426,16 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if ([...STAMP_MODES, "waterfall"].includes(c.mode)) {
+    if ([...STAMP_MODES, "waterfall", "ridge"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
       if (now() - last < 20) return;
     }
     if (c.mode === "waterfall") return waterfall(ses, t, c);
+    if (c.mode === "rockarch") return rockArch(ses, t, c);
+    if (c.mode === "cave") return cave(ses, t, c);
+    if (c.mode === "ridge") return ridge(ses, c);
     const ctr = t.pos;
     const R = c.radius;
     // Stempel: Längsachse (Blickrichtung + Drehung) und Streckung → ovaler Grundriss

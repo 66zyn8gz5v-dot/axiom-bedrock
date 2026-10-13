@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.25.0 – 13.10.2026 (nächtlicher Ausbau: Terraform)
+- **Felsbogen:** neuer Stempel – ein natürlicher Bogen aus Stein, Andesit und Bruchstein steht quer vor dir
+  (Radius = halbe Spannweite, Stärke = Dicke, Zackigkeit = raue Kanten); die Füße reichen bis zum Boden
+- **Höhleneingang:** in einen Hang oder eine Felswand zielen – ein leicht abfallender Stollen wird in Blickrichtung
+  gegraben, vorne größer, hinten schmaler (Radius = Länge, Stärke = Höhe, Streckung = noch länger)
+- **Hügelkette entlang der Pfad-Punkte:** mit dem Pfad-Werkzeug Punkte setzen, dann im Pfad-Menü
+  „Hügelkette entlang der Punkte“ (oder Terrain-Modus „Hügelkette“). Der Kamm folgt der Kurve, die Enden laufen flach
+  aus; Breite, Höhe, Zackigkeit und Biom-Malen sind einstellbar
+
 ## 0.24.0 – 13.10.2026 (nächtlicher Ausbau: Formen)
 - **Formen frei drehen & kippen:** Formen → Schleichen + Benutzen → „Drehen“, „Nach vorne kippen“, „Zur Seite neigen“
   in 15°-Schritten. So entstehen z.B. schräge Zylinder, liegende Kegel, eine Raute aus einem Quader oder ein

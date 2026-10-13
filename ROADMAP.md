@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.25: Felsbogen, Höhleneingang, Hügelkette entlang Pfad-Punkten
 - [x] v0.24: Formen drehen/kippen/neigen, Form in Auswahl einpassen
 - [x] v0.23: Stempel Düne, Schneegipfel, Klippe
 - [x] v0.22: Terrain-Stempel einstellbar (Zackigkeit, Drehung, Streckung) mit Vorschau-Umriss
@@ -69,7 +70,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Erosion** (v0.19): Regen-Erosion (Rinnen an Hängen) und Wind-/Schmelz-Erosion als Pinsel-Modi
 - [x] **Stempel-Formen frei einstellbar** (v0.22): Größe, Höhe, Zackigkeit, Drehung + Vorschau-Rahmen vor dem Setzen
 - [x] **Neue Stempel** Düne, Schneegipfel, Klippe (v0.23)
-- [ ] **Weitere Stempel**: Hügelkette entlang Pfadpunkten, Felsbogen, Höhleneingang
+- [x] **Weitere Stempel**: Hügelkette entlang Pfadpunkten, Felsbogen, Höhleneingang (v0.25)
 - [ ] **Gelände aus Auswahl**: ganze Box-Auswahl als Landschaft füllen (Rauschen mit Oktaven, Meereshöhe, Seen)
 - [ ] **Flüsse & Seen verbessern**: Flussbett mit Ufer-Sand, Seen auffüllen bis zum Überlauf
 - [ ] **Höhenkarten-Pinsel**: Formen „Spitz“, „Rund“, „Plateau“ für Anheben/Absenken, Stärke per Schleichen umkehren
