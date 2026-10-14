@@ -7,6 +7,8 @@ import { selContains, selPositions, selSize, shiftSel, selDims, recomputeBounds,
 import { copySelection, freeClip, getClip, pasteClip, rotatedSize } from "./clipboard.js";
 import { err, fmtNum, msg } from "./util.js";
 import { v, vmax, vmin } from "./vec.js";
+import { fbm } from "./noise.js";
+import { surfaceFor } from "../tools/terrain.js";
 
 /** @param {import("./state.js").Session} ses */
 function need(ses) {
@@ -631,6 +633,63 @@ export function opThin(ses, o) {
     const id = es.id(x, y, z);
     if (!id || !isSolidId(id) || Math.random() * 100 >= o.percent) return;
     es.set(x, y, z, o.replace ? pick() : A);
+  });
+}
+
+/**
+ * Landschaft in der Auswahl erzeugen: Höhen aus fraktalem Rauschen, Oberfläche passend (Gras, Fels an Hängen,
+ * Sand am Wasser, Schnee oben), Wasser bis zur Meereshöhe. Die Auswahl wird komplett neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{scale:number, relief:number, sea:number, octaves:number}} o
+ * @param {number} [seed] Zufallsversatz (fest für Tests)
+ */
+export function opLandscape(ses, o, seed = Math.random() * 1000) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  const seaY = o.sea > 0 ? min.y + Math.round(((sy - 1) * o.sea) / 100) : -Infinity;
+  const snowY = min.y + Math.round((sy - 1) * 0.85);
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const n = fbm((x + seed) / o.scale, 0.37, (z + seed * 0.7) / o.scale, o.octaves);
+      const t = Math.pow(Math.min(1, Math.max(0, 0.5 + n * 0.9)), 1.2);
+      H.set(x + "," + z, min.y + Math.round(t * (sy - 1) * (o.relief / 100)));
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const W = P("minecraft:water");
+  const A = air();
+  runEdit(ses.player, { label: "Landschaft", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = /** @type {number} */ (H.get(x + "," + z));
+        let slope = 0;
+        let wet = h <= seaY + 1;
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nh = H.get(x + dx + "," + (z + dz));
+          if (nh === undefined) continue;
+          slope = Math.max(slope, Math.abs(nh - h));
+          if (nh < seaY) wet = wet || h <= seaY + 2;
+        }
+        let sf = surfaceFor(slope, wet, h, snowY, x, z);
+        if (h < seaY) sf = h < seaY - 3 ? { top: "minecraft:gravel", sub: "minecraft:dirt" } : { top: "minecraft:sand", sub: "minecraft:sand" };
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y > h) es.set(x, y, z, y <= seaY ? W : A);
+          else if (y === h) es.set(x, y, z, P(sf.top));
+          else es.set(x, y, z, P(h - y <= 3 ? sf.sub : "minecraft:stone"));
+        }
+      }
+      yield;
+    }
   });
 }
 

@@ -38,6 +38,7 @@ export function defaultSettings() {
     bridge: { width: 1, arch: 3, railing: "oak_fence", deck: "", pillars: 0 },
     gradient: { axis: "y", blend: 3, reverse: false },
     thin: { percent: 30, replace: false },
+    landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },
     stack: { count: 2, gap: 0 },

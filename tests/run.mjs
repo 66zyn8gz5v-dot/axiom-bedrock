@@ -1125,6 +1125,50 @@ console.log("Formen A→B, offen & Drahtgitter");
   dim.blocks.clear();
 }
 
+console.log("Landschaft erzeugen");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 31, y: 89, z: 31 });
+  const o = { scale: 16, relief: 90, sea: 30, octaves: 4 };
+  await roundTrip("Landschaft", () => ops.opLandscape(ses, o, 42));
+  ops.opLandscape(ses, o, 42);
+  await drain();
+  const seaY = 60 + Math.round(29 * 0.3);
+  const heights = [];
+  let water = 0;
+  let waterAbove = 0;
+  let badUnder = 0;
+  for (let x = 0; x <= 31; x++)
+    for (let z = 0; z <= 31; z++) {
+      let h = 0;
+      for (let y = 89; y >= 60; y--) {
+        const id = dim._get(x, y, z).type.id;
+        if (id === "minecraft:water") {
+          water++;
+          if (y > seaY) waterAbove++;
+        } else if (id !== "minecraft:air") {
+          h = y;
+          if (y < seaY && !["minecraft:sand", "minecraft:gravel"].includes(id)) badUnder++;
+          break;
+        }
+      }
+      heights.push(h);
+    }
+  check(Math.max(...heights) - Math.min(...heights) >= 8, "Landschaft: Berge & Täler (" + Math.min(...heights) + "–" + Math.max(...heights) + ")");
+  check(water > 0 && waterAbove === 0, "Landschaft: Seen bis zur Meereshöhe (" + water + ")");
+  check(badUnder === 0, "Landschaft: unter Wasser Sand/Kies");
+  check(dim._get(5, 60, 5).type.id === "minecraft:stone", "Landschaft: unten Stein");
+  check(heights.every((h) => h >= 60), "Landschaft: jede Spalte hat Boden");
+  await undo();
+  ops.opLandscape(ses, { ...o, sea: 0 }, 42);
+  await drain();
+  let w2 = 0;
+  for (const k of dim.blocks.keys()) if (dim.blocks.get(k)?.type?.id === "minecraft:water") w2++;
+  check(w2 === 0, "Landschaft: Meereshöhe 0 = kein Wasser");
+  await undo();
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

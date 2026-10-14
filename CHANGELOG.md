@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.27.0 – 14.10.2026 (nächtlicher Ausbau: Terraform)
+- **Landschaft erzeugen:** eine Box-Auswahl machen (z.B. 64×30×64), dann Axiom-Menü → Auswahl bearbeiten →
+  „Landschaft erzeugen“. Die Auswahl wird mit einer neuen Landschaft gefüllt: Hügel und Täler aus Rauschen, Gras mit
+  Erde darunter, Fels an steilen Hängen, Schnee auf den höchsten Gipfeln, Seen bis zur Meereshöhe mit Sand- und
+  Kiesgrund. Einstellbar: Größe der Hügel, Höhe der Berge, Meereshöhe (0 = kein Wasser) und Feinheit. Jedes Mal
+  entsteht eine andere Landschaft – nicht gefallen? Rückgängig und nochmal
+
 ## 0.26.0 – 14.10.2026 (nächtlicher Ausbau: Formen)
 - **Form von Punkt A nach Punkt B:** Formen → Platzierung „Von Punkt A nach Punkt B ziehen“. 1. Benutzen setzt
   Punkt A, 2. Benutzen setzt Punkt B und baut – die Form (Zylinder, Kegel, Kegelstumpf, Pyramide, Quader, Vieleck,

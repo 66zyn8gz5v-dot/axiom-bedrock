@@ -182,6 +182,22 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Landschaft erzeugen (Gelände füllen)",
+      run: async () => {
+        const c = ses.s.landscape;
+        const r = await new Modal("Landschaft erzeugen")
+          .slider("scale", "Größe der Hügel (klein = viele kleine, groß = weite Täler)", 6, 96, 2, c.scale)
+          .slider("relief", "Höhe der Berge in % der Auswahlhöhe", 10, 100, 5, c.relief)
+          .slider("sea", "Meereshöhe in % (0 = kein Wasser)", 0, 80, 5, c.sea)
+          .slider("octaves", "Feinheit (mehr = rauer)", 1, 6, 1, c.octaves)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opLandscape(ses, c);
+      },
+    },
+    {
       text: "Ausdünnen (Ruinen / Verfall)",
       run: async () => {
         const c = ses.s.thin;
