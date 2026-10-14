@@ -7,7 +7,7 @@ import { drawFrame } from "./builder.js";
 import { system } from "@minecraft/server";
 import { err, msg, target, targetOrAir } from "../core/util.js";
 import { cardinal, v } from "../core/vec.js";
-import { Modal } from "../ui/forms.js";
+import { Modal, menu } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
 
 export const SHAPES = /** @type {[string,string][]} */ ([
@@ -431,6 +431,31 @@ function pillar(ses, c) {
 }
 
 /**
+ * Material einer Form: ein Muster, Verlauf von unten (Muster 1) nach oben (Muster 2) oder Rand aus Muster 2.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{material?:string}} c
+ * @param {(x:number, y:number, z:number) => boolean} In Weltkoordinaten
+ * @param {number} y0 unterste Höhe @param {number} y1 oberste Höhe (Welt)
+ * @returns {(x:number, y:number, z:number) => import("@minecraft/server").BlockPermutation}
+ */
+export function paintFn(ses, c, In, y0, y1) {
+  const p1 = picker(ses.s.pattern);
+  if (!c.material || c.material === "single") return () => p1();
+  const p2 = picker(ses.s.pattern2);
+  if (c.material === "gradient") {
+    const span = Math.max(1, y1 - y0);
+    return (x, y, z) => {
+      // Fließender Übergang: zufällig gestreut, aber fest pro Block
+      const r = (((x * 73856093) ^ (y * 19349663) ^ (z * 83492791)) >>> 0) / 4294967296;
+      return r < (y - y0) / span ? p2() : p1();
+    };
+  }
+  // Rand: Blöcke mit freier Seite aus Muster 2, innen Muster 1
+  return (x, y, z) =>
+    !In(x + 1, y, z) || !In(x - 1, y, z) || !In(x, y + 1, z) || !In(x, y - 1, z) || !In(x, y, z + 1) || !In(x, y, z - 1) ? p2() : p1();
+}
+
+/**
  * Welche Blöcke einer Form werden gesetzt? Voll, hohl (mit Wandstärke, Boden/Deckel offen) oder nur die Kanten.
  * @param {(x:number, y:number, z:number) => boolean} In liegt der Block in der Form?
  * @param {{hollow:boolean, thick:number, open?:string, wire?:boolean}} c
@@ -509,14 +534,14 @@ function buildBetween(ses, c) {
   ses.shapeA = undefined;
   const g = shapeBetween(c, A, p);
   const keep = keepFn(g.In, c);
-  const pick = picker(ses.s.pattern);
+  const paint = paintFn(ses, c, g.In, g.min.y, g.max.y);
   runEdit(ses.player, { label: "Form A→B: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: g.min, max: g.max } }, function* (es) {
     let n = 0;
     for (let x = g.min.x; x <= g.max.x; x++)
       for (let z = g.min.z; z <= g.max.z; z++)
         for (let y = g.min.y; y <= g.max.y; y++) {
           if (!g.In(x, y, z) || !keep(x, y, z)) continue;
-          es.set(x, y, z, pick());
+          es.set(x, y, z, paint(x, y, z));
           if (++n % 256 === 0) yield;
         }
   });
@@ -531,19 +556,19 @@ function buildInSelection(ses, c) {
   const sel = ses.sel;
   if (!sel) return err(ses.player, "Zum Einpassen erst eine Auswahl machen (z.B. Box-Auswahl).");
   const { f, at } = fitShape(c, sel);
-  const pick = picker(ses.s.pattern);
   const In = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
     const q = at(x, y, z);
     return selContains(sel, x, y, z) && f.inside(q.x, q.y, q.z);
   };
   const keep = keepFn(In, c);
+  const paint = paintFn(ses, c, In, sel.min.y, sel.max.y);
   runEdit(ses.player, { label: "Form in Auswahl: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: sel.min, max: sel.max } }, function* (es) {
     let n = 0;
     for (let x = sel.min.x; x <= sel.max.x; x++)
       for (let z = sel.min.z; z <= sel.max.z; z++)
         for (let y = sel.min.y; y <= sel.max.y; y++) {
           if (!In(x, y, z) || !keep(x, y, z)) continue;
-          es.set(x, y, z, pick());
+          es.set(x, y, z, paint(x, y, z));
           if (++n % 256 === 0) yield;
         }
   });
@@ -572,9 +597,9 @@ export const shapeTool = {
       ctr = lock.ctr;
       ses.shapeLock = undefined;
     }
-    const pick = picker(ses.s.pattern);
     const keep = keepFn(f.inside, c);
     const e = f.ext;
+    const paint = paintFn(ses, c, f.inside, -e.y, e.y);
     runEdit(
       ses.player,
       {
@@ -588,7 +613,7 @@ export const shapeTool = {
           for (let z = -e.z; z <= e.z; z++)
             for (let y = -e.y; y <= e.y; y++) {
               if (!f.inside(x, y, z) || !keep(x, y, z)) continue;
-              es.set(ctr.x + x, ctr.y + y, ctr.z + z, pick());
+              es.set(ctr.x + x, ctr.y + y, ctr.z + z, paint(x, y, z));
               if (++n % 256 === 0) yield;
             }
       }
@@ -642,6 +667,45 @@ export const shapeTool = {
     return `${SHAPES.find((s) => s[0] === c.type)?.[1]} ${c.rx * 2 + 1}×${c.ry * 2 + 1}×${c.rz * 2 + 1}${c.hollow ? " hohl" : ""}${c.yaw || c.tilt || c.roll ? ` · ↻${c.yaw ?? 0}/${c.tilt ?? 0}/${c.roll ?? 0}°` : ""}${c.anchor === "sel" ? " · in Auswahl" : ""} · §e${formatPattern(ses.s.pattern)}`;
   },
   async menu(ses) {
+    const favs = ses.s.shapeFavs ?? [];
+    if (!favs.length) return shapeSettings(ses);
+    await menu(ses.player, "Formen", "Lieblingsform antippen = sofort benutzen.", [
+      { text: "§lEinstellungen ändern", run: () => shapeSettings(ses) },
+      ...favs.map((fv) => ({
+        text: "★ " + fv.name + "\n§8" + (SHAPES.find((s) => s[0] === fv.cfg.type)?.[1] ?? fv.cfg.type),
+        run: () => {
+          Object.assign(ses.s.shape, fv.cfg);
+          ses.shapeLock = undefined;
+          ses.shapeA = undefined;
+          markDirty(ses);
+          msg(ses.player, `Lieblingsform §e${fv.name}§r gewählt.`);
+        },
+      })),
+      {
+        text: "§cLieblingsform löschen …",
+        run: () =>
+          menu(
+            ses.player,
+            "Lieblingsform löschen",
+            "",
+            favs.map((fv, i) => ({
+              text: fv.name,
+              run: () => {
+                favs.splice(i, 1);
+                ses.s.shapeFavs = favs;
+                markDirty(ses);
+                msg(ses.player, `„${fv.name}“ gelöscht.`);
+              },
+            }))
+          ),
+      },
+    ]);
+  },
+};
+
+/** Einstellungen des Formen-Werkzeugs. @param {import("../core/state.js").Session} ses */
+async function shapeSettings(ses) {
+  {
     const c = ses.s.shape;
     const r = await new Modal("Formen")
       .dropdown("type", "Form", SHAPES, c.type)
@@ -682,12 +746,37 @@ export const shapeTool = {
       .slider("sides", "Vieleck-Turm: Anzahl Ecken", 3, 12, 1, c.sides)
       .slider("step", "Stufenpyramide: Stufenhöhe", 1, 8, 1, c.step)
       .toggle("confirm", "Vorschau-Modus: 1. Benutzen zeigt die Form, 2. Benutzen baut sie", c.confirm)
+      .dropdown(
+        "material",
+        "Material",
+        [
+          ["single", "Ein Muster"],
+          ["gradient", "Verlauf: unten Muster 1 → oben Muster 2"],
+          ["rim", "Rand aus Muster 2, innen Muster 1"],
+        ],
+        c.material ?? "single"
+      )
       .toggle("pat", "Danach Block/Muster wählen", false)
+      .toggle("fav", "Diese Einstellungen als Lieblingsform speichern", false)
+      .text("favName", "Name der Lieblingsform", "z.B. Turmdach", "")
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll });
+    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll, material: r.material });
     ses.shapeLock = undefined;
     markDirty(ses);
+    if (r.fav) saveFavorite(ses, String(r.favName ?? ""));
     if (r.pat) await patternMenu(ses);
-  },
-};
+    if (r.pat && c.material && c.material !== "single") await patternMenu(ses, "pattern2");
+  }
+}
+
+/** Aktuelle Form als Lieblingsform merken (max. 12, gleicher Name wird ersetzt). @param {import("../core/state.js").Session} ses @param {string} name */
+export function saveFavorite(ses, name) {
+  const c = ses.s.shape;
+  const label = name.trim() || (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type) + ` ${c.rx * 2 + 1}×${c.ry * 2 + 1}×${c.rz * 2 + 1}`;
+  const favs = (ses.s.shapeFavs ?? []).filter((f) => f.name !== label);
+  favs.unshift({ name: label, cfg: { ...c } });
+  ses.s.shapeFavs = favs.slice(0, 12);
+  markDirty(ses);
+  msg(ses.player, `Lieblingsform §e${label}§r gespeichert – Schleichen + Benutzen zeigt deine Lieblingsformen.`);
+}

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.28.0 – 15.10.2026 (nächtlicher Ausbau: Formen)
+- **Material für Formen:** im Formen-Menü unter „Material“ – **Verlauf** (unten Muster 1, nach oben fließend in
+  Muster 2, z.B. Stein → Moos oder Sand → Sandstein) oder **Rand** (Außenhaut aus Muster 2, innen Muster 1, z.B.
+  Glas außen, Licht innen). Mit „Danach Block/Muster wählen“ werden beide Muster nacheinander abgefragt
+- **Lieblingsformen:** im Formen-Menü „Als Lieblingsform speichern“ (mit Namen, bis 12 Stück). Danach zeigt
+  Schleichen + Benutzen zuerst deine Lieblingsformen – antippen und sofort bauen; löschen geht im selben Menü
+
 ## 0.27.0 – 14.10.2026 (nächtlicher Ausbau: Terraform)
 - **Landschaft erzeugen:** eine Box-Auswahl machen (z.B. 64×30×64), dann Axiom-Menü → Auswahl bearbeiten →
   „Landschaft erzeugen“. Die Auswahl wird mit einer neuen Landschaft gefüllt: Hügel und Täler aus Rauschen, Gras mit

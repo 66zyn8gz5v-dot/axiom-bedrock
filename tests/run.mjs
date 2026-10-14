@@ -1169,6 +1169,55 @@ console.log("Landschaft erzeugen");
   dim.blocks.clear();
 }
 
+console.log("Formen: Material & Lieblingsformen");
+{
+  const { shapeTool, saveFavorite } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone");
+  ses.s.pattern2 = parsePattern("gold_block");
+  Object.assign(ses.s.shape, { type: "cuboid", rx: 2, ry: 5, rz: 2, hollow: false, wire: false, anchor: "center", look: false, material: "gradient", yaw: 0, tilt: 0, roll: 0 });
+  await roundTrip("Form mit Verlauf", () => use("axiom:shape", { x: 0, y: 80, z: 0 }));
+  await use("axiom:shape", { x: 0, y: 80, z: 0 });
+  const layer = (y) => {
+    let gold = 0;
+    for (let x = -2; x <= 2; x++) for (let z = -2; z <= 2; z++) if (dim._get(x, y, z).type.id === "minecraft:gold_block") gold++;
+    return gold;
+  };
+  check(layer(75) <= 3 && layer(85) >= 22 && layer(80) > 3 && layer(80) < 22, "Material: Verlauf von unten (Stein) nach oben (Gold) – " + [layer(75), layer(80), layer(85)].join("/"));
+  await undo();
+  Object.assign(ses.s.shape, { type: "sphere", rx: 3, ry: 3, rz: 3, material: "rim" });
+  await use("axiom:shape", { x: 0, y: 80, z: 0 });
+  check(dim._get(0, 80, 0).type.id === "minecraft:stone" && dim._get(3, 80, 0).type.id === "minecraft:gold_block" && dim._get(0, 83, 0).type.id === "minecraft:gold_block", "Material: Rand aus Muster 2, innen Muster 1");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  // Lieblingsformen
+  ses.s.shapeFavs = [];
+  Object.assign(ses.s.shape, { type: "polygon", sides: 8, rx: 5, ry: 9, rz: 5, material: "single" });
+  saveFavorite(ses, "Achteck-Turm");
+  saveFavorite(ses, "");
+  check(ses.s.shapeFavs.length === 2 && ses.s.shapeFavs[1].name === "Achteck-Turm" && ses.s.shapeFavs[0].name.startsWith("Vieleck"), "Lieblingsformen: gespeichert (mit und ohne Namen)");
+  saveFavorite(ses, "Achteck-Turm");
+  check(ses.s.shapeFavs.length === 2, "Lieblingsformen: gleicher Name wird ersetzt");
+  Object.assign(ses.s.shape, { type: "sphere", rx: 2, ry: 2, rz: 2, sides: 6 });
+  answers.push({ selectText: "Achteck-Turm" });
+  await shapeTool.menu(ses);
+  check(ses.s.shape.type === "polygon" && ses.s.shape.sides === 8 && ses.s.shape.ry === 9, "Lieblingsformen: antippen lädt die Form");
+  answers.push({ selectText: "löschen" }, { selectText: "Achteck-Turm" });
+  await shapeTool.menu(ses);
+  check(ses.s.shapeFavs.length === 1 && !ses.s.shapeFavs.some((f) => f.name === "Achteck-Turm"), "Lieblingsformen: löschen");
+  const { shown } = await import("@minecraft/server-ui");
+  const n0 = shown.length;
+  answers.push({ selectText: "Einstellungen ändern" });
+  await shapeTool.menu(ses);
+  check(shown.slice(n0).some((f) => f.kind === "modal"), "Lieblingsformen: „Einstellungen ändern“ öffnet die Einstellungen");
+  ses.s.shapeFavs = [];
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, look: true, material: "single" });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

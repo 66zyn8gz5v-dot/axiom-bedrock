@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.28: Formen-Material (Verlauf, Rand), Lieblingsformen
 - [x] v0.27: Landschaft in einer Auswahl erzeugen (Hügel, Täler, Seen, Schnee)
 - [x] v0.26: Form von Punkt A nach B, Hohl mit offenem Boden/Deckel, Drahtgitter
 - [x] v0.25: Felsbogen, Höhleneingang, Hügelkette entlang Pfad-Punkten
@@ -86,8 +87,8 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Form zwischen zwei Punkten** (v0.26): Zylinder/Kegel/Pyramide von Punkt A nach Punkt B ziehen (wie Box-Auswahl)
 - [x] **Form in die Auswahl einpassen** (v0.24): Kugel, Zylinder, Pyramide usw. genau in die aktuelle Box-Auswahl setzen
 - [x] **Hohl-Optionen** (v0.26): Wandstärke je Form, offener Boden/Deckel, nur Umriss (Drahtgitter-Kanten)
-- [ ] **Material-Varianten**: Verlauf von unten nach oben (Muster 1 → 2), Rand anderer Block als Füllung
-- [ ] **Lieblingsformen speichern**: Form + Größe + Einstellungen als Vorlage merken und schnell wieder wählen
+- [x] **Material-Varianten** (v0.28): Verlauf von unten nach oben (Muster 1 → 2), Rand anderer Block als Füllung
+- [x] **Lieblingsformen speichern** (v0.28): Form + Größe + Einstellungen als Vorlage merken und schnell wieder wählen
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
