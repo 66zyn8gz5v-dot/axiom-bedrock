@@ -38,6 +38,34 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["melt", "Erosion: Wind/Schmelzen (Kanten abrunden)"],
 ]);
 
+export const BRUSHES = /** @type {[string,string][]} */ ([
+  ["soft", "Weich (Mitte stärker, Rand sanft)"],
+  ["spike", "Spitz (wie ein Gipfel)"],
+  ["round", "Rund (wie eine Kuppel)"],
+  ["plateau", "Plateau (flach oben, kurzer Rand)"],
+  ["hard", "Hart (überall gleich stark)"],
+]);
+
+/**
+ * Pinselform: wie stark wirkt der Pinsel im Abstand d vom Mittelpunkt (1 = voll, 0 = gar nicht).
+ * @param {number} d @param {number} R @param {string} brush
+ */
+export function brushFalloff(d, R, brush) {
+  const q = Math.min(1, d / (R + 0.5));
+  switch (brush) {
+    case "hard":
+      return 1;
+    case "spike":
+      return (1 - q) ** 2;
+    case "round":
+      return Math.sqrt(Math.max(0, 1 - q * q));
+    case "plateau":
+      return q < 0.6 ? 1 : Math.max(0, Math.cos(((q - 0.6) / 0.4) * (Math.PI / 2)));
+    default:
+      return Math.max(0, Math.cos(q * (Math.PI / 2)));
+  }
+}
+
 /** Stempel (ein Klick): Form über Zackigkeit, Drehung und Streckung einstellbar. */
 export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff", "rockarch", "cave"];
 
@@ -630,7 +658,7 @@ export const terrainTool = {
             }
             continue;
           }
-          const fall = c.falloff ? Math.max(0, Math.cos((Math.min(d, R) / (R + 0.5)) * (Math.PI / 2))) : 1;
+          const fall = brushFalloff(d, R, c.falloff === false ? "hard" : c.brush ?? "soft");
           /** @type {string|undefined} */
           let topOverride;
           /** @type {string|undefined} */
@@ -854,7 +882,7 @@ export const terrainTool = {
   },
   hud(ses) {
     const c = ses.s.terrain;
-    return `${TERRAIN_MODES.find((m) => m[0] === c.mode)?.[1]} · Radius ${c.radius} · Stärke ${c.strength}${c.biome ? " · §aBiom" : ""}`;
+    return `${TERRAIN_MODES.find((m) => m[0] === c.mode)?.[1]} · Radius ${c.radius} · Stärke ${c.strength}${c.brush && c.brush !== "soft" ? " · " + BRUSHES.find((b) => b[0] === c.brush)?.[1].split(" ")[0] : ""}${c.biome ? " · §aBiom" : ""}`;
   },
   async menu(ses) {
     const c = ses.s.terrain;
@@ -862,7 +890,7 @@ export const terrainTool = {
       .dropdown("mode", "Modus", TERRAIN_MODES, c.mode)
       .slider("radius", "Radius", 1, 32, 1, c.radius)
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
-      .toggle("falloff", "Weicher Rand (zur Mitte stärker)", c.falloff)
+      .dropdown("brush", "Pinselform (Anheben, Absenken, Einebnen, Glätten, Hügel, Terrassen)", BRUSHES, c.falloff === false ? "hard" : c.brush ?? "soft")
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
       .slider("jag", "Stempel: Zackigkeit (0 = glatt)", 0, 10, 1, c.jag)
       .slider("rot", "Stempel: Drehung in Grad (0 = Blickrichtung)", 0, 345, 15, c.rot)
@@ -872,6 +900,7 @@ export const terrainTool = {
       .show(ses.player);
     if (!r) return;
     Object.assign(c, r);
+    c.falloff = c.brush !== "hard";
     markDirty(ses);
   },
 };

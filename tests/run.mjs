@@ -1252,6 +1252,31 @@ console.log("See bis zum Überlauf");
   dim.blocks.clear();
 }
 
+console.log("Pinselformen");
+{
+  const { brushFalloff } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  check(brushFalloff(0, 6, "spike") === 1 && brushFalloff(3, 6, "spike") < 0.35 && brushFalloff(3, 6, "plateau") === 1 && brushFalloff(6, 6, "hard") === 1, "Pinselformen: Rechenwerte");
+  check(brushFalloff(3, 6, "round") > brushFalloff(3, 6, "soft") && brushFalloff(3, 6, "soft") > brushFalloff(3, 6, "spike"), "Pinselformen: Rund > Weich > Spitz");
+  const top = (x, z) => {
+    for (let y = 140; y > 50; y--) if (dim._get(x, y, z).type.id !== "minecraft:air") return y;
+    return 0;
+  };
+  const prof = {};
+  for (const brush of ["spike", "plateau", "hard"]) {
+    dim.blocks.clear();
+    Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 6, brush, falloff: brush !== "hard", biome: false });
+    if (brush === "spike") await roundTrip("Pinsel spitz", () => use("axiom:terrain", G));
+    await use("axiom:terrain", G);
+    prof[brush] = [top(0, 0), top(3, 0), top(6, 0)];
+    await undo();
+  }
+  check(prof.spike[0] === 70 && prof.spike[1] <= 66, "Pinsel spitz: hoher Gipfel, schmaler Fuß (" + prof.spike + ")");
+  check(prof.plateau[0] === 70 && prof.plateau[1] === 70 && prof.plateau[2] < 70, "Pinsel Plateau: flach oben (" + prof.plateau + ")");
+  check(prof.hard.every((h) => h === 70), "Pinsel hart: überall gleich (" + prof.hard + ")");
+  Object.assign(ses.s.terrain, { radius: 6, strength: 2, brush: "soft", falloff: true });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

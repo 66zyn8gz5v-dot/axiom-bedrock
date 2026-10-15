@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.30: Terrain-Pinselformen (Weich, Spitz, Rund, Plateau, Hart)
 - [x] v0.29: See bis zum Überlauf füllen, Flüsse mit Sandufer
 - [x] v0.28: Formen-Material (Verlauf, Rand), Lieblingsformen
 - [x] v0.27: Landschaft in einer Auswahl erzeugen (Hügel, Täler, Seen, Schnee)
@@ -77,7 +78,12 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Weitere Stempel**: Hügelkette entlang Pfadpunkten, Felsbogen, Höhleneingang (v0.25)
 - [x] **Gelände aus Auswahl** (v0.27): ganze Box-Auswahl als Landschaft füllen (Rauschen mit Oktaven, Meereshöhe, Seen)
 - [x] **Flüsse & Seen verbessern** (v0.29): Flussbett mit Ufer-Sand, Seen auffüllen bis zum Überlauf
-- [ ] **Höhenkarten-Pinsel**: Formen „Spitz“, „Rund“, „Plateau“ für Anheben/Absenken, Stärke per Schleichen umkehren
+- [x] **Höhenkarten-Pinsel** (v0.30): Pinselform Weich, Spitz, Rund, Plateau, Hart
+      (Umkehren per Schleichen geht nicht – Schleichen öffnet die Einstellungen; dafür gibt es Anheben/Absenken)
+- [ ] **Vegetation aufs Gelände**: Bäume (Eiche, Fichte, Birke), Büsche, Gras & Blumen passend zur Höhe streuen
+- [ ] **Küste & Strand**: Uferlinie entlang Pfad-Punkten mit Strand, flachem Wasser und Klippen
+- [ ] **Höhlen-Netz** in einer Auswahl (verzweigte Gänge mit Kammern)
+- [ ] **Terrassenfelder**: Hang in begehbare Stufen mit Stützmauern umbauen
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
@@ -90,6 +96,12 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Hohl-Optionen** (v0.26): Wandstärke je Form, offener Boden/Deckel, nur Umriss (Drahtgitter-Kanten)
 - [x] **Material-Varianten** (v0.28): Verlauf von unten nach oben (Muster 1 → 2), Rand anderer Block als Füllung
 - [x] **Lieblingsformen speichern** (v0.28): Form + Größe + Einstellungen als Vorlage merken und schnell wieder wählen
+
+- [ ] **Formen abziehen**: zweite Form als Loch aus der ersten schneiden (z.B. Fenster in Kuppel, Tunnel durch Berg)
+- [ ] **Muster auf Formen**: Streifen (waagerecht/senkrecht) und Schachbrett aus Muster 1 und 2
+- [ ] **Wendeltreppe** mit echten Treppenblöcken und Geländer
+- [ ] **Bogengang (Arkaden)**: Reihe von Bögen mit Säulen entlang Pfad-Punkten
+- [ ] **Kuppel mit Rippen/Fenstern** und **Zwiebelturm**
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

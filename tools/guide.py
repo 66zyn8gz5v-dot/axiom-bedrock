@@ -168,7 +168,7 @@ PAGES = [
                "Streuen (Blumen) · Flutfüllung (See füllen)"),
          ("tip", "Terrain-Modus „See“: in eine Mulde zielen – sie läuft bis genau zum Rand voll Wasser.")],
         [("h", "Terrain"),
-         ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten – und Erosion durch Regen oder Wind."),
+         ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten, Erosion – Pinsel spitz, rund oder flach."),
          ("p", "12 Stempel: Berg, Krater, Vulkan, Plateau, Insel, Schlucht, Düne, Gipfel, Klippe, Felsbogen, Höhle, Wasserfall."),
          ("img", "terrain"),
          ("tip", "Biom-Malen einschalten: Gras, Sand am Wasser, Stein an Hängen, Schnee auf Gipfeln.")],

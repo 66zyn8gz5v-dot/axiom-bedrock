@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.30.0 – 16.10.2026 (nächtlicher Ausbau: Terraform)
+- **Pinselformen fürs Terrain:** Terrain → Schleichen + Benutzen → „Pinselform“: **Weich** (wie bisher),
+  **Spitz** (schmale Gipfel), **Rund** (Kuppeln), **Plateau** (flache Oberseite mit kurzem Rand) oder **Hart**
+  (überall gleich stark). Gilt für Anheben, Absenken, Einebnen, Glätten, Hügel und Terrassen
+
 ## 0.29.0 – 15.10.2026 (nächtlicher Ausbau: Terraform)
 - **See bis zum Überlauf:** neuer Terrain-Modus „See“ – in eine Mulde, Grube oder ein Tal zielen und benutzen. Das
   Wasser steigt wie echtes Wasser bis genau zum niedrigsten Rand (ein Einschnitt im Rand senkt den Wasserspiegel),
