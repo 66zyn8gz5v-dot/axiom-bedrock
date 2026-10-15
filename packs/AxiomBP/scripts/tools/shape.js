@@ -1,6 +1,6 @@
 // Formen-Werkzeug: Kugel, Quader, Zylinder, Kegel, Pyramiden, Torus, Bogen, Keil, Vieleck, Stern, Herz u.v.m.
 import { runEdit } from "../core/edit.js";
-import { formatPattern, isSolidId, picker } from "../core/pattern.js";
+import { formatPattern, isSolidId, picker, air } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
 import { markBlock, selContains, spawn } from "../core/selection.js";
 import { drawFrame } from "./builder.js";
@@ -439,6 +439,11 @@ function pillar(ses, c) {
  * @returns {(x:number, y:number, z:number) => import("@minecraft/server").BlockPermutation}
  */
 export function paintFn(ses, c, In, y0, y1) {
+  if (c.material === "carve") {
+    // Ausschneiden: die Form wird zu Luft (Loch, Tunnel, Fensteröffnung)
+    const A = air();
+    return () => A;
+  }
   const p1 = picker(ses.s.pattern);
   if (!c.material || c.material === "single") return () => p1();
   const p2 = picker(ses.s.pattern2);
@@ -753,6 +758,7 @@ async function shapeSettings(ses) {
           ["single", "Ein Muster"],
           ["gradient", "Verlauf: unten Muster 1 → oben Muster 2"],
           ["rim", "Rand aus Muster 2, innen Muster 1"],
+          ["carve", "Ausschneiden: Form wird zu Luft (Loch, Tunnel)"],
         ],
         c.material ?? "single"
       )

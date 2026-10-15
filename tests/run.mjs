@@ -1277,6 +1277,23 @@ console.log("Pinselformen");
   dim.blocks.clear();
 }
 
+console.log("Formen ausschneiden");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: -6, y: 65, z: -6 }, { x: 6, y: 77, z: 6 });
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  Object.assign(ses.s.shape, { type: "cylinder", rx: 2, ry: 2, rz: 2, anchor: "ab", material: "carve", hollow: false, wire: false });
+  await use("axiom:shape", { x: -6, y: 70, z: 0 });
+  await roundTrip("Tunnel ausschneiden", () => use("axiom:shape", { x: 6, y: 70, z: 0 }));
+  await use("axiom:shape", { x: -6, y: 70, z: 0 });
+  await use("axiom:shape", { x: 6, y: 70, z: 0 });
+  check(dim._get(0, 70, 0).type.id === "minecraft:air" && dim._get(0, 70, 2).type.id === "minecraft:air" && dim._get(0, 70, 4).type.id === "minecraft:stone" && dim._get(0, 74, 0).type.id === "minecraft:stone", "Ausschneiden: Tunnel durch den Steinblock");
+  await undo();
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, anchor: "center", material: "single" });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

@@ -159,7 +159,7 @@ PAGES = [
          ("tool", "sculpt", "Modellieren", "Wie Knete: gedrückt halten und formen."),
          ("p", "Modi: Aufbauen · Abtragen · Glätten · Schmelzen · Auffüllen · Felsen · Aufrauen · Verzerren · Zerbrechen"),
          ("tool", "bulldozer", "Bulldozer", "Baut Blöcke aus großer Entfernung sofort ab."),
-         ("tip", "Formen: Material „Verlauf“ oder „Rand“ mischt zwei Blöcke. Gute Formen als Lieblingsform speichern!")],
+         ("tip", "Formen: Material „Verlauf“ oder „Rand“ mischt zwei Blöcke, „Ausschneiden“ macht Löcher & Tunnel.")],
     ),
     (
         [("h", "5. Malen"),

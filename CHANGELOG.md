@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.31.0 – 16.10.2026 (nächtlicher Ausbau: Formen)
+- **Formen ausschneiden:** Formen → Material „Ausschneiden“ – die Form wird zu Luft statt zu Blöcken. So schneidest
+  du eine Form aus einer anderen heraus: runde Fenster in eine Kuppel, ein Tor in eine Mauer oder mit „Von Punkt A
+  nach Punkt B“ einen Tunnel quer durch einen Berg. Rückgängig wie immer
+
 ## 0.30.0 – 16.10.2026 (nächtlicher Ausbau: Terraform)
 - **Pinselformen fürs Terrain:** Terrain → Schleichen + Benutzen → „Pinselform“: **Weich** (wie bisher),
   **Spitz** (schmale Gipfel), **Rund** (Kuppeln), **Plateau** (flache Oberseite mit kurzem Rand) oder **Hart**
