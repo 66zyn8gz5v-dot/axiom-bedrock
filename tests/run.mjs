@@ -591,6 +591,7 @@ console.log("Fluss & Blaupausen-Verwaltung");
   answers.push({ selectText: "Fluss" }, { set: { Breite: 2, Tiefe: 2 } });
   await use("axiom:path", G, { sneak: true });
   check(dim._get(0, 64, 0).type.id === "minecraft:water" && dim._get(0, 63, 0).type.id === "minecraft:water" && dim._get(0, 62, 0).type.id === "minecraft:sand", "Fluss: Wasser + Sandbett");
+  check(dim._get(0, 64, -3).type.id === "minecraft:sand" && dim._get(0, 64, -6).type.id === "minecraft:grass_block", "Fluss: Sandufer neben dem Wasser");
   await undo();
   ses.pathPoints = [];
   const { listBlueprints: lb } = await import("../packs/AxiomBP/scripts/core/clipboard.js");
@@ -1215,6 +1216,39 @@ console.log("Formen: Material & Lieblingsformen");
   check(shown.slice(n0).some((f) => f.kind === "modal"), "Lieblingsformen: „Einstellungen ändern“ öffnet die Einstellungen");
   ses.s.shapeFavs = [];
   Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, look: true, material: "single" });
+  dim.blocks.clear();
+}
+
+console.log("See bis zum Überlauf");
+{
+  const { findLake } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const bowl = (x, z) => {
+    const d = Math.max(Math.abs(x), Math.abs(z));
+    return d <= 5 ? 60 + d : d === 6 ? 66 : 62;
+  };
+  const r1 = findLake(bowl, 0, 0, 5000);
+  check(!("error" in r1) && r1.level === 66 && r1.cols.length === 121, "See: Mulde bis zum Rand (" + (r1.level ?? r1.error) + ")");
+  const notch = (x, z) => (x === 6 && z === 0 ? 63 : bowl(x, z));
+  const r2 = findLake(notch, 0, 0, 5000);
+  check(!("error" in r2) && r2.level === 65, "See: Kerbe im Rand senkt den Wasserspiegel (" + r2.level + ")");
+  check("error" in findLake(() => 64, 0, 0, 500), "See: flaches Land = keine Mulde");
+  const pit = (x, z) => (Math.abs(x) <= 2 && Math.abs(z) <= 2 ? 61 : 64);
+  const r3 = findLake(pit, 0, 0, 500);
+  check(!("error" in r3) && r3.level === 64 && r3.cols.length === 25 && !r3.partial, "See: Grube in flachem Land (vollständig)");
+  const big = findLake((x, z) => 70 - Math.max(0, 20 - Math.abs(x) - Math.abs(z)), 0, 0, 50);
+  check(!("error" in big) && big.partial && big.cols.length <= 50 && big.level < 70, "See: riesige Mulde nur teilweise (dicht) gefüllt");
+  // Im Spiel: Grube graben und füllen
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: -2, y: 62, z: -2 }, { x: 2, y: 64, z: 2 });
+  ops.opClear(ses);
+  await drain();
+  Object.assign(ses.s.terrain, { mode: "lake" });
+  await roundTrip("See füllen", () => use("axiom:terrain", { x: 0, y: 61, z: 0 }));
+  await use("axiom:terrain", { x: 0, y: 61, z: 0 });
+  check(dim._get(0, 64, 0).type.id === "minecraft:water" && dim._get(2, 62, 2).type.id === "minecraft:water", "See: Grube voll Wasser bis zum Rand");
+  check(dim._get(0, 61, 0).type.id === "minecraft:sand" && dim._get(0, 65, 0).type.id === "minecraft:air" && dim._get(3, 65, 0).type.id === "minecraft:air", "See: Sandgrund, nichts läuft über");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise" });
   dim.blocks.clear();
 }
 

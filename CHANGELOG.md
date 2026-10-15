@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.29.0 – 15.10.2026 (nächtlicher Ausbau: Terraform)
+- **See bis zum Überlauf:** neuer Terrain-Modus „See“ – in eine Mulde, Grube oder ein Tal zielen und benutzen. Das
+  Wasser steigt wie echtes Wasser bis genau zum niedrigsten Rand (ein Einschnitt im Rand senkt den Wasserspiegel),
+  der Grund wird Sand, tiefe Stellen Kies. Nichts läuft über; sehr große Mulden werden nur so weit gefüllt, wie das
+  Wasser sicher eingefasst ist
+- **Flüsse mit Sandufer:** Pfad → Fluss entlang der Punkte legt jetzt einen 2 Blöcke breiten Sandstreifen an beide
+  Ufer (abschaltbar, nur natürlicher Boden wird verändert)
+
 ## 0.28.0 – 15.10.2026 (nächtlicher Ausbau: Formen)
 - **Material für Formen:** im Formen-Menü unter „Material“ – **Verlauf** (unten Muster 1, nach oben fließend in
   Muster 2, z.B. Stein → Moos oder Sand → Sandstein) oder **Rand** (Außenhaut aus Muster 2, innen Muster 1, z.B.

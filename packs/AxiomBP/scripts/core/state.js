@@ -34,7 +34,7 @@ export function defaultSettings() {
     editorBar: /** @type {string[]} */ ([]),
     palettes: /** @type {Record<string, {id:string, states?:Record<string, string|number|boolean>, w:number}[]>} */ ({}),
     text: { text: "AXIOM", scale: 1, orient: "wall", spacing: 1, mode: "text", pixel: "rr.rr/rrrrr/.rrr./..r..", legend: "r=red_wool" },
-    river: { width: 3, depth: 3, bed: "sand" },
+    river: { width: 3, depth: 3, bed: "sand", banks: true },
     roof: { type: "gable", stairs: "spruce_stairs", overhang: 1 },
     windows: { w: 2, h: 2, gap: 2, sill: 1, block: "glass_pane" },
     bridge: { width: 1, arch: 3, railing: "oak_fence", deck: "", pillars: 0 },

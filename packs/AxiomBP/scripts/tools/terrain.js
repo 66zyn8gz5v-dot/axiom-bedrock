@@ -4,7 +4,7 @@ import { runEdit } from "../core/edit.js";
 import { air, isSolidId } from "../core/pattern.js";
 import { fbm } from "../core/noise.js";
 import { markDirty } from "../core/state.js";
-import { err, now, target } from "../core/util.js";
+import { err, msg, now, target } from "../core/util.js";
 import { v } from "../core/vec.js";
 import { spawn } from "../core/selection.js";
 import { samplePath } from "./path.js";
@@ -30,6 +30,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
   ["ridge", "Hügelkette entlang der Pfad-Punkte"],
+  ["lake", "See: Mulde bis zum Überlauf mit Wasser füllen (in die Mulde zielen)"],
   ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
   ["biome", "Nur Oberfläche anpassen (Gras, Sand, Stein, Schnee)"],
@@ -53,7 +54,7 @@ export function stampAxis(vd, rot) {
 }
 
 /** Natürliche Bodenblöcke, die das Biom-Malen umfärben darf (Bauwerke bleiben unberührt). */
-const NATURAL =
+export const NATURAL =
   /^minecraft:(grass_block|grass|dirt|coarse_dirt|podzol|mycelium|dirt_with_roots|stone|andesite|diorite|granite|tuff|calcite|deepslate|sand|red_sand|gravel|snow|clay|mud|moss_block|cobblestone|mossy_cobblestone)$/;
 
 /**
@@ -416,6 +417,133 @@ export function ridge(ses, c) {
   });
 }
 
+/**
+ * Wasserspiegel einer Mulde finden. Spalten werden nach Bodenhöhe aufsteigend abgelaufen (wie steigendes Wasser).
+ * Jedes Mal, wenn ein neuer, höherer Rand erreicht wird, ist der See bis zu diesem Rand dicht – das merken wir uns.
+ * Wird die Fläche danach riesig (Wasser liefe ins Umland), gilt der zuletzt gemerkte Wasserspiegel.
+ * Generator: gibt zwischendurch die Kontrolle ab (große Mulden über mehrere Ticks).
+ * @param {(x:number, z:number) => number|null} H Bodenhöhe
+ * @param {number} sx @param {number} sz Startspalte @param {number} limit max. Spalten
+ * @returns {Generator<void, {level:number, cols:{x:number, z:number, h:number}[], partial:boolean} | {error:string}>}
+ */
+export function* findLakeGen(H, sx, sz, limit) {
+  const h0 = H(sx, sz);
+  if (h0 === null) return { error: "Kein Boden gefunden." };
+  /** @type {{x:number, z:number, h:number}[]} Min-Heap nach Höhe */
+  const heap = [];
+  const push = (/** @type {{x:number, z:number, h:number}} */ e) => {
+    heap.push(e);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const q = (i - 1) >> 1;
+      if (heap[q].h <= heap[i].h) break;
+      [heap[q], heap[i]] = [heap[i], heap[q]];
+      i = q;
+    }
+  };
+  const pop = () => {
+    const top = heap[0];
+    const last = /** @type {{x:number, z:number, h:number}} */ (heap.pop());
+    if (heap.length) {
+      heap[0] = last;
+      let i = 0;
+      for (;;) {
+        const l = 2 * i + 1;
+        const r = l + 1;
+        let m = i;
+        if (l < heap.length && heap[l].h < heap[m].h) m = l;
+        if (r < heap.length && heap[r].h < heap[m].h) m = r;
+        if (m === i) break;
+        [heap[m], heap[i]] = [heap[i], heap[m]];
+        i = m;
+      }
+    }
+    return top;
+  };
+  const seen = new Set([sx + "," + sz]);
+  push({ x: sx, z: sz, h: h0 });
+  let max = h0;
+  let level = -Infinity;
+  let wetCount = 0;
+  /** @type {{x:number, z:number, h:number}[]} */
+  const cols = [];
+  let partial = false;
+  while (heap.length) {
+    const c = pop();
+    if (c.h > max) {
+      // Neuer höchster Rand: alles bisher Erreichte liegt tiefer und ist rundum eingefasst
+      max = c.h;
+      level = c.h;
+      wetCount = cols.length;
+    }
+    cols.push(c);
+    if (cols.length > limit) {
+      // Nur „teilweise“, wenn es noch höhere Ränder gäbe (bei ebenem Umland ist der See bereits voll)
+      partial = heap.some((e) => e.h > max);
+      break;
+    }
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const x = c.x + dx;
+      const z = c.z + dz;
+      const k = x + "," + z;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const h = H(x, z);
+      if (h !== null) push({ x, z, h });
+    }
+    if (cols.length % 128 === 0) yield;
+  }
+  const wet = cols.slice(0, wetCount).filter((c) => c.h < level);
+  if (!wet.length) return { error: "Hier ist keine Mulde – auf eine tiefe Stelle zielen, die rundum höher eingefasst ist." };
+  return { level, cols: wet, partial };
+}
+
+/** Wie findLakeGen, aber auf einmal (für Tests). @param {(x:number, z:number) => number|null} H @param {number} sx @param {number} sz @param {number} limit */
+export function findLake(H, sx, sz, limit) {
+  const g = findLakeGen(H, sx, sz, limit);
+  for (;;) {
+    const r = g.next();
+    if (r.done) return r.value;
+  }
+}
+
+/**
+ * See: Mulde am Blickziel bis zum Überlauf mit Wasser füllen, Grund unter Wasser wird Sand/Kies.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ */
+function lake(ses, t) {
+  const p = t.pos;
+  runEdit(ses.player, { label: "See" }, function* (es) {
+    /** @type {Map<string, number|null>} */
+    const hm = new Map();
+    const H = (/** @type {number} */ x, /** @type {number} */ z) => {
+      const k = x + "," + z;
+      if (!hm.has(k)) hm.set(k, groundY(es, x, z, p.y + 48, 96));
+      return hm.get(k) ?? null;
+    };
+    const res = yield* findLakeGen(H, p.x, p.z, 8000);
+    if ("error" in res) return err(ses.player, res.error);
+    yield;
+    const W = permOf("minecraft:water");
+    let n = 0;
+    for (const c of res.cols) {
+      const top = es.id(c.x, c.h, c.z);
+      if (NATURAL.test(top)) es.set(c.x, c.h, c.z, permOf(res.level - c.h > 3 ? "minecraft:gravel" : "minecraft:sand"));
+      for (let y = c.h + 1; y <= res.level; y++) {
+        const id = es.id(c.x, y, c.z);
+        if (!id || !isSolidId(id)) es.set(c.x, y, c.z, W);
+      }
+      if (++n % 64 === 0) yield;
+    }
+    msg(
+      ses.player,
+      `See gefüllt: ${res.cols.length} Spalten, Wasserspiegel auf Höhe ${res.level}.` +
+        (res.partial ? " §7(Sehr große Mulde oder ebenes Umland – zur Sicherheit nur so weit gefüllt, wie das Wasser sicher eingefasst ist.)" : "")
+    );
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const terrainTool = {
   id: "axiom:terrain",
@@ -426,7 +554,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if ([...STAMP_MODES, "waterfall", "ridge"].includes(c.mode)) {
+    if ([...STAMP_MODES, "waterfall", "ridge", "lake"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -436,6 +564,7 @@ export const terrainTool = {
     if (c.mode === "rockarch") return rockArch(ses, t, c);
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
+    if (c.mode === "lake") return lake(ses, t);
     const ctr = t.pos;
     const R = c.radius;
     // Stempel: Längsachse (Blickrichtung + Drehung) und Streckung → ovaler Grundriss

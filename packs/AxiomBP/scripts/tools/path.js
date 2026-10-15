@@ -9,6 +9,7 @@ import { cardinal, fmt, k3, v } from "../core/vec.js";
 import { Modal, menu } from "../ui/forms.js";
 import { patternMenu } from "../ui/common.js";
 import { FONT } from "./font.js";
+import { NATURAL } from "./terrain.js";
 import { SEL_MODES, applySel, selInfo } from "./select.js";
 import { SET_LIMIT } from "../core/selection.js";
 
@@ -189,6 +190,29 @@ function buildRiver(ses) {
       es.set(x, col.y - col.depth, z, bed);
       if (++n % 64 === 0) yield;
     }
+    if (c.banks !== false) {
+      // Ufer: 2 Blöcke breiter Streifen neben dem Wasser wird Sand (nur natürlicher Boden)
+      const SAND = BlockPermutation.resolve("minecraft:sand");
+      const done = new Set();
+      for (const [k, col] of cols) {
+        const [x0, z0] = k.split(",").map(Number);
+        for (let dx = -2; dx <= 2; dx++)
+          for (let dz = -2; dz <= 2; dz++) {
+            const x = x0 + dx;
+            const z = z0 + dz;
+            const bk = x + "," + z;
+            if (cols.has(bk) || done.has(bk)) continue;
+            done.add(bk);
+            for (let y = col.y + 3; y >= col.y - 2; y--) {
+              const id = es.id(x, y, z);
+              if (!id || !isSolidId(id)) continue;
+              if (NATURAL.test(id)) es.set(x, y, z, SAND);
+              break;
+            }
+          }
+        if (++n % 64 === 0) yield;
+      }
+    }
   });
 }
 
@@ -306,9 +330,10 @@ export const pathTool = {
             .slider("width", "Breite (Radius)", 1, 12, 1, c.width)
             .slider("depth", "Tiefe", 1, 8, 1, c.depth)
             .text("bed", "Flussbett-Block", "sand", c.bed)
+            .toggle("banks", "Sandufer neben dem Wasser", c.banks !== false)
             .show(ses.player);
           if (!r) return;
-          Object.assign(c, { width: r.width, depth: r.depth, bed: String(r.bed) || "sand" });
+          Object.assign(c, { width: r.width, depth: r.depth, bed: String(r.bed) || "sand", banks: r.banks });
           markDirty(ses);
           buildRiver(ses);
         },

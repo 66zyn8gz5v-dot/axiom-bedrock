@@ -165,7 +165,8 @@ PAGES = [
         [("h", "5. Malen"),
          ("tool", "painter", "Maler", "Färbt Blöcke im Pinsel um – gedrückt halten."),
          ("p", "Gute Modi: Oberfläche · Nach Neigung (oben Gras, Hänge Stein) · Rauschen (2 Blöcke gemischt) · "
-               "Streuen (Blumen) · Flutfüllung (See füllen)")],
+               "Streuen (Blumen) · Flutfüllung (See füllen)"),
+         ("tip", "Terrain-Modus „See“: in eine Mulde zielen – sie läuft bis genau zum Rand voll Wasser.")],
         [("h", "Terrain"),
          ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten – und Erosion durch Regen oder Wind."),
          ("p", "12 Stempel: Berg, Krater, Vulkan, Plateau, Insel, Schlucht, Düne, Gipfel, Klippe, Felsbogen, Höhle, Wasserfall."),
