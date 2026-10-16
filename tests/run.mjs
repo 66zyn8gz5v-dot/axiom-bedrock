@@ -1344,6 +1344,71 @@ console.log("Bepflanzen");
   dim.blocks.clear();
 }
 
+console.log("Formen: Streifen & Schachbrett");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("white_wool");
+  ses.s.pattern2 = parsePattern("red_wool");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  Object.assign(ses.s.shape, { type: "cuboid", rx: 3, ry: 3, rz: 3, hollow: false, wire: false, anchor: "center", look: false, material: "stripesH", band: 2, yaw: 0, tilt: 0, roll: 0 });
+  await roundTrip("Form mit Streifen", () => use("axiom:shape", { x: 0, y: 80, z: 0 }));
+  await use("axiom:shape", { x: 0, y: 80, z: 0 });
+  check(id(0, 80, 0) === id(3, 80, 3) && id(0, 80, 0) === id(0, 81, 0) && id(0, 80, 0) !== id(0, 82, 0), "Streifen waagerecht: 2 Lagen gleich, dann Wechsel");
+  await undo();
+  ses.s.shape.material = "stripesV";
+  ses.s.shape.band = 1;
+  await use("axiom:shape", { x: 0, y: 80, z: 0 });
+  check(id(0, 78, 0) === id(0, 82, 0) && id(0, 80, 0) !== id(1, 80, 0), "Streifen senkrecht");
+  await undo();
+  ses.s.shape.material = "checker";
+  await use("axiom:shape", { x: 0, y: 80, z: 0 });
+  check(id(0, 80, 0) !== id(1, 80, 0) && id(0, 80, 0) !== id(0, 81, 0) && id(0, 80, 0) === id(1, 81, 0), "Schachbrett");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, look: true, material: "single", band: 1 });
+  dim.blocks.clear();
+}
+
+console.log("Wendeltreppe");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone");
+  ses.s.pattern2 = parsePattern("cobblestone");
+  Object.assign(ses.s.shape, { type: "winding", rx: 2, ry: 4, rz: 2, pitch: 8, anchor: "center", material: "single" });
+  await roundTrip("Wendeltreppe", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  let core = 0;
+  const cover = new Set();
+  const dirs = new Set();
+  const perLevel = [];
+  for (let k = 0; k < 9; k++) {
+    if (dim._get(0, 65 + k, 0).type.id === "minecraft:cobblestone") core++;
+    let n = 0;
+    for (let x = -2; x <= 2; x++)
+      for (let z = -2; z <= 2; z++) {
+        const p = dim._get(x, 65 + k, z);
+        if (p.type.id !== "minecraft:normal_stone_stairs") continue;
+        n++;
+        if (k < 8) cover.add(x + "," + z);
+        dirs.add(p.getAllStates().weirdo_direction);
+      }
+    perLevel.push(n);
+  }
+  check(core === 9, "Wendeltreppe: Mittelsäule aus Muster 2");
+  check(perLevel.every((n) => n > 0 && n < 8), "Wendeltreppe: jede Stufe ein Tortenstück (" + perLevel + ")");
+  check(cover.size === 20 && dirs.size === 4, "Wendeltreppe: eine Umdrehung, Treppen in alle 4 Richtungen (" + cover.size + ")");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, pitch: 12 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

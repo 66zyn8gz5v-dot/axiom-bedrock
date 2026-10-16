@@ -151,7 +151,7 @@ PAGES = [
     ),
     (
         [("h", "4. Formen"),
-         ("tool", "shape", "Formen", "22 Formen: Kugel, Zylinder, Kegel, Pyramide, Keil, Sechseck-Turm, Rohr, Stern, Herz …"),
+         ("tool", "shape", "Formen", "23 Formen: Kugel, Zylinder, Pyramide, Keil, Sechseck-Turm, Stern, Herz, Wendeltreppe …"),
          ("p", "Schleichen + Benutzen: Form, Größe, hohl, offen oder nur Kanten, drehen & kippen, in die Auswahl einpassen oder von Punkt A nach B ziehen."),
          ("p", "Benutzen setzt die Form dort, wo du hinschaust – auch in der Luft. Der Umriss aus Partikeln zeigt sie vorher."),
          ("img", "sphere")],
@@ -159,7 +159,7 @@ PAGES = [
          ("tool", "sculpt", "Modellieren", "Wie Knete: gedrückt halten und formen."),
          ("p", "Modi: Aufbauen · Abtragen · Glätten · Schmelzen · Auffüllen · Felsen · Aufrauen · Verzerren · Zerbrechen"),
          ("tool", "bulldozer", "Bulldozer", "Baut Blöcke aus großer Entfernung sofort ab."),
-         ("tip", "Formen: Material „Verlauf“ oder „Rand“ mischt zwei Blöcke, „Ausschneiden“ macht Löcher & Tunnel.")],
+         ("tip", "Formen: Material „Verlauf“, „Rand“, Streifen oder Schachbrett mischt zwei Blöcke, „Ausschneiden“ macht Löcher.")],
     ),
     (
         [("h", "5. Malen"),

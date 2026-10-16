@@ -105,7 +105,7 @@ export function surfaceFor(slope, wet, y, snowY, x, z) {
 }
 
 /** Richtung zur höheren Nachbarspalte -> weirdo_direction (0 Ost, 1 West, 2 Süd, 3 Nord) */
-const STAIR_DIRS = /** @type {[number, number, number][]} */ ([
+export const STAIR_DIRS = /** @type {[number, number, number][]} */ ([
   [1, 0, 0],
   [-1, 0, 1],
   [0, 1, 2],
@@ -132,7 +132,7 @@ const STAIR_MAP = /** @type {Record<string,string>} */ ({
 });
 
 /** Passende Treppe zum Material der höheren Stufe (Gras/Erde -> Bruchstein-Treppe). @param {string} id */
-function stairFor(id) {
+export function stairFor(id) {
   // In Bedrock heißt die Bruchsteintreppe „stone_stairs“
   return STAIR_MAP[id] ?? "minecraft:stone_stairs";
 }

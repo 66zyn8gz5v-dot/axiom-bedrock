@@ -4,7 +4,8 @@ import { formatPattern, isSolidId, picker, air } from "../core/pattern.js";
 import { markDirty } from "../core/state.js";
 import { markBlock, selContains, spawn } from "../core/selection.js";
 import { drawFrame } from "./builder.js";
-import { system } from "@minecraft/server";
+import { STAIR_DIRS, stairFor } from "./terrain.js";
+import { BlockPermutation, system } from "@minecraft/server";
 import { err, msg, target, targetOrAir } from "../core/util.js";
 import { cardinal, v } from "../core/vec.js";
 import { Modal, menu } from "../ui/forms.js";
@@ -22,6 +23,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["prism", "Prisma (Dach, entlang X)"],
   ["spiral", "Spirale (Wendelrampe)"],
   ["pillar", "Säule mit Sockel & Kapitell (bis zum Boden)"],
+  ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
   ["wedge", "Keil / Rampe (steigt von dir weg an)"],
   ["tetra", "Dreieck-Pyramide (Tetraeder)"],
   ["octa", "Doppelpyramide (Oktaeder)"],
@@ -433,7 +435,7 @@ function pillar(ses, c) {
 /**
  * Material einer Form: ein Muster, Verlauf von unten (Muster 1) nach oben (Muster 2) oder Rand aus Muster 2.
  * @param {import("../core/state.js").Session} ses
- * @param {{material?:string}} c
+ * @param {{material?:string, band?:number}} c
  * @param {(x:number, y:number, z:number) => boolean} In Weltkoordinaten
  * @param {number} y0 unterste Höhe @param {number} y1 oberste Höhe (Welt)
  * @returns {(x:number, y:number, z:number) => import("@minecraft/server").BlockPermutation}
@@ -447,6 +449,11 @@ export function paintFn(ses, c, In, y0, y1) {
   const p1 = picker(ses.s.pattern);
   if (!c.material || c.material === "single") return () => p1();
   const p2 = picker(ses.s.pattern2);
+  const w = Math.max(1, c.band ?? 1);
+  const band = (/** @type {number} */ n) => Math.floor(n / w) & 1;
+  if (c.material === "stripesH") return (x, y, z) => (band(y) ? p2() : p1());
+  if (c.material === "stripesV") return (x, y, z) => (band(x + z) ? p2() : p1());
+  if (c.material === "checker") return (x, y, z) => (band(x) ^ band(y) ^ band(z) ? p2() : p1());
   if (c.material === "gradient") {
     const span = Math.max(1, y1 - y0);
     return (x, y, z) => {
@@ -520,7 +527,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -579,6 +586,60 @@ function buildInSelection(ses, c) {
   });
 }
 
+/**
+ * Wendeltreppe: Mittelsäule (Muster 2) und Stufen aus echten Treppenblöcken, die sich nach oben drehen.
+ * Treppenart passend zum Muster (Stein → Steintreppe, Eichenholz → Eichentreppe …). Stufen pro Umdrehung =
+ * „Spirale: Höhe pro Umdrehung“. Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function windingStairs(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(2, c.rx);
+  const H = 2 * c.ry + 1;
+  const per = Math.max(4, c.pitch ?? 12);
+  const core = picker(ses.s.pattern2);
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:stone";
+  let stair = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stair);
+  } catch {
+    stair = "minecraft:stone_stairs";
+  }
+  /** @param {number} dx @param {number} dz */
+  const dirOf = (dx, dz) => {
+    const [sx, sz] = Math.abs(dx) >= Math.abs(dz) ? [Math.sign(dx), 0] : [0, Math.sign(dz)];
+    return STAIR_DIRS.find(([a, b]) => a === sx && b === sz)?.[2] ?? 0;
+  };
+  runEdit(ses.player, { label: "Wendeltreppe", symmetry: true }, function* (es) {
+    for (let k = 0; k < H; k++) {
+      const y = base.y + k;
+      es.set(base.x, y, base.z, core());
+      const a0 = (k / per) * Math.PI * 2;
+      const a1 = ((k + 1) / per) * Math.PI * 2;
+      const mid = (a0 + a1) / 2;
+      // Stufe steigt in Drehrichtung an (Tangente)
+      const perm = BlockPermutation.resolve(stair, { weirdo_direction: dirOf(-Math.sin(mid), Math.cos(mid)), upside_down_bit: false });
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          if (!dx && !dz) continue;
+          const d = Math.hypot(dx, dz);
+          if (d > R + 0.5) continue;
+          let a = Math.atan2(dz, dx);
+          if (a < 0) a += Math.PI * 2;
+          const s0 = ((a0 % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+          let rel = a - s0;
+          if (rel < -1e-9) rel += Math.PI * 2; // Rundungsfehler an der Sektorgrenze nicht als volle Runde werten
+          else if (rel < 0) rel = 0;
+          if (rel >= a1 - a0) continue;
+          es.set(base.x + dx, y, base.z + dz, perm);
+        }
+      yield;
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const shapeTool = {
   id: "axiom:shape",
@@ -587,6 +648,7 @@ export const shapeTool = {
   onUse(ses) {
     const c = { ...ses.s.shape };
     if (c.type === "pillar") return pillar(ses, c);
+    if (c.type === "winding") return windingStairs(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -637,7 +699,7 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (c.type === "pillar") return markBlock(ses.player, "axiom:marker", center(ses));
+    if (c.type === "pillar" || c.type === "winding") return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel
@@ -758,16 +820,20 @@ async function shapeSettings(ses) {
           ["single", "Ein Muster"],
           ["gradient", "Verlauf: unten Muster 1 → oben Muster 2"],
           ["rim", "Rand aus Muster 2, innen Muster 1"],
+          ["stripesH", "Streifen waagerecht (Muster 1 / 2)"],
+          ["stripesV", "Streifen senkrecht (Muster 1 / 2)"],
+          ["checker", "Schachbrett (Muster 1 / 2)"],
           ["carve", "Ausschneiden: Form wird zu Luft (Loch, Tunnel)"],
         ],
         c.material ?? "single"
       )
+      .slider("band", "Streifen/Schachbrett: Breite", 1, 8, 1, c.band ?? 1)
       .toggle("pat", "Danach Block/Muster wählen", false)
       .toggle("fav", "Diese Einstellungen als Lieblingsform speichern", false)
       .text("favName", "Name der Lieblingsform", "z.B. Turmdach", "")
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll, material: r.material });
+    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll, material: r.material, band: r.band });
     ses.shapeLock = undefined;
     markDirty(ses);
     if (r.fav) saveFavorite(ses, String(r.favName ?? ""));

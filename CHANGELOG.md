@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.33.0 – 17.10.2026 (nächtlicher Ausbau: Formen)
+- **Muster auf Formen:** neue Materialien **Streifen waagerecht**, **Streifen senkrecht** und **Schachbrett** aus
+  Muster 1 und Muster 2, Breite 1–8 Blöcke einstellbar (z.B. rot-weißer Leuchtturm, gestreifte Zeltkuppel)
+- **Wendeltreppe:** neue Form – Mittelsäule aus Muster 2, darum Stufen aus echten Treppenblöcken, die sich nach oben
+  drehen. Die Treppenart passt zum Muster (Stein → Steintreppe, Bretter → Holztreppe …). Radius X = Breite,
+  Höhe = 2 × Radius Y + 1, „Höhe pro Umdrehung“ = Stufen pro Runde
+
 ## 0.32.0 – 16.10.2026 (nächtlicher Ausbau: Terraform)
 - **Bepflanzen:** neuer Terrain-Modus. Auf Gras und Erde im Radius wachsen Bäume, Büsche, Gras und Blumen. Art im
   Terrain-Menü: **Gemischt**, **Laubwald** (dicht, Eiche & Birke), **Nadelwald** (Fichten) oder **Wiese** (nur Gras &
