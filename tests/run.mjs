@@ -1294,6 +1294,56 @@ console.log("Formen ausschneiden");
   dim.blocks.clear();
 }
 
+console.log("Bepflanzen");
+{
+  const tally = () => {
+    const c = { log: 0, leaves: 0, grass: 0, flower: 0, persistent: true };
+    for (const p of dim.blocks.values()) {
+      const id = p.type.id;
+      if (id.endsWith("_log")) c.log++;
+      else if (id.endsWith("_leaves")) {
+        c.leaves++;
+        if (p.getAllStates().persistent_bit !== true) c.persistent = false;
+      } else if (id === "minecraft:short_grass") c.grass++;
+      else if (/dandelion|poppy|cornflower|bluet|daisy/.test(id)) c.flower++;
+    }
+    return c;
+  };
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "plant", radius: 10, strength: 6, veg: "mix", snowY: 120 });
+  await roundTrip("Bepflanzen gemischt", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const mix = tally();
+  check(mix.log > 0 && mix.leaves > mix.log && mix.grass > 20 && mix.flower > 0, "Bepflanzen: Bäume, Gras & Blumen " + JSON.stringify(mix));
+  check(mix.persistent, "Bepflanzen: Blätter zerfallen nicht");
+  await undo();
+  ses.s.terrain.veg = "meadow";
+  await use("axiom:terrain", G);
+  const meadow = tally();
+  check(meadow.log === 0 && meadow.grass > 20, "Bepflanzen: Wiese ohne Bäume");
+  await undo();
+  Object.assign(ses.s.terrain, { veg: "taiga", strength: 10 });
+  await use("axiom:terrain", G);
+  let spruce = 0;
+  let other = 0;
+  for (const p of dim.blocks.values()) {
+    if (p.type.id === "minecraft:spruce_log") spruce++;
+    else if (/oak_log|birch_log/.test(p.type.id)) other++;
+  }
+  check(spruce > 0 && other === 0, "Bepflanzen: Nadelwald nur Fichten (" + spruce + ")");
+  await undo();
+  // Auf Stein wächst nichts
+  ses.sel = boxSel(dim.id, { x: -5, y: 64, z: -5 }, { x: 5, y: 64, z: 5 });
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  const before = dim.snapshot();
+  Object.assign(ses.s.terrain, { veg: "mix", radius: 4 });
+  await use("axiom:terrain", G);
+  check(eqSnap(before, dim.snapshot()), "Bepflanzen: auf Stein wächst nichts");
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, veg: "mix" });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

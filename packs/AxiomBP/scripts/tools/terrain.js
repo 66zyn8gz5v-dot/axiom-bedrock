@@ -31,6 +31,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
   ["ridge", "Hügelkette entlang der Pfad-Punkte"],
   ["lake", "See: Mulde bis zum Überlauf mit Wasser füllen (in die Mulde zielen)"],
+  ["plant", "Bepflanzen: Bäume, Büsche, Gras & Blumen (Radius = Fläche)"],
   ["waterfall", "Stempel: Wasserfall (auf eine Felswand zielen)"],
   ["stairs", "Treppen/Stufen an Stufenkanten setzen"],
   ["biome", "Nur Oberfläche anpassen (Gras, Sand, Stein, Schnee)"],
@@ -572,6 +573,117 @@ function lake(ses, t) {
   });
 }
 
+export const VEGETATION = /** @type {[string,string][]} */ ([
+  ["mix", "Gemischt (Bäume, Büsche, Wiese)"],
+  ["forest", "Laubwald (dicht, Eiche & Birke)"],
+  ["taiga", "Nadelwald (Fichten)"],
+  ["meadow", "Wiese (Gras & Blumen, keine Bäume)"],
+]);
+
+const FLOWERS = ["minecraft:dandelion", "minecraft:poppy", "minecraft:cornflower", "minecraft:azure_bluet", "minecraft:oxeye_daisy"];
+const PLANT_ON = /^minecraft:(grass_block|dirt|podzol|coarse_dirt|moss_block)$/;
+
+/** Feste Zufallszahl 0..1 je Spalte (gleiches Ergebnis bei gleicher Stelle). @param {number} x @param {number} z @param {number} salt */
+function hash01(x, z, salt) {
+  let h = (x * 374761393 + z * 668265263 + salt * 1442695041) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * Baum aufbauen (Stamm + Krone). Blätter sind dauerhaft (zerfallen nicht).
+ * @param {import("../core/edit.js").EditSession} es
+ * @param {number} x @param {number} y Boden + 1 @param {number} z
+ * @param {"oak"|"birch"|"spruce"} kind @param {number} r Zufall 0..1
+ */
+function growTree(es, x, y, z, kind, r) {
+  const log = permOf(`minecraft:${kind}_log`);
+  const leaves = BlockPermutation.resolve(`minecraft:${kind}_leaves`, { persistent_bit: true });
+  const free = (/** @type {number} */ a, /** @type {number} */ b, /** @type {number} */ c) => {
+    const id = es.id(a, b, c);
+    return !id || !isSolidId(id) || id.endsWith("_leaves");
+  };
+  const leaf = (/** @type {number} */ a, /** @type {number} */ b, /** @type {number} */ c) => {
+    const id = es.id(a, b, c);
+    if (!id || !isSolidId(id)) es.set(a, b, c, leaves);
+  };
+  const H = kind === "spruce" ? 6 + Math.floor(r * 4) : kind === "birch" ? 5 + Math.floor(r * 3) : 4 + Math.floor(r * 3);
+  for (let i = 0; i < H; i++) if (!free(x, y + i, z)) return false;
+  for (let i = 0; i < H; i++) es.set(x, y + i, z, log);
+  const top = y + H;
+  if (kind === "spruce") {
+    // Kegel: oben spitz, nach unten breiter, Lagen abwechselnd
+    leaf(x, top, z);
+    leaf(x, top + 1, z);
+    for (let k = 0; k < H - 2; k++) {
+      const ly = top - 1 - k;
+      const rad = Math.min(3, 1 + Math.floor(k / 2)) - (k % 2);
+      for (let dx = -rad; dx <= rad; dx++)
+        for (let dz = -rad; dz <= rad; dz++) if ((dx || dz) && Math.abs(dx) + Math.abs(dz) <= rad + 1) leaf(x + dx, ly, z + dz);
+    }
+    return true;
+  }
+  // Laubbaum: zwei breite Lagen, zwei schmale darüber
+  for (let ly = top - 2; ly <= top + 1; ly++) {
+    const rad = ly >= top ? 1 : 2;
+    for (let dx = -rad; dx <= rad; dx++)
+      for (let dz = -rad; dz <= rad; dz++) {
+        if (Math.abs(dx) === rad && Math.abs(dz) === rad && (ly === top + 1 || hash01(x + dx, z + dz, ly) < 0.5)) continue;
+        if (!dx && !dz && ly < top) continue;
+        leaf(x + dx, ly, z + dz);
+      }
+  }
+  return true;
+}
+
+/**
+ * Bepflanzen: auf Gras/Erde im Radius Bäume, Büsche, Gras und Blumen setzen – passend zur Höhe
+ * (oben Fichten) und mit Abstand zwischen den Bäumen. Dichte = Stärke.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function plant(ses, t, c) {
+  const ctr = t.pos;
+  const R = c.radius;
+  const kind = c.veg ?? "mix";
+  const dens = Math.max(1, c.strength) / 10;
+  const seed = Math.floor(Math.random() * 100000);
+  runEdit(ses.player, { label: "Bepflanzen", symmetry: true }, function* (es) {
+    const SG = permOf("minecraft:short_grass");
+    const bush = BlockPermutation.resolve("minecraft:oak_leaves", { persistent_bit: true });
+    /** @type {{x:number, z:number}[]} */
+    const trees = [];
+    const spacing = kind === "mix" ? 5 : 3;
+    let n = 0;
+    for (let dx = -R; dx <= R; dx++) {
+      for (let dz = -R; dz <= R; dz++) {
+        if (dx * dx + dz * dz > (R + 0.5) ** 2) continue;
+        const x = ctr.x + dx;
+        const z = ctr.z + dz;
+        const g = groundY(es, x, z, ctr.y + 24, 48);
+        if (g === null || !PLANT_ON.test(es.id(x, g, z))) continue;
+        const above = es.id(x, g + 1, z);
+        if (above && above !== "minecraft:air") continue;
+        const r = hash01(x, z, seed);
+        const treeChance = kind === "meadow" ? 0 : kind === "mix" ? 0.05 * dens : 0.12 * dens;
+        if (r < treeChance && trees.every((p) => Math.abs(p.x - x) + Math.abs(p.z - z) >= spacing)) {
+          const high = g >= c.snowY - 25;
+          const type = kind === "taiga" || high ? "spruce" : hash01(x, z, seed + 7) < 0.3 ? "birch" : "oak";
+          if (growTree(es, x, g + 1, z, /** @type {"oak"|"birch"|"spruce"} */ (type), hash01(z, x, seed))) trees.push({ x, z });
+        } else if (kind === "mix" && r < treeChance + 0.04 * dens) {
+          es.set(x, g + 1, z, bush);
+        } else if (kind !== "taiga" && r < treeChance + 0.45 * dens) {
+          es.set(x, g + 1, z, hash01(x, z, seed + 3) < 0.2 ? permOf(FLOWERS[Math.floor(hash01(z, x, seed + 5) * FLOWERS.length)]) : SG);
+        } else if (kind === "taiga" && r < treeChance + 0.15 * dens) {
+          es.set(x, g + 1, z, SG);
+        }
+        if (++n % 64 === 0) yield;
+      }
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const terrainTool = {
   id: "axiom:terrain",
@@ -582,7 +694,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if ([...STAMP_MODES, "waterfall", "ridge", "lake"].includes(c.mode)) {
+    if ([...STAMP_MODES, "waterfall", "ridge", "lake", "plant"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -593,6 +705,7 @@ export const terrainTool = {
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
     if (c.mode === "lake") return lake(ses, t);
+    if (c.mode === "plant") return plant(ses, t, c);
     const ctr = t.pos;
     const R = c.radius;
     // Stempel: Längsachse (Blickrichtung + Drehung) und Streckung → ovaler Grundriss
@@ -890,6 +1003,7 @@ export const terrainTool = {
       .dropdown("mode", "Modus", TERRAIN_MODES, c.mode)
       .slider("radius", "Radius", 1, 32, 1, c.radius)
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
+      .dropdown("veg", "Bepflanzen: Art (Stärke = Dichte)", VEGETATION, c.veg ?? "mix")
       .dropdown("brush", "Pinselform (Anheben, Absenken, Einebnen, Glätten, Hügel, Terrassen)", BRUSHES, c.falloff === false ? "hard" : c.brush ?? "soft")
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
       .slider("jag", "Stempel: Zackigkeit (0 = glatt)", 0, 10, 1, c.jag)

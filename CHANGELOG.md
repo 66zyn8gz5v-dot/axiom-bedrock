@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.32.0 – 16.10.2026 (nächtlicher Ausbau: Terraform)
+- **Bepflanzen:** neuer Terrain-Modus. Auf Gras und Erde im Radius wachsen Bäume, Büsche, Gras und Blumen. Art im
+  Terrain-Menü: **Gemischt**, **Laubwald** (dicht, Eiche & Birke), **Nadelwald** (Fichten) oder **Wiese** (nur Gras &
+  Blumen). Stärke = Dichte. Bäume halten Abstand zueinander, hoch oben (nahe der Schneegrenze) wachsen nur Fichten,
+  auf Stein und Sand wächst nichts. Die Blätter sind dauerhaft und zerfallen nicht
+
 ## 0.31.0 – 16.10.2026 (nächtlicher Ausbau: Formen)
 - **Formen ausschneiden:** Formen → Material „Ausschneiden“ – die Form wird zu Luft statt zu Blöcken. So schneidest
   du eine Form aus einer anderen heraus: runde Fenster in eine Kuppel, ein Tor in eine Mauer oder mit „Von Punkt A

@@ -166,7 +166,7 @@ PAGES = [
          ("tool", "painter", "Maler", "Färbt Blöcke im Pinsel um – gedrückt halten."),
          ("p", "Gute Modi: Oberfläche · Nach Neigung (oben Gras, Hänge Stein) · Rauschen (2 Blöcke gemischt) · "
                "Streuen (Blumen) · Flutfüllung (See füllen)"),
-         ("tip", "Terrain-Modus „See“: in eine Mulde zielen – sie läuft bis genau zum Rand voll Wasser.")],
+         ("tip", "Terrain-Modi: „See“ füllt eine Mulde bis zum Rand mit Wasser, „Bepflanzen“ setzt Bäume, Gras & Blumen.")],
         [("h", "Terrain"),
          ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten, Erosion – Pinsel spitz, rund oder flach."),
          ("p", "12 Stempel: Berg, Krater, Vulkan, Plateau, Insel, Schlucht, Düne, Gipfel, Klippe, Felsbogen, Höhle, Wasserfall."),

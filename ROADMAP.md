@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.32: Bepflanzen (Bäume, Büsche, Gras & Blumen)
 - [x] v0.31: Formen ausschneiden (Loch, Tunnel)
 - [x] v0.30: Terrain-Pinselformen (Weich, Spitz, Rund, Plateau, Hart)
 - [x] v0.29: See bis zum Überlauf füllen, Flüsse mit Sandufer
@@ -81,7 +82,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Flüsse & Seen verbessern** (v0.29): Flussbett mit Ufer-Sand, Seen auffüllen bis zum Überlauf
 - [x] **Höhenkarten-Pinsel** (v0.30): Pinselform Weich, Spitz, Rund, Plateau, Hart
       (Umkehren per Schleichen geht nicht – Schleichen öffnet die Einstellungen; dafür gibt es Anheben/Absenken)
-- [ ] **Vegetation aufs Gelände**: Bäume (Eiche, Fichte, Birke), Büsche, Gras & Blumen passend zur Höhe streuen
+- [x] **Vegetation aufs Gelände** (v0.32): Bäume (Eiche, Fichte, Birke), Büsche, Gras & Blumen passend zur Höhe streuen
 - [ ] **Küste & Strand**: Uferlinie entlang Pfad-Punkten mit Strand, flachem Wasser und Klippen
 - [ ] **Höhlen-Netz** in einer Auswahl (verzweigte Gänge mit Kammern)
 - [ ] **Terrassenfelder**: Hang in begehbare Stufen mit Stützmauern umbauen
