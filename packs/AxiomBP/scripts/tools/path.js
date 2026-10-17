@@ -339,6 +339,40 @@ export const pathTool = {
         },
       },
       {
+        text: "Küste entlang der Punkte (Strand oder Klippe)",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.coast;
+          const r = await new Modal("Küste")
+            .dropdown(
+              "side",
+              "Wo ist das Meer? (in Richtung der Punkte gesehen)",
+              [
+                ["right", "Rechts"],
+                ["left", "Links"],
+              ],
+              c.side
+            )
+            .dropdown(
+              "style",
+              "Landseite",
+              [
+                ["beach", "Sandstrand (flach)"],
+                ["cliff", "Felsklippe (steil)"],
+              ],
+              c.style
+            )
+            .slider("width", "Breite des Meeres-Streifens", 3, 24, 1, c.width)
+            .slider("cliff", "Klippenhöhe über dem Wasser", 3, 20, 1, c.cliff)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { coast } = await import("./terrain.js");
+          coast(ses, c);
+        },
+      },
+      {
         text: "Hügelkette entlang der Punkte",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

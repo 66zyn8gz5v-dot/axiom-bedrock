@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.34.0 – 17.10.2026 (nächtlicher Ausbau: Terraform)
+- **Küste entlang der Pfad-Punkte:** mit dem Pfad-Werkzeug die Uferlinie abstecken, dann im Pfad-Menü
+  „Küste entlang der Punkte“. Einstellen: auf welcher Seite das Meer liegt (rechts/links in Richtung der Punkte),
+  Sandstrand oder Felsklippe, Breite des Meeres und Klippenhöhe. Das Meer wird nach außen tiefer (vorne Sand,
+  draußen Kies), der Strand steigt flach aus dem Wasser an, die Klippe ragt senkrecht auf (oben Wiese)
+
 ## 0.33.0 – 17.10.2026 (nächtlicher Ausbau: Formen)
 - **Muster auf Formen:** neue Materialien **Streifen waagerecht**, **Streifen senkrecht** und **Schachbrett** aus
   Muster 1 und Muster 2, Breite 1–8 Blöcke einstellbar (z.B. rot-weißer Leuchtturm, gestreifte Zeltkuppel)

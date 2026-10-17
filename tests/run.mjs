@@ -1409,6 +1409,32 @@ console.log("Wendeltreppe");
   dim.blocks.clear();
 }
 
+console.log("Küste");
+{
+  const { coast } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  dim.blocks.clear();
+  ses.pathPoints = [];
+  coast(ses, { width: 10, side: "right", style: "beach", cliff: 6 });
+  check(player.messages.at(-1).includes("Pfad"), "Küste: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -10, y: 65, z: 0 }, { x: 10, y: 65, z: 0 }];
+  await roundTrip("Küste mit Strand", () => coast(ses, { width: 10, side: "right", style: "beach", cliff: 6 }));
+  coast(ses, { width: 10, side: "right", style: "beach", cliff: 6 });
+  await drain();
+  check(id(0, 64, 4) === "minecraft:water" && id(0, 62, 4) === "minecraft:water" && id(0, 61, 4) === "minecraft:sand", "Küste: flaches Wasser mit Sandgrund");
+  check(id(0, 64, 10) === "minecraft:water" && id(0, 58, 10) === "minecraft:gravel", "Küste: weiter draußen tiefer mit Kies");
+  check(id(0, 65, -2) === "minecraft:sand" && id(0, 64, -6) === "minecraft:grass_block", "Küste: Sandstrand an Land, dahinter Wiese");
+  check(id(0, 64, -2) !== "minecraft:water", "Küste: Land bleibt trocken");
+  await undo();
+  coast(ses, { width: 10, side: "left", style: "cliff", cliff: 6 });
+  await drain();
+  check(id(0, 64, -4) === "minecraft:water" && id(0, 64, 4) !== "minecraft:water", "Küste: Meer links");
+  check(["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone"].includes(id(0, 69, 1)) && id(0, 70, 2) === "minecraft:grass_block", "Küste: Felsklippe mit Wiese oben");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

@@ -573,6 +573,79 @@ function lake(ses, t) {
   });
 }
 
+/**
+ * Küste entlang der Pfad-Punkte: die Punkte sind die Uferlinie. Auf der Meeresseite wird das Wasser nach außen
+ * tiefer (Sand, weiter draußen Kies), auf der Landseite entsteht ein flacher Sandstrand oder eine Felsklippe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, side:string, style:string, cliff:number}} o
+ */
+export function coast(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte entlang der gewünschten Uferlinie setzen.");
+  const samples = samplePath(ses.pathPoints, true);
+  const sea = Math.round(samples.reduce((a, p) => a + p.y, 0) / samples.length) - 1;
+  const W = Math.max(3, o.width);
+  const beach = o.style === "cliff" ? 2 : 4;
+  const sign = o.side === "left" ? -1 : 1;
+  const xs = samples.map((p) => p.x);
+  const zs = samples.map((p) => p.z);
+  const min = v(Math.floor(Math.min(...xs)) - W - beach, 0, Math.floor(Math.min(...zs)) - W - beach);
+  const max = v(Math.ceil(Math.max(...xs)) + W + beach, 0, Math.ceil(Math.max(...zs)) + W + beach);
+  runEdit(ses.player, { label: "Küste" }, function* (es) {
+    const Wt = permOf("minecraft:water");
+    const A = air();
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        // Nächster Punkt auf der Uferlinie und Seite (Kreuzprodukt mit der Laufrichtung)
+        let best = Infinity;
+        let side = 0;
+        for (let i = 0; i < samples.length - 1; i++) {
+          const a = samples[i];
+          const b = samples[i + 1];
+          const dx = b.x - a.x;
+          const dz = b.z - a.z;
+          const L2 = dx * dx + dz * dz || 1;
+          const tt = Math.max(0, Math.min(1, ((x + 0.5 - a.x - 0.5) * dx + (z + 0.5 - a.z - 0.5) * dz) / L2));
+          const px = a.x + dx * tt;
+          const pz = a.z + dz * tt;
+          const d = Math.hypot(x - px, z - pz);
+          if (d < best) {
+            best = d;
+            side = Math.sign(dx * (z - a.z) - dz * (x - a.x)) || 1;
+          }
+        }
+        const s = best * side * sign; // > 0 = Meer, < 0 = Land
+        if (s > W + 0.5 || s < -(beach + 0.5)) continue;
+        const g = groundY(es, x, z, sea + 24, 48);
+        if (g === null) continue;
+        const top = es.id(x, g, z);
+        if (s >= 0) {
+          // Meer: Grund fällt nach außen ab (max. 6 tief)
+          const bed = Math.min(g, sea - 1 - Math.min(5, Math.floor(s / 2)));
+          for (let y = g; y > bed; y--) es.set(x, y, z, A);
+          if (NATURAL.test(es.id(x, bed, z)) || bed < g) es.set(x, bed, z, permOf(sea - bed > 3 ? "minecraft:gravel" : "minecraft:sand"));
+          for (let y = bed + 1; y <= sea; y++) es.set(x, y, z, Wt);
+          for (let y = sea + 1; y <= g; y++) es.set(x, y, z, A);
+        } else if (o.style === "cliff") {
+          // Klippe: Land steigt direkt am Ufer senkrecht auf
+          const h = Math.max(g, sea + Math.max(3, o.cliff));
+          for (let y = g; y < h; y++) es.set(x, y, z, permOf(rockId(x, y, z)));
+          es.set(x, h, z, permOf(s > -1.5 ? rockId(x, h, z) : NATURAL.test(top) ? "minecraft:grass_block" : top));
+        } else {
+          // Strand: flach aus dem Wasser ansteigend, Sand oben, Sandstein darunter
+          const h = sea + Math.ceil(-s / 2);
+          for (let y = g; y > h; y--) es.set(x, y, z, A);
+          for (let y = Math.min(g, h) + 1; y <= h; y++) es.set(x, y, z, permOf("minecraft:sand"));
+          if (NATURAL.test(es.id(x, h, z)) || h > g) es.set(x, h, z, permOf("minecraft:sand"));
+          if (NATURAL.test(es.id(x, h - 1, z))) es.set(x, h - 1, z, permOf("minecraft:sandstone"));
+        }
+        if (++n % 64 === 0) yield;
+      }
+      yield;
+    }
+  });
+}
+
 export const VEGETATION = /** @type {[string,string][]} */ ([
   ["mix", "Gemischt (Bäume, Büsche, Wiese)"],
   ["forest", "Laubwald (dicht, Eiche & Birke)"],

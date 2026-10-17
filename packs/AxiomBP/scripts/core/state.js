@@ -40,6 +40,7 @@ export function defaultSettings() {
     bridge: { width: 1, arch: 3, railing: "oak_fence", deck: "", pillars: 0 },
     gradient: { axis: "y", blend: 3, reverse: false },
     thin: { percent: 30, replace: false },
+    coast: { width: 8, side: "right", style: "beach", cliff: 6 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },
