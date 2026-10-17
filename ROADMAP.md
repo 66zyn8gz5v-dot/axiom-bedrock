@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.35: Zwiebelturm, Material „Rippen“
 - [x] v0.34: Küste mit Strand oder Klippe entlang Pfad-Punkten
 - [x] v0.33: Streifen & Schachbrett auf Formen, Wendeltreppe
 - [x] v0.32: Bepflanzen (Bäume, Büsche, Gras & Blumen)
@@ -105,7 +106,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Muster auf Formen** (v0.33): Streifen (waagerecht/senkrecht) und Schachbrett aus Muster 1 und 2
 - [x] **Wendeltreppe** mit echten Treppenblöcken (v0.33; Geländer folgt)
 - [ ] **Bogengang (Arkaden)**: Reihe von Bögen mit Säulen entlang Pfad-Punkten
-- [ ] **Kuppel mit Rippen/Fenstern** und **Zwiebelturm**
+- [x] **Kuppel mit Rippen** und **Zwiebelturm** (v0.35; Fenster per „Ausschneiden“)
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

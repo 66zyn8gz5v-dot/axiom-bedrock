@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.35.0 – 18.10.2026 (nächtlicher Ausbau: Formen)
+- **Zwiebelturm:** neue Form – unten etwas schmaler, dann bauchig und nach oben zu einer Spitze eingezogen, wie bei
+  russischen Kirchen oder Märchenschlössern (Radius X/Z = Breite, Radius Y = Höhe, mit „Hohl“ innen begehbar)
+- **Rippen:** neues Material – senkrechte Bänder aus Muster 2 rundherum um die Mitte der Form, Anzahl über den
+  Regler „Vieleck-Turm: Anzahl Ecken“, Dicke über „Breite“. Ideal für eine Kuppel mit Rippen oder einen gestreiften
+  Zwiebelturm
+
 ## 0.34.0 – 17.10.2026 (nächtlicher Ausbau: Terraform)
 - **Küste entlang der Pfad-Punkte:** mit dem Pfad-Werkzeug die Uferlinie abstecken, dann im Pfad-Menü
   „Küste entlang der Punkte“. Einstellen: auf welcher Seite das Meer liegt (rechts/links in Richtung der Punkte),

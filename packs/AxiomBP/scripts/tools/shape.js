@@ -23,6 +23,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["prism", "Prisma (Dach, entlang X)"],
   ["spiral", "Spirale (Wendelrampe)"],
   ["pillar", "Säule mit Sockel & Kapitell (bis zum Boden)"],
+  ["onion", "Zwiebelturm (Kuppel mit Spitze)"],
   ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
   ["wedge", "Keil / Rampe (steigt von dir weg an)"],
   ["tetra", "Dreieck-Pyramide (Tetraeder)"],
@@ -142,6 +143,20 @@ export function shapeFn(c) {
         yMin: -c.ry,
       };
     }
+    case "onion":
+      // Zwiebelform: unten schmaler, in der unteren Hälfte bauchig, dann zur Spitze eingezogen
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const t = (y + c.ry + 0.5) / (2 * c.ry + 1);
+          const f = t < 0.35 ? 0.7 + 0.3 * Math.sin((t / 0.35) * (Math.PI / 2)) : Math.pow(Math.max(0, 1 - (t - 0.35) / 0.65), 1.6);
+          if (x === 0 && z === 0) return true;
+          if (f <= 0) return false;
+          return (x * x) / (rx * rx * f * f) + (z * z) / (rz * rz * f * f) <= 1;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
     case "wedge":
       // Rampe: vorne (z = -rz) flach, hinten (z = +rz) volle Höhe 2·ry+1
       return {
@@ -435,12 +450,15 @@ function pillar(ses, c) {
 /**
  * Material einer Form: ein Muster, Verlauf von unten (Muster 1) nach oben (Muster 2) oder Rand aus Muster 2.
  * @param {import("../core/state.js").Session} ses
- * @param {{material?:string, band?:number}} c
+ * @param {{material?:string, band?:number, sides?:number}} c
  * @param {(x:number, y:number, z:number) => boolean} In Weltkoordinaten
  * @param {number} y0 unterste Höhe @param {number} y1 oberste Höhe (Welt)
+ * @param {{x:number, z:number}} [mid] Mitte der Form (für Rippen)
  * @returns {(x:number, y:number, z:number) => import("@minecraft/server").BlockPermutation}
  */
-export function paintFn(ses, c, In, y0, y1) {
+export function paintFn(ses, c, In, y0, y1, mid = { x: 0, z: 0 }) {
+  const cx = mid.x;
+  const cz = mid.z;
   if (c.material === "carve") {
     // Ausschneiden: die Form wird zu Luft (Loch, Tunnel, Fensteröffnung)
     const A = air();
@@ -453,6 +471,16 @@ export function paintFn(ses, c, In, y0, y1) {
   const band = (/** @type {number} */ n) => Math.floor(n / w) & 1;
   if (c.material === "stripesH") return (x, y, z) => (band(y) ? p2() : p1());
   if (c.material === "stripesV") return (x, y, z) => (band(x + z) ? p2() : p1());
+  if (c.material === "ribs") {
+    // Rippen: senkrechte Bänder rund um die Mitte (Anzahl = Ecken-Regler), z.B. Kuppel mit Rippen
+    const n = Math.max(3, c.sides ?? 6);
+    const seg = (Math.PI * 2) / n;
+    const half = Math.min(seg / 2, (seg / 2) * 0.3 * w);
+    return (x, y, z) => {
+      const r = ((Math.atan2(z - cz, x - cx) % seg) + seg) % seg;
+      return r < half || seg - r < half ? p2() : p1();
+    };
+  }
   if (c.material === "checker") return (x, y, z) => (band(x) ^ band(y) ^ band(z) ? p2() : p1());
   if (c.material === "gradient") {
     const span = Math.max(1, y1 - y0);
@@ -546,7 +574,7 @@ function buildBetween(ses, c) {
   ses.shapeA = undefined;
   const g = shapeBetween(c, A, p);
   const keep = keepFn(g.In, c);
-  const paint = paintFn(ses, c, g.In, g.min.y, g.max.y);
+  const paint = paintFn(ses, c, g.In, g.min.y, g.max.y, { x: (g.min.x + g.max.x) / 2, z: (g.min.z + g.max.z) / 2 });
   runEdit(ses.player, { label: "Form A→B: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: g.min, max: g.max } }, function* (es) {
     let n = 0;
     for (let x = g.min.x; x <= g.max.x; x++)
@@ -573,7 +601,7 @@ function buildInSelection(ses, c) {
     return selContains(sel, x, y, z) && f.inside(q.x, q.y, q.z);
   };
   const keep = keepFn(In, c);
-  const paint = paintFn(ses, c, In, sel.min.y, sel.max.y);
+  const paint = paintFn(ses, c, In, sel.min.y, sel.max.y, { x: (sel.min.x + sel.max.x) / 2, z: (sel.min.z + sel.max.z) / 2 });
   runEdit(ses.player, { label: "Form in Auswahl: " + (SHAPES.find((s) => s[0] === c.type)?.[1] ?? c.type), symmetry: true, region: { min: sel.min, max: sel.max } }, function* (es) {
     let n = 0;
     for (let x = sel.min.x; x <= sel.max.x; x++)
@@ -823,6 +851,7 @@ async function shapeSettings(ses) {
           ["stripesH", "Streifen waagerecht (Muster 1 / 2)"],
           ["stripesV", "Streifen senkrecht (Muster 1 / 2)"],
           ["checker", "Schachbrett (Muster 1 / 2)"],
+          ["ribs", "Rippen rundherum (Muster 2, Anzahl = Ecken-Regler)"],
           ["carve", "Ausschneiden: Form wird zu Luft (Loch, Tunnel)"],
         ],
         c.material ?? "single"

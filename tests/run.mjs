@@ -128,7 +128,7 @@ for (const rot of [0, 90, 180, 270])
   }
 
 console.log("Formen");
-for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross"]) {
+for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross", "onion"]) {
   Object.assign(ses.s.shape, { type, rx: 4, ry: 3, rz: 4, hollow: type === "sphere", thick: 1, anchor: "center" });
   await roundTrip("Form " + type, () => use("axiom:shape", G));
 }
@@ -1432,6 +1432,34 @@ console.log("Küste");
   check(["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone"].includes(id(0, 69, 1)) && id(0, 70, 2) === "minecraft:grass_block", "Küste: Felsklippe mit Wiese oben");
   await undo();
   ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
+console.log("Zwiebelturm & Rippen");
+{
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const on = shapeFn({ type: "onion", rx: 5, ry: 8, rz: 5 });
+  const width = (y) => {
+    let w = 0;
+    for (let x = -5; x <= 5; x++) if (on.inside(x, y, 0)) w++;
+    return w;
+  };
+  check(width(8) === 1 && width(-3) === 11 && width(-8) < width(-3) && width(3) < width(-3), "Zwiebelturm: unten schmaler, bauchig, Spitze oben (" + [width(-8), width(-3), width(3), width(8)] + ")");
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("white_concrete");
+  ses.s.pattern2 = parsePattern("gold_block");
+  Object.assign(ses.s.shape, { type: "hemisphere", rx: 6, ry: 6, rz: 6, hollow: true, thick: 1, anchor: "center", look: false, material: "ribs", sides: 4, band: 1, open: "none", wire: false, yaw: 0, tilt: 0, roll: 0 });
+  await roundTrip("Kuppel mit Rippen", () => use("axiom:shape", { x: 0, y: 70, z: 0 }));
+  await use("axiom:shape", { x: 0, y: 70, z: 0 });
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  check(id(6, 70, 0) === "minecraft:gold_block" && id(0, 70, 6) === "minecraft:gold_block" && id(-6, 70, 0) === "minecraft:gold_block", "Rippen: 4 Rippen auf den Achsen");
+  check(id(4, 70, 4) === "minecraft:white_concrete", "Rippen: dazwischen Muster 1");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, hollow: false, look: true, material: "single", sides: 6 });
   dim.blocks.clear();
 }
 
