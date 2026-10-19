@@ -91,6 +91,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Küste & Strand** (v0.34): Uferlinie entlang Pfad-Punkten mit Strand, flachem Wasser und Klippen
 - [x] **Höhlen-Netz** in einer Auswahl (verzweigte Gänge mit Kammern) (v0.36)
 - [ ] **Terrassenfelder**: Hang in begehbare Stufen mit Stützmauern umbauen
+- [ ] **Trampelpfad aufs Gelände**: Weg entlang Pfad-Punkten, der dem Boden folgt (Erdpfad/Kies, Ränder ausgefranst)
+- [ ] **Inselgruppe**: in einer Auswahl mehrere Inseln mit Stränden im Meer erzeugen
+- [ ] **Eis & Gletscher**: Eisberge im Wasser, Gletscherzunge mit Packeis und Schnee
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
@@ -109,6 +112,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Wendeltreppe** mit echten Treppenblöcken (v0.33; Geländer folgt)
 - [x] **Bogengang (Arkaden)** (v0.37): Reihe von Bögen mit Säulen entlang Pfad-Punkten
 - [x] **Kuppel mit Rippen** und **Zwiebelturm** (v0.35; Fenster per „Ausschneiden“)
+- [ ] **Geländer für Wendeltreppe** und Treppen-Spirale außen an Türmen
+- [ ] **Turm-Baukasten**: Rundturm mit Zinnen, Fensterschlitzen und Spitzdach in einem Schritt
+- [ ] **Fachwerk-Muster** auf Wänden (Balken aus Muster 2 in Rauten/Kreuzen)
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
