@@ -1487,6 +1487,31 @@ console.log("Höhlen-Netz");
   dim.blocks.clear();
 }
 
+console.log("Bogengang");
+{
+  const { buildArcade } = await import("../packs/AxiomBP/scripts/tools/path.js");
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("quartz_block");
+  ses.s.path.smooth = false;
+  ses.pathPoints = [{ x: 0, y: 65, z: 0 }, { x: 18, y: 65, z: 0 }];
+  await roundTrip("Bogengang", () => buildArcade(ses, { span: 6, height: 4, depth: 1 }));
+  buildArcade(ses, { span: 6, height: 4, depth: 1 });
+  await drain();
+  const id = (x, y) => dim._get(x, y, 0).type.id;
+  check(id(0, 65) === "minecraft:quartz_block" && id(6, 66) === "minecraft:quartz_block" && id(18, 65) === "minecraft:quartz_block", "Bogengang: Säulen alle 6 Blöcke");
+  check(id(3, 65) === "minecraft:air" && id(3, 68) === "minecraft:air", "Bogengang: Durchgang unter dem Bogen");
+  check(id(3, 72) === "minecraft:stone_bricks" && id(1, 70) === "minecraft:stone_bricks", "Bogengang: Bogen und Balken oben");
+  await undo();
+  ses.pathPoints = [];
+  ses.s.path.smooth = true;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

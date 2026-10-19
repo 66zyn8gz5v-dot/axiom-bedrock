@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.37.0 – 19.10.2026 (nächtlicher Ausbau: Formen)
+- **Bogengang (Arkaden):** mit dem Pfad-Werkzeug Punkte setzen, dann im Pfad-Menü „Bogengang (Arkaden) entlang der
+  Punkte“. Säulen aus Muster 2 stehen im eingestellten Abstand, dazwischen spannen sich Rundbögen aus Muster 1 mit
+  einem durchgehenden Balken oben. Einstellbar: Säulenabstand, Säulenhöhe, Wandtiefe; folgt auch Kurven
+
 ## 0.36.0 – 19.10.2026 (nächtlicher Ausbau: Terraform)
 - **Höhlen-Netz:** einen Bereich unter der Erde (oder einen Berg) mit der Box-Auswahl markieren, dann Axiom-Menü →
   Auswahl bearbeiten → „Höhlen-Netz graben“. Mehrere Gänge schlängeln sich durch den Fels, verzweigen sich und

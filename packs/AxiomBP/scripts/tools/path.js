@@ -217,6 +217,63 @@ function buildRiver(ses) {
 }
 
 /**
+ * Bogengang (Arkaden) entlang der Punkte: Säulen aus Muster 2 im festen Abstand, dazwischen Rundbögen aus Muster 1,
+ * oben ein durchgehender Balken. Die Unterkante folgt der Höhe der Punkte.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{span:number, height:number, depth:number}} o
+ */
+export function buildArcade(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+  const samples = samplePath(ses.pathPoints, ses.s.path.smooth);
+  const wall = picker(ses.s.pattern);
+  const col = picker(ses.s.pattern2);
+  const span = Math.max(3, o.span);
+  const Hp = Math.max(2, o.height);
+  const a = (span - 1) / 2;
+  const c = (span + 1) / 2;
+  const top = Hp + Math.ceil(a) + 1;
+  const D = Math.max(1, o.depth);
+  runEdit(ses.player, { label: "Bogengang", symmetry: true }, function* (es) {
+    /** @type {Set<string>} */
+    const done = new Set();
+    let s = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const p = samples[i];
+      if (i > 0) s += Math.hypot(p.x - samples[i - 1].x, p.z - samples[i - 1].z);
+      const q = samples[Math.min(samples.length - 1, i + 1)];
+      const r0 = samples[Math.max(0, i - 1)];
+      let dx = q.x - r0.x;
+      let dz = q.z - r0.z;
+      const L = Math.hypot(dx, dz) || 1;
+      dx /= L;
+      dz /= L;
+      // Position im Joch, so verschoben, dass die Säule genau auf jedem Vielfachen von „span“ steht
+      const u = (s + 0.5) % span;
+      const last = i === samples.length - 1;
+      const pillar = u < 1 || last;
+      for (let k = 0; k < D; k++) {
+        const off = k - (D - 1) / 2;
+        const x = Math.round(p.x - dz * off);
+        const z = Math.round(p.z + dx * off);
+        const key = x + "," + z;
+        if (done.has(key)) continue;
+        done.add(key);
+        const y0 = Math.round(p.y);
+        for (let y = 0; y <= top; y++) {
+          let solid;
+          if (pillar) solid = y < top;
+          else if (y < Hp) solid = false;
+          else solid = (u - c) ** 2 + (y - Hp) ** 2 > a * a;
+          if (y === top) solid = true;
+          if (solid) es.set(x, y0 + y, z, pillar && y < top ? col() : wall());
+        }
+      }
+      if (i % 8 === 0) yield;
+    }
+  });
+}
+
+/**
  * Brücke: Belag entlang der Punkte mit Bogen nach oben und Geländer an beiden Rändern.
  * @param {import("../core/state.js").Session} ses
  */
@@ -336,6 +393,27 @@ export const pathTool = {
           Object.assign(c, { width: r.width, depth: r.depth, bed: String(r.bed) || "sand", banks: r.banks });
           markDirty(ses);
           buildRiver(ses);
+        },
+      },
+      {
+        text: "Bogengang (Arkaden) entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.arcade;
+          const r = await new Modal("Bogengang")
+            .slider("span", "Abstand der Säulen", 3, 15, 1, c.span)
+            .slider("height", "Höhe der Säulen (bis zum Bogenansatz)", 2, 12, 1, c.height)
+            .slider("depth", "Tiefe (Dicke der Wand)", 1, 4, 1, c.depth)
+            .toggle("pat", "Danach Blöcke wählen (Bögen = Muster 1, Säulen = Muster 2)", false)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { span: r.span, height: r.height, depth: r.depth });
+          markDirty(ses);
+          if (r.pat) {
+            await patternMenu(ses);
+            await patternMenu(ses, "pattern2");
+          }
+          buildArcade(ses, c);
         },
       },
       {
