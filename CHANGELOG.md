@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.38.0 – 20.10.2026 (nächtlicher Ausbau: Formen)
+- **Turm-Baukasten:** neue Form „Turm“ – ein Rundturm in einem Schritt: Boden, runde Mauer aus Muster 1, Tür zur
+  Blickrichtung, Schießscharten in alle vier Richtungen, Zinnenkranz oben und ein spitzes Kegeldach aus Muster 2
+  (abschaltbar). Radius X = Turmradius, Radius Y = Höhe
+- **Geländer für die Wendeltreppe:** am Außenrand jeder Stufe – bei Holztreppen der passende Zaun, sonst
+  Eisengitter (im Formen-Menü abschaltbar)
+
 ## 0.37.0 – 19.10.2026 (nächtlicher Ausbau: Formen)
 - **Bogengang (Arkaden):** mit dem Pfad-Werkzeug Punkte setzen, dann im Pfad-Menü „Bogengang (Arkaden) entlang der
   Punkte“. Säulen aus Muster 2 stehen im eingestellten Abstand, dazwischen spannen sich Rundbögen aus Muster 1 mit

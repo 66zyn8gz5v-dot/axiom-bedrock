@@ -1512,6 +1512,46 @@ console.log("Bogengang");
   dim.blocks.clear();
 }
 
+console.log("Turm & Treppengeländer");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("dark_oak_planks");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  Object.assign(ses.s.shape, { type: "tower", rx: 4, ry: 5, rz: 4, anchor: "center", material: "single", roof: true });
+  await roundTrip("Turm", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  // Basis y=65, Höhe 11 → Mauer 66..75, Zinnen 76, Dach ab 77
+  check(id(0, 65, 0) === "minecraft:stone_bricks" && id(0, 70, 0) === "minecraft:air" && id(4, 70, 1) === "minecraft:stone_bricks", "Turm: Boden, hohl, runde Mauer");
+  check(id(0, 67, 4) === "minecraft:air" && id(0, 68, 4) === "minecraft:air" && id(0, 69, 4) === "minecraft:stone_bricks", "Turm: Schießscharte");
+  let crenel = 0;
+  let gap = 0;
+  for (let dx = -4; dx <= 4; dx++)
+    for (let dz = -4; dz <= 4; dz++) {
+      const d = Math.hypot(dx, dz);
+      if (d > 4.5 || d <= 3.5) continue;
+      if (id(dx, 76, dz) === "minecraft:stone_bricks") crenel++;
+      else gap++;
+    }
+  check(crenel > 4 && gap > 4, "Turm: Zinnen mit Lücken (" + crenel + "/" + gap + ")");
+  check(id(0, 77, 0) === "minecraft:dark_oak_planks" && id(5, 77, 0) === "minecraft:dark_oak_planks" && id(0, 77 + 8, 0) === "minecraft:dark_oak_planks", "Turm: Spitzdach aus Muster 2");
+  await undo();
+  ses.s.pattern = parsePattern("spruce_planks");
+  ses.s.pattern2 = parsePattern("spruce_log");
+  Object.assign(ses.s.shape, { type: "winding", rx: 3, ry: 4, pitch: 12, rail: true });
+  await use("axiom:shape", G);
+  let fence = 0;
+  for (const p of dim.blocks.values()) if (p.type.id === "minecraft:spruce_fence") fence++;
+  check(fence > 5, "Wendeltreppe: Geländer aus Zaun der Holzart (" + fence + ")");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, pitch: 12 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

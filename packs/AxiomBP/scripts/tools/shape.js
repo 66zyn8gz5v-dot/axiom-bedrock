@@ -24,6 +24,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["spiral", "Spirale (Wendelrampe)"],
   ["pillar", "Säule mit Sockel & Kapitell (bis zum Boden)"],
   ["onion", "Zwiebelturm (Kuppel mit Spitze)"],
+  ["tower", "Turm (Rundturm mit Zinnen, Schießscharten, Spitzdach)"],
   ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
   ["wedge", "Keil / Rampe (steigt von dir weg an)"],
   ["tetra", "Dreieck-Pyramide (Tetraeder)"],
@@ -555,7 +556,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -640,6 +641,16 @@ function windingStairs(ses, c) {
     const [sx, sz] = Math.abs(dx) >= Math.abs(dz) ? [Math.sign(dx), 0] : [0, Math.sign(dz)];
     return STAIR_DIRS.find(([a, b]) => a === sx && b === sz)?.[2] ?? 0;
   };
+  // Geländer passend zum Material: Holz → Zaun der Holzart, sonst Eisengitter
+  const wood = /^minecraft:(\w+)_planks$/.exec(mat)?.[1];
+  let rail = null;
+  if (c.rail !== false) {
+    try {
+      rail = BlockPermutation.resolve(wood ? `minecraft:${wood}_fence` : "minecraft:iron_bars");
+    } catch {
+      rail = BlockPermutation.resolve("minecraft:oak_fence");
+    }
+  }
   runEdit(ses.player, { label: "Wendeltreppe", symmetry: true }, function* (es) {
     for (let k = 0; k < H; k++) {
       const y = base.y + k;
@@ -662,8 +673,73 @@ function windingStairs(ses, c) {
           else if (rel < 0) rel = 0;
           if (rel >= a1 - a0) continue;
           es.set(base.x + dx, y, base.z + dz, perm);
+          // Geländer am Außenrand der Stufe
+          if (rail && d > R - 0.5) es.set(base.x + dx, y + 1, base.z + dz, rail);
         }
       yield;
+    }
+  });
+}
+
+/**
+ * Turm-Baukasten: runde Mauer (Muster 1) mit Boden, Schießscharten in alle vier Richtungen, Zinnenkranz oben und
+ * auf Wunsch spitzem Kegeldach (Muster 2). Radius X = Turmradius, Höhe = 2 × Radius Y + 1. Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildTower(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(2, c.rx);
+  const H = Math.max(5, 2 * c.ry + 1);
+  const wall = picker(ses.s.pattern);
+  const roof = picker(ses.s.pattern2);
+  const A = air();
+  const ring = (/** @type {number} */ dx, /** @type {number} */ dz) => {
+    const d = Math.hypot(dx, dz);
+    return d <= R + 0.5 && d > R - 0.5;
+  };
+  runEdit(ses.player, { label: "Turm", symmetry: true }, function* (es) {
+    for (let y = 0; y < H; y++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > R + 0.5) continue;
+          const x = base.x + dx;
+          const z = base.z + dz;
+          if (y === 0) {
+            es.set(x, base.y, z, wall());
+            continue;
+          }
+          if (!ring(dx, dz)) {
+            es.set(x, base.y + y, z, A);
+            continue;
+          }
+          // Schießscharten: schmale Schlitze (2 hoch) in den vier Himmelsrichtungen, alle 5 Blöcke
+          const slit = y % 5 === 2 || y % 5 === 3;
+          if (slit && y < H - 2 && ((dx === 0 && Math.abs(dz) >= R - 0.5) || (dz === 0 && Math.abs(dx) >= R - 0.5))) es.set(x, base.y + y, z, A);
+          else es.set(x, base.y + y, z, wall());
+        }
+      yield;
+    }
+    // Tür unten (Richtung Spieler)
+    const dir = cardinal(ses.player.getViewDirection(), true);
+    for (let y = 1; y <= 2; y++) es.set(base.x - dir.x * R, base.y + y, base.z - dir.z * R, A);
+    // Zinnen: jeder zweite Block des Rings eine Lage höher
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++)
+        if (ring(dx, dz) && (dx + dz) % 2 === 0) es.set(base.x + dx, base.y + H, base.z + dz, wall());
+    yield;
+    if (c.roof !== false) {
+      // Spitzdach: Kegel, etwas breiter als der Turm, über den Zinnen
+      const rr = R + 1;
+      const rh = Math.round(rr * 1.6);
+      for (let k = 0; k <= rh; k++) {
+        const r = rr * (1 - k / (rh + 1));
+        for (let dx = -rr; dx <= rr; dx++)
+          for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3 || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, roof());
+        yield;
+      }
     }
   });
 }
@@ -677,6 +753,7 @@ export const shapeTool = {
     const c = { ...ses.s.shape };
     if (c.type === "pillar") return pillar(ses, c);
     if (c.type === "winding") return windingStairs(ses, c);
+    if (c.type === "tower") return buildTower(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -727,7 +804,7 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (c.type === "pillar" || c.type === "winding") return markBlock(ses.player, "axiom:marker", center(ses));
+    if (c.type === "pillar" || c.type === "winding" || c.type === "tower") return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel
@@ -840,6 +917,8 @@ async function shapeSettings(ses) {
       .slider("pitch", "Spirale: Höhe pro Umdrehung", 3, 40, 1, c.pitch)
       .slider("sides", "Vieleck-Turm: Anzahl Ecken", 3, 12, 1, c.sides)
       .slider("step", "Stufenpyramide: Stufenhöhe", 1, 8, 1, c.step)
+      .toggle("roof", "Turm: mit Spitzdach (Muster 2)", c.roof !== false)
+      .toggle("rail", "Wendeltreppe: mit Geländer", c.rail !== false)
       .toggle("confirm", "Vorschau-Modus: 1. Benutzen zeigt die Form, 2. Benutzen baut sie", c.confirm)
       .dropdown(
         "material",
@@ -862,7 +941,7 @@ async function shapeSettings(ses) {
       .text("favName", "Name der Lieblingsform", "z.B. Turmdach", "")
       .show(ses.player);
     if (!r) return;
-    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll, material: r.material, band: r.band });
+    Object.assign(c, { look: r.look, pitch: r.pitch, sides: r.sides, step: r.step, type: r.type, rx: r.rx, ry: r.same ? r.rx : r.ry, rz: r.same ? r.rx : r.rz, hollow: r.hollow, thick: r.thick, anchor: r.anchor, open: r.open, wire: r.wire, confirm: r.confirm, yaw: r.yaw, tilt: r.tilt, roll: r.roll, material: r.material, band: r.band, roof: r.roof, rail: r.rail });
     ses.shapeLock = undefined;
     markDirty(ses);
     if (r.fav) saveFavorite(ses, String(r.favName ?? ""));
