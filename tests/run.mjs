@@ -1463,6 +1463,30 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Höhlen-Netz");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 30, z: 0 }, { x: 31, y: 55, z: 31 });
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Höhlen-Netz", () => ops.opCaves(ses, { tunnels: 4, width: 3, chambers: 5 }, rnd));
+  seed = 7;
+  ops.opCaves(ses, { tunnels: 4, width: 3, chambers: 5 }, rnd);
+  await drain();
+  let holes = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== "minecraft:air") continue;
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 31 || y < 30 || y > 55 || z < 0 || z > 31) outside++;
+    else holes++;
+  }
+  check(holes > 400 && outside === 0, "Höhlen-Netz: Gänge gegraben, nur in der Auswahl (" + holes + ")");
+  check(dim._get(5, 64, 5).type.id === "minecraft:grass_block", "Höhlen-Netz: Oberfläche bleibt");
+  await undo();
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

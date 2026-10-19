@@ -182,6 +182,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Höhlen-Netz graben",
+      run: async () => {
+        const c = ses.s.caves;
+        const r = await new Modal("Höhlen-Netz")
+          .slider("tunnels", "Anzahl Gänge", 1, 12, 1, c.tunnels)
+          .slider("width", "Breite der Gänge", 2, 8, 1, c.width)
+          .slider("chambers", "Kammern (0 = keine)", 0, 10, 1, c.chambers)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opCaves(ses, c);
+      },
+    },
+    {
       text: "Landschaft erzeugen (Gelände füllen)",
       run: async () => {
         const c = ses.s.landscape;

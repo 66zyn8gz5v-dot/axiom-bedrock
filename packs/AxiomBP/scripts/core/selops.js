@@ -694,6 +694,75 @@ export function opLandscape(ses, o, seed = Math.random() * 1000) {
 }
 
 /**
+ * Höhlen-Netz in der Auswahl: mehrere „Würmer“ graben sich in Schlangenlinien durch festen Boden, verzweigen sich
+ * und öffnen unterwegs größere Kammern. Nur feste Blöcke werden zu Luft (Wasser, Luft bleiben).
+ * @param {import("./state.js").Session} ses
+ * @param {{tunnels:number, width:number, chambers:number}} o
+ * @param {() => number} [rand]
+ */
+export function opCaves(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const size = selDims(sel);
+  const len = Math.max(16, Math.round((size.x + size.y + size.z) * 1.2));
+  const A = air();
+  runEdit(ses.player, { label: "Höhlen-Netz", region: { min, max } }, function* (es) {
+    /** @param {number} cx @param {number} cy @param {number} cz @param {number} r */
+    const carve = (cx, cy, cz, r) => {
+      const R = Math.ceil(r);
+      for (let dx = -R; dx <= R; dx++)
+        for (let dy = -R; dy <= R; dy++)
+          for (let dz = -R; dz <= R; dz++) {
+            if (dx * dx + dy * dy * 1.6 + dz * dz > r * r) continue;
+            const x = Math.round(cx + dx);
+            const y = Math.round(cy + dy);
+            const z = Math.round(cz + dz);
+            if (!selContains(sel, x, y, z)) continue;
+            const id = es.id(x, y, z);
+            if (id && isSolidId(id) && id !== "minecraft:bedrock") es.set(x, y, z, A);
+          }
+    };
+    /** @type {{x:number,y:number,z:number,yaw:number,pitch:number,left:number}[]} */
+    const worms = [];
+    for (let i = 0; i < o.tunnels; i++)
+      worms.push({
+        x: min.x + rand() * size.x,
+        y: min.y + size.y * (0.2 + rand() * 0.6),
+        z: min.z + rand() * size.z,
+        yaw: rand() * Math.PI * 2,
+        pitch: (rand() - 0.5) * 0.4,
+        left: len,
+      });
+    let steps = 0;
+    while (worms.length) {
+      const w = /** @type {typeof worms[0]} */ (worms.pop());
+      while (w.left-- > 0) {
+        const r = o.width / 2 + Math.sin(w.left * 0.3) * 0.4;
+        carve(w.x, w.y, w.z, Math.max(1, r));
+        // Kammer
+        if (rand() < o.chambers * 0.004) carve(w.x, w.y, w.z, o.width + 2 + rand() * 2);
+        // Abzweigung
+        if (rand() < 0.02 && worms.length < o.tunnels * 3) worms.push({ ...w, yaw: w.yaw + (rand() < 0.5 ? 1 : -1) * 1.2, left: Math.floor(w.left / 2) });
+        w.yaw += (rand() - 0.5) * 0.5;
+        w.pitch = Math.max(-0.5, Math.min(0.5, w.pitch + (rand() - 0.5) * 0.2));
+        w.x += Math.cos(w.yaw) * Math.cos(w.pitch);
+        w.z += Math.sin(w.yaw) * Math.cos(w.pitch);
+        w.y += Math.sin(w.pitch);
+        // An den Rändern der Auswahl umkehren
+        if (w.x < min.x || w.x > max.x) w.yaw = Math.PI - w.yaw;
+        if (w.z < min.z || w.z > max.z) w.yaw = -w.yaw;
+        if (w.y < min.y + 1 || w.y > max.y - 1) w.pitch = -w.pitch;
+        w.x = Math.max(min.x, Math.min(max.x, w.x));
+        w.y = Math.max(min.y + 1, Math.min(max.y - 1, w.y));
+        w.z = Math.max(min.z, Math.min(max.z, w.z));
+        if (++steps % 8 === 0) yield;
+      }
+    }
+  });
+}
+
+/**
  * Dach auf eine Box-Auswahl setzen (oberhalb der Auswahl).
  * Satteldach: First entlang der längeren Seite, Giebeldreiecke werden mit dem aktiven Muster gefüllt.
  * Walmdach: auf allen vier Seiten geneigt.

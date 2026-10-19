@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.36.0 – 19.10.2026 (nächtlicher Ausbau: Terraform)
+- **Höhlen-Netz:** einen Bereich unter der Erde (oder einen Berg) mit der Box-Auswahl markieren, dann Axiom-Menü →
+  Auswahl bearbeiten → „Höhlen-Netz graben“. Mehrere Gänge schlängeln sich durch den Fels, verzweigen sich und
+  öffnen größere Kammern. Einstellbar: Anzahl der Gänge, Breite, Kammern. Nur feste Blöcke werden ausgehöhlt
+  (kein Grundgestein), alles bleibt innerhalb der Auswahl
+
 ## 0.35.0 – 18.10.2026 (nächtlicher Ausbau: Formen)
 - **Zwiebelturm:** neue Form – unten etwas schmaler, dann bauchig und nach oben zu einer Spitze eingezogen, wie bei
   russischen Kirchen oder Märchenschlössern (Radius X/Z = Breite, Radius Y = Höhe, mit „Hohl“ innen begehbar)

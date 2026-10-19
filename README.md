@@ -90,7 +90,7 @@ In der Aktionsleiste siehst du immer das aktuelle Werkzeug und seine Einstellung
 | **Rückgängig** | Benutzen = Rückgängig, Schleichen + Benutzen = Wiederherstellen (40 Schritte pro Spieler). Im Menü „Verlauf“ kann man gezielt zu einem Schritt zurückspringen. |
 
 ### Auswahl bearbeiten (im Axiom-Menü)
-Füllen · Ersetzen · Leeren · Hohlräume füllen · Dach aufsetzen (Sattel-/Walmdach) · Fenster-Raster · Verlauf (Muster 1 → 2) · **Landschaft erzeugen** (Box mit Hügeln, Tälern, Seen bis zur Meereshöhe füllen – Größe, Bergeshöhe, Meereshöhe, Feinheit einstellbar) · Ausdünnen (Ruinen) · Wasser ablassen · Mit Wasser füllen · Wände · Umriss · Aushöhlen · Überziehen · Natürlich machen · Glätten ·
+Füllen · Ersetzen · Leeren · Hohlräume füllen · Dach aufsetzen (Sattel-/Walmdach) · Fenster-Raster · Verlauf (Muster 1 → 2) · **Landschaft erzeugen** (Box mit Hügeln, Tälern, Seen bis zur Meereshöhe füllen – Größe, Bergeshöhe, Meereshöhe, Feinheit einstellbar) · **Höhlen-Netz graben** (verzweigte Gänge mit Kammern in einer Auswahl – Anzahl, Breite, Kammern einstellbar) · Ausdünnen (Ruinen) · Wasser ablassen · Mit Wasser füllen · Wände · Umriss · Aushöhlen · Überziehen · Natürlich machen · Glätten ·
 Kopieren · Ausschneiden · Stapeln · Array (Versatz + Drehung pro Kopie, z.B. Wendeltreppen) · Verschieben ·
 Drehen (90/180/270°) · Spiegeln · Gespiegelte Kopie daneben (symmetrische Gebäudeflügel) · Zwischenablage verstreuen (z.B. Baum-Blaupause als Wald) · Analysieren (Blöcke zählen) ·
 Auswahl erweitern/verkleinern/verschieben · in 3D aufblasen/schrumpfen · auf Oberfläche begrenzen · per Koordinaten · Auswahl aufheben.

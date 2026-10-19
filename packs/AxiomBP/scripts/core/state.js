@@ -41,6 +41,7 @@ export function defaultSettings() {
     gradient: { axis: "y", blend: 3, reverse: false },
     thin: { percent: 30, replace: false },
     coast: { width: 8, side: "right", style: "beach", cliff: 6 },
+    caves: { tunnels: 4, width: 3, chambers: 4 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },
