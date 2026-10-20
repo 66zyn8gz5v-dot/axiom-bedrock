@@ -159,7 +159,7 @@ PAGES = [
          ("tool", "sculpt", "Modellieren", "Wie Knete: gedrückt halten und formen."),
          ("p", "Modi: Aufbauen · Abtragen · Glätten · Schmelzen · Auffüllen · Felsen · Aufrauen · Verzerren · Zerbrechen"),
          ("tool", "bulldozer", "Bulldozer", "Baut Blöcke aus großer Entfernung sofort ab."),
-         ("tip", "Formen: Material „Verlauf“, „Rand“, Streifen, Schachbrett oder Rippen mischt zwei Blöcke, „Ausschneiden“ macht Löcher.")],
+         ("tip", "Formen: Material Verlauf, Rand, Streifen, Schachbrett, Rippen oder Fachwerk mischt zwei Blöcke, „Ausschneiden“ macht Löcher.")],
     ),
     (
         [("h", "5. Malen"),

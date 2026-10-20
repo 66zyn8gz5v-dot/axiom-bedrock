@@ -1579,6 +1579,29 @@ console.log("Terrassenfelder");
   dim.blocks.clear();
 }
 
+console.log("Fachwerk");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("white_concrete");
+  ses.s.pattern2 = parsePattern("dark_oak_planks");
+  ses.sel = boxSel(dim.id, { x: 0, y: 70, z: 0 }, { x: 8, y: 74, z: 0 });
+  Object.assign(ses.s.shape, { type: "cuboid", anchor: "sel", material: "timber", band: 2, hollow: false, wire: false, yaw: 0, tilt: 0, roll: 0 });
+  await roundTrip("Fachwerkwand", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y) => dim._get(x, y, 0).type.id;
+  const D = "minecraft:dark_oak_planks";
+  const W = "minecraft:white_concrete";
+  check(id(0, 70) === D && id(4, 72) === D && id(8, 71) === D, "Fachwerk: Riegel & Ständer alle 4 Blöcke");
+  check(id(1, 71) === D && id(3, 71) === D && id(2, 73) === W, "Fachwerk: Andreaskreuz im Feld");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, anchor: "center", material: "single", band: 1 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.40: Fachwerk-Muster
 - [x] v0.39: Terrassenfelder mit Stützmauern
 - [x] v0.38: Turm-Baukasten, Geländer für die Wendeltreppe
 - [x] v0.37: Bogengang (Arkaden) entlang Pfad-Punkten
@@ -116,7 +117,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Kuppel mit Rippen** und **Zwiebelturm** (v0.35; Fenster per „Ausschneiden“)
 - [x] **Geländer für Wendeltreppe** (v0.38)
 - [x] **Turm-Baukasten** (v0.38): Rundturm mit Zinnen, Fensterschlitzen und Spitzdach in einem Schritt
-- [ ] **Fachwerk-Muster** auf Wänden (Balken aus Muster 2 in Rauten/Kreuzen)
+- [x] **Fachwerk-Muster** auf Wänden (v0.40)
+- [ ] **Spitzbogen-Fenster** (gotisch) und **Rosettenfenster** als Formen
+- [ ] **Tonnengewölbe / Kreuzgewölbe** in einer Auswahl (Decke für Hallen und Keller)
+- [ ] **Leuchtturm-Baukasten** (gestreifter Turm, Galerie mit Geländer, Laterne mit Licht)
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

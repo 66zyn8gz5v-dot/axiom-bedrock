@@ -472,6 +472,15 @@ export function paintFn(ses, c, In, y0, y1, mid = { x: 0, z: 0 }) {
   const band = (/** @type {number} */ n) => Math.floor(n / w) & 1;
   if (c.material === "stripesH") return (x, y, z) => (band(y) ? p2() : p1());
   if (c.material === "stripesV") return (x, y, z) => (band(x + z) ? p2() : p1());
+  if (c.material === "timber") {
+    // Fachwerk: Rahmen aus Balken (Muster 2) – waagerechte Riegel, senkrechte Ständer und Andreaskreuze in jedem Feld
+    const P = w + 2;
+    return (x, y, z) => {
+      const u = (((x + z) % P) + P) % P;
+      const v = (((y - y0) % P) + P) % P;
+      return u === 0 || v === 0 || u === v || u === P - v ? p2() : p1();
+    };
+  }
   if (c.material === "ribs") {
     // Rippen: senkrechte Bänder rund um die Mitte (Anzahl = Ecken-Regler), z.B. Kuppel mit Rippen
     const n = Math.max(3, c.sides ?? 6);
@@ -931,11 +940,12 @@ async function shapeSettings(ses) {
           ["stripesV", "Streifen senkrecht (Muster 1 / 2)"],
           ["checker", "Schachbrett (Muster 1 / 2)"],
           ["ribs", "Rippen rundherum (Muster 2, Anzahl = Ecken-Regler)"],
+          ["timber", "Fachwerk: Balken & Kreuze aus Muster 2, Felder aus Muster 1"],
           ["carve", "Ausschneiden: Form wird zu Luft (Loch, Tunnel)"],
         ],
         c.material ?? "single"
       )
-      .slider("band", "Streifen/Schachbrett: Breite", 1, 8, 1, c.band ?? 1)
+      .slider("band", "Streifen/Schachbrett/Fachwerk: Breite", 1, 8, 1, c.band ?? 1)
       .toggle("pat", "Danach Block/Muster wählen", false)
       .toggle("fav", "Diese Einstellungen als Lieblingsform speichern", false)
       .text("favName", "Name der Lieblingsform", "z.B. Turmdach", "")

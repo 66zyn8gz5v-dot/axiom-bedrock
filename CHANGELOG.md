@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.40.0 – 21.10.2026 (nächtlicher Ausbau: Formen)
+- **Fachwerk:** neues Material im Formen-Menü – waagerechte Riegel, senkrechte Ständer und Andreaskreuze aus
+  Muster 2 (z.B. dunkle Eiche), die Felder dazwischen aus Muster 1 (z.B. weißer Beton). Feldgröße über „Breite“.
+  Tipp: Wand mit der Box-Auswahl markieren, Form „Quader“, Platzierung „In die Auswahl einpassen“, Material
+  „Fachwerk“ – fertig ist die Fachwerkwand
+
 ## 0.39.0 – 20.10.2026 (nächtlicher Ausbau: Terraform)
 - **Terrassenfelder:** neuer Terrain-Modus – ein Hang wird in ganz ebene, begehbare Stufen umgebaut (Stufenhöhe =
   Stärke), und wo eine Stufe höher liegt als die nächste, entsteht eine Stützmauer. Mauerblock im Terrain-Menü
