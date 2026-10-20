@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.39.0 – 20.10.2026 (nächtlicher Ausbau: Terraform)
+- **Terrassenfelder:** neuer Terrain-Modus – ein Hang wird in ganz ebene, begehbare Stufen umgebaut (Stufenhöhe =
+  Stärke), und wo eine Stufe höher liegt als die nächste, entsteht eine Stützmauer. Mauerblock im Terrain-Menü
+  wählbar (Standard: Steinziegel). Ideal für Weinberge, Reisfelder oder Gärten am Hang
+
 ## 0.38.0 – 20.10.2026 (nächtlicher Ausbau: Formen)
 - **Turm-Baukasten:** neue Form „Turm“ – ein Rundturm in einem Schritt: Boden, runde Mauer aus Muster 1, Tür zur
   Blickrichtung, Schießscharten in alle vier Richtungen, Zinnenkranz oben und ein spitzes Kegeldach aus Muster 2

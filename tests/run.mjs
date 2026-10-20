@@ -1552,6 +1552,33 @@ console.log("Turm & Treppengeländer");
   dim.blocks.clear();
 }
 
+console.log("Terrassenfelder");
+{
+  dim.blocks.clear();
+  // Schräger Hang: Höhe steigt mit x (y 65..76)
+  for (let x = -8; x <= 8; x++) {
+    const h = 64 + Math.round((x + 8) * 0.7);
+    for (let z = -8; z <= 8; z++) for (let y = 65; y <= h; y++) dim._set(x, y, z, BlockPermutation.resolve(y === h ? "minecraft:grass_block" : "minecraft:dirt"));
+  }
+  const top = (x, z) => {
+    for (let y = 100; y > 50; y--) if (dim._get(x, y, z).type.id !== "minecraft:air") return y;
+    return 0;
+  };
+  Object.assign(ses.s.terrain, { mode: "fields", radius: 6, strength: 3, wall: "minecraft:stone_bricks", biome: false });
+  await roundTrip("Terrassenfelder", () => use("axiom:terrain", { x: 0, y: top(0, 0), z: 0 }));
+  await use("axiom:terrain", { x: 0, y: top(0, 0), z: 0 });
+  const hs = [];
+  for (let x = -5; x <= 5; x++) hs.push(top(x, 0));
+  check(hs.every((h) => h % 3 === 0), "Terrassenfelder: nur Stufenhöhen (" + hs + ")");
+  check(new Set(hs).size >= 2 && hs.every((h, i) => i === 0 || h >= hs[i - 1]), "Terrassenfelder: ebene Stufen bergauf");
+  let walls = 0;
+  for (const p of dim.blocks.values()) if (p.type.id === "minecraft:stone_bricks") walls++;
+  check(walls > 5, "Terrassenfelder: Stützmauern aus Steinziegeln (" + walls + ")");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

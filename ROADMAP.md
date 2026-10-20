@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.39: Terrassenfelder mit Stützmauern
 - [x] v0.38: Turm-Baukasten, Geländer für die Wendeltreppe
 - [x] v0.37: Bogengang (Arkaden) entlang Pfad-Punkten
 - [x] v0.36: Höhlen-Netz in einer Auswahl
@@ -91,7 +92,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Vegetation aufs Gelände** (v0.32): Bäume (Eiche, Fichte, Birke), Büsche, Gras & Blumen passend zur Höhe streuen
 - [x] **Küste & Strand** (v0.34): Uferlinie entlang Pfad-Punkten mit Strand, flachem Wasser und Klippen
 - [x] **Höhlen-Netz** in einer Auswahl (verzweigte Gänge mit Kammern) (v0.36)
-- [ ] **Terrassenfelder**: Hang in begehbare Stufen mit Stützmauern umbauen
+- [x] **Terrassenfelder** (v0.39): Hang in begehbare Stufen mit Stützmauern umbauen
 - [ ] **Trampelpfad aufs Gelände**: Weg entlang Pfad-Punkten, der dem Boden folgt (Erdpfad/Kies, Ränder ausgefranst)
 - [ ] **Inselgruppe**: in einer Auswahl mehrere Inseln mit Stränden im Meer erzeugen
 - [ ] **Eis & Gletscher**: Eisberge im Wasser, Gletscherzunge mit Packeis und Schnee

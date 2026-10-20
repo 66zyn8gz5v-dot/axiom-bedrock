@@ -18,6 +18,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["smooth", "Höhen glätten"],
   ["hills", "Hügel / Rauschen"],
   ["terrace", "Terrassen (Stufen)"],
+  ["fields", "Terrassenfelder (ebene Stufen mit Stützmauern)"],
   ["mountain", "Stempel: Berg (ein Klick)"],
   ["crater", "Stempel: Krater (ein Klick)"],
   ["volcano", "Stempel: Vulkan (ein Klick)"],
@@ -972,6 +973,12 @@ export const terrainTool = {
               target = Math.round(h + (Math.floor(h / step) * step - h) * fall);
               break;
             }
+            case "fields": {
+              // Ganz ebene Stufen (auf- oder abgerundet zur nächsten Stufenhöhe), Mauern folgen unten
+              const step = Math.max(2, c.strength);
+              target = Math.round(h / step) * step;
+              break;
+            }
           }
           // Zackigkeit: Höhenänderung der Stempel mit Rauschen verformen (0 = glatt)
           if (stamp && target !== h && c.jag) {
@@ -1042,6 +1049,20 @@ export const terrainTool = {
         }
         if (++n % 64 === 0) yield;
       }
+      if (c.mode === "fields") {
+        // Stützmauern: wo der Nachbar tiefer liegt, wird die freie Seite der Stufe gemauert
+        const wall = perm(c.wall || "minecraft:stone_bricks");
+        const NH = (/** @type {number} */ x, /** @type {number} */ z) => newH.get(x + "," + z) ?? H(x, z);
+        for (const { x, z, target } of plan) {
+          let low = target;
+          for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nh = NH(x + ox, z + oz);
+            if (nh !== null && nh < low) low = nh;
+          }
+          for (let y = low + 1; y < target; y++) es.set(x, y, z, wall);
+          if (++n % 64 === 0) yield;
+        }
+      }
     });
   },
   preview(ses) {
@@ -1076,6 +1097,7 @@ export const terrainTool = {
       .dropdown("mode", "Modus", TERRAIN_MODES, c.mode)
       .slider("radius", "Radius", 1, 32, 1, c.radius)
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
+      .text("wall", "Terrassenfelder: Mauerblock", "stone_bricks", (c.wall ?? "minecraft:stone_bricks").replace("minecraft:", ""))
       .dropdown("veg", "Bepflanzen: Art (Stärke = Dichte)", VEGETATION, c.veg ?? "mix")
       .dropdown("brush", "Pinselform (Anheben, Absenken, Einebnen, Glätten, Hügel, Terrassen)", BRUSHES, c.falloff === false ? "hard" : c.brush ?? "soft")
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
@@ -1087,6 +1109,14 @@ export const terrainTool = {
       .show(ses.player);
     if (!r) return;
     Object.assign(c, r);
+    const w = String(r.wall ?? "").trim();
+    c.wall = w ? (w.includes(":") ? w : "minecraft:" + w) : "minecraft:stone_bricks";
+    try {
+      BlockPermutation.resolve(c.wall);
+    } catch {
+      err(ses.player, `Unbekannter Mauerblock „${w}“ – nehme Steinziegel.`);
+      c.wall = "minecraft:stone_bricks";
+    }
     c.falloff = c.brush !== "hard";
     markDirty(ses);
   },
