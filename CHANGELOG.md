@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.42.0 – 22.10.2026 (nächtlicher Ausbau: Formen)
+- **Spitzbogen:** neue Form für gotische Fenster und Tore – unten gerade Seiten, oben zwei Bögen, die sich zur
+  Spitze treffen. Steht quer vor dir. Tipp: mit Material „Ausschneiden“ schneidest du das Fenster direkt in eine
+  Mauer, mit „Hohl“ entsteht ein steinerner Rahmen
+- **Rosettenfenster:** neue Form – ein Rad aus Steinmaßwerk mit Außenring, Innenring, Nabe und Speichen (Anzahl
+  über „Vieleck-Turm: Anzahl Ecken“). Dahinter eine Lage buntes Glas setzen – fertig ist die Kirchenrosette
+
 ## 0.41.0 – 21.10.2026 (nächtlicher Ausbau: Terraform)
 - **Trampelpfad:** mit dem Pfad-Werkzeug grob den Weg abstecken, dann im Pfad-Menü „Trampelpfad entlang der
   Punkte“. Der Weg legt sich auf den Boden – über Hügel und durch Täler, egal wie hoch die Punkte gesetzt wurden.

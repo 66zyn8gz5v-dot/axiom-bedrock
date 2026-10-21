@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.42: Spitzbogen, Rosettenfenster
 - [x] v0.41: Trampelpfad, der dem Boden folgt
 - [x] v0.40: Fachwerk-Muster
 - [x] v0.39: Terrassenfelder mit Stützmauern
@@ -119,7 +120,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Geländer für Wendeltreppe** (v0.38)
 - [x] **Turm-Baukasten** (v0.38): Rundturm mit Zinnen, Fensterschlitzen und Spitzdach in einem Schritt
 - [x] **Fachwerk-Muster** auf Wänden (v0.40)
-- [ ] **Spitzbogen-Fenster** (gotisch) und **Rosettenfenster** als Formen
+- [x] **Spitzbogen-Fenster** (gotisch) und **Rosettenfenster** als Formen (v0.42)
 - [ ] **Tonnengewölbe / Kreuzgewölbe** in einer Auswahl (Decke für Hallen und Keller)
 - [ ] **Leuchtturm-Baukasten** (gestreifter Turm, Galerie mit Geländer, Laterne mit Licht)
 

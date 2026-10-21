@@ -24,6 +24,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["spiral", "Spirale (Wendelrampe)"],
   ["pillar", "Säule mit Sockel & Kapitell (bis zum Boden)"],
   ["onion", "Zwiebelturm (Kuppel mit Spitze)"],
+  ["gothic", "Spitzbogen (gotisches Fenster/Tor, steht vor dir)"],
+  ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["tower", "Turm (Rundturm mit Zinnen, Schießscharten, Spitzdach)"],
   ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
   ["wedge", "Keil / Rampe (steigt von dir weg an)"],
@@ -142,6 +144,40 @@ export function shapeFn(c) {
         },
         ext: v(c.rx, c.ry, c.rx),
         yMin: -c.ry,
+      };
+    }
+    case "gothic": {
+      // Spitzbogen: unten senkrechte Seiten, oben zwei Kreisbögen (Radius = Breite), die sich in der Spitze treffen
+      const W = c.rx + 0.5;
+      const top = c.ry + 0.5;
+      const spring = top - W * Math.sqrt(3);
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(z) > c.rz || Math.abs(x) > c.rx || Math.abs(y) > c.ry) return false;
+          if (y < spring) return true;
+          const yy = y - spring;
+          return (x - W) ** 2 + yy * yy <= 4 * W * W && (x + W) ** 2 + yy * yy <= 4 * W * W;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "rose": {
+      // Rosette: äußerer Ring, mittlerer Ring, Nabe und Speichen (Anzahl = Ecken-Regler) als steinernes Maßwerk
+      const R = Math.max(c.rx, c.ry);
+      const n = Math.max(3, c.sides ?? 8);
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(z) > c.rz) return false;
+          const r = Math.hypot(x, y);
+          if (r > R + 0.5) return false;
+          if (r >= R - 0.5 || r <= 1.2 || Math.abs(r - R * 0.55) < 0.5) return true;
+          const seg = (Math.PI * 2) / n;
+          const a = ((Math.atan2(y, x) % seg) + seg) % seg;
+          return Math.abs(r * Math.sin(Math.min(a, seg - a))) < 0.55;
+        },
+        ext: v(R, R, c.rz),
+        yMin: -R,
       };
     }
     case "onion":

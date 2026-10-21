@@ -128,7 +128,7 @@ for (const rot of [0, 90, 180, 270])
   }
 
 console.log("Formen");
-for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross", "onion"]) {
+for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross", "onion", "gothic", "rose"]) {
   Object.assign(ses.s.shape, { type, rx: 4, ry: 3, rz: 4, hollow: type === "sphere", thick: 1, anchor: "center" });
   await roundTrip("Form " + type, () => use("axiom:shape", G));
 }
@@ -1625,6 +1625,23 @@ console.log("Trampelpfad");
   await undo();
   ses.pathPoints = [];
   dim.blocks.clear();
+}
+
+console.log("Spitzbogen & Rosette");
+{
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const g = shapeFn({ type: "gothic", rx: 3, ry: 7, rz: 0 });
+  const row = (y) => {
+    let w = 0;
+    for (let x = -3; x <= 3; x++) if (g.inside(x, y, 0)) w++;
+    return w;
+  };
+  check(row(-7) === 7 && row(0) === 7 && row(7) <= 3 && row(7) >= 1 && g.inside(0, 7, 0), "Spitzbogen: unten gerade, oben spitz (" + [row(-7), row(0), row(5), row(7)] + ")");
+  const r = shapeFn({ type: "rose", rx: 7, ry: 7, rz: 0, sides: 8 });
+  check(r.inside(7, 0, 0) && r.inside(0, 0, 0) && r.inside(4, 0, 0) && !r.inside(5, 2, 0) && !r.inside(2, 5, 0), "Rosette: Ring, Nabe, Speichen, dazwischen frei");
+  let filled = 0;
+  for (let x = -7; x <= 7; x++) for (let y = -7; y <= 7; y++) if (r.inside(x, y, 0)) filled++;
+  check(filled > 40 && filled < 120, "Rosette: Maßwerk statt voller Scheibe (" + filled + ")");
 }
 
 console.log("Gespiegelte Kopie & Brücke");
