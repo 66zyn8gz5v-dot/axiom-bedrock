@@ -451,6 +451,31 @@ export const pathTool = {
         },
       },
       {
+        text: "Trampelpfad entlang der Punkte (folgt dem Boden)",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.trail;
+          const r = await new Modal("Trampelpfad")
+            .slider("width", "Breite", 1, 7, 1, c.width)
+            .dropdown(
+              "style",
+              "Art",
+              [
+                ["dirt", "Erdweg (Trampelpfad)"],
+                ["gravel", "Kiesweg"],
+                ["stone", "Pflaster (Bruchstein, bemoost)"],
+              ],
+              c.style
+            )
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { trail } = await import("./terrain.js");
+          trail(ses, c);
+        },
+      },
+      {
         text: "Hügelkette entlang der Punkte",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

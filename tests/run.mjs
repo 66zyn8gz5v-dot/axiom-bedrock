@@ -1602,6 +1602,31 @@ console.log("Fachwerk");
   dim.blocks.clear();
 }
 
+console.log("Trampelpfad");
+{
+  const { trail } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  dim.blocks.clear();
+  // Hügel, damit der Weg der Höhe folgen muss
+  for (let x = 5; x <= 9; x++) for (let z = -4; z <= 4; z++) for (let y = 65; y <= 67; y++) dim._set(x, y, z, BlockPermutation.resolve(y === 67 ? "minecraft:grass_block" : "minecraft:dirt"));
+  dim._set(2, 65, 0, BlockPermutation.resolve("minecraft:short_grass"));
+  ses.pathPoints = [{ x: 0, y: 65, z: 0 }, { x: 14, y: 65, z: 0 }];
+  await roundTrip("Trampelpfad", () => trail(ses, { width: 3, style: "dirt" }));
+  trail(ses, { width: 3, style: "dirt" });
+  await drain();
+  const PATH = ["minecraft:grass_path", "minecraft:coarse_dirt", "minecraft:dirt"];
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  check(PATH.includes(id(2, 64, 0)) && PATH.includes(id(12, 64, 0)) && id(2, 65, 0) === "minecraft:air", "Trampelpfad: Weg auf dem Boden, Gras entfernt");
+  check(PATH.includes(id(7, 67, 0)) && id(7, 68, 0) === "minecraft:air", "Trampelpfad: folgt dem Hügel");
+  check(id(7, 64, 6) === "minecraft:grass_block" && id(2, 64, 4) === "minecraft:grass_block", "Trampelpfad: daneben bleibt Wiese");
+  await undo();
+  trail(ses, { width: 3, style: "stone" });
+  await drain();
+  check(["minecraft:cobblestone", "minecraft:mossy_cobblestone", "minecraft:stone_bricks", "minecraft:gravel"].includes(id(2, 64, 0)), "Trampelpfad: Pflaster");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

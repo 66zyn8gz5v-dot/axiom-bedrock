@@ -85,7 +85,7 @@ export function stampAxis(vd, rot) {
 
 /** Natürliche Bodenblöcke, die das Biom-Malen umfärben darf (Bauwerke bleiben unberührt). */
 export const NATURAL =
-  /^minecraft:(grass_block|grass|dirt|coarse_dirt|podzol|mycelium|dirt_with_roots|stone|andesite|diorite|granite|tuff|calcite|deepslate|sand|red_sand|gravel|snow|clay|mud|moss_block|cobblestone|mossy_cobblestone)$/;
+  /^minecraft:(grass_block|grass|dirt|coarse_dirt|grass_path|podzol|mycelium|dirt_with_roots|stone|andesite|diorite|granite|tuff|calcite|deepslate|sand|red_sand|gravel|snow|clay|mud|moss_block|cobblestone|mossy_cobblestone)$/;
 
 /**
  * Passende Oberfläche für eine Spalte (Biom-Malen).
@@ -150,7 +150,7 @@ const NOT_GROUND = /(leaves|log|wood|mushroom_block|vine|bamboo|cactus)/;
  * @param {import("../core/edit.js").EditSession} es
  * @param {number} x @param {number} z @param {number} from @param {number} range
  */
-function groundY(es, x, z, from, range) {
+export function groundY(es, x, z, from, range) {
   for (let y = from; y >= from - range; y--) {
     const id = es.id(x, y, z);
     if (id && isSolidId(id) && !NOT_GROUND.test(id)) return y;
@@ -643,6 +643,80 @@ export function coast(ses, o) {
         if (++n % 64 === 0) yield;
       }
       yield;
+    }
+  });
+}
+
+const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
+  dirt: [
+    ["minecraft:grass_path", 0.7],
+    ["minecraft:coarse_dirt", 0.2],
+    ["minecraft:dirt", 0.1],
+  ],
+  gravel: [
+    ["minecraft:gravel", 0.75],
+    ["minecraft:coarse_dirt", 0.15],
+    ["minecraft:cobblestone", 0.1],
+  ],
+  stone: [
+    ["minecraft:cobblestone", 0.5],
+    ["minecraft:mossy_cobblestone", 0.25],
+    ["minecraft:stone_bricks", 0.15],
+    ["minecraft:gravel", 0.1],
+  ],
+});
+
+/**
+ * Trampelpfad entlang der Pfad-Punkte, der dem Boden folgt: die Oberfläche wird zu Erdweg, Kies oder Pflaster,
+ * die Ränder fransen aus, Gras und Blumen auf dem Weg verschwinden. Höhe der Punkte ist egal.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, style:string}} o
+ */
+export function trail(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte setzen – der Weg folgt ihnen.");
+  const samples = samplePath(ses.pathPoints, true);
+  const mix = TRAILS[o.style] ?? TRAILS.dirt;
+  const W = Math.max(0.5, o.width / 2);
+  const seed = Math.floor(Math.random() * 100000);
+  runEdit(ses.player, { label: "Trampelpfad", symmetry: true }, function* (es) {
+    /** @type {Map<string, {d:number, y:number}>} */
+    const cols = new Map();
+    for (const s of samples) {
+      const R = Math.ceil(W + 1);
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const x = Math.round(s.x + dx);
+          const z = Math.round(s.z + dz);
+          const d = Math.hypot(x - s.x, z - s.z);
+          const k = x + "," + z;
+          const old = cols.get(k);
+          if (!old || d < old.d) cols.set(k, { d, y: s.y });
+        }
+    }
+    yield;
+    let n = 0;
+    for (const [k, c] of cols) {
+      // Ränder ausfransen: im Randbereich nur ein Teil der Blöcke
+      const edge = (c.d - (W - 0.5)) / 1.5;
+      const [x, z] = k.split(",").map(Number);
+      if (edge > 0 && hash01(x, z, seed) < edge) continue;
+      if (c.d > W + 1) continue;
+      const g = groundY(es, x, z, Math.round(c.y) + 12, 32);
+      if (g === null || !NATURAL.test(es.id(x, g, z))) continue;
+      let r = hash01(z, x, seed + 1);
+      let id = mix[0][0];
+      for (const [mid, p] of mix) {
+        if (r < p) {
+          id = mid;
+          break;
+        }
+        r -= p;
+      }
+      es.set(x, g, z, permOf(id));
+      // Gras/Blumen auf dem Weg entfernen
+      const above = es.id(x, g + 1, z);
+      if (above && above !== "minecraft:air" && !isSolidId(above)) es.set(x, g + 1, z, air());
+      if (++n % 64 === 0) yield;
     }
   });
 }

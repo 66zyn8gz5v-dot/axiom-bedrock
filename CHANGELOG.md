@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.41.0 – 21.10.2026 (nächtlicher Ausbau: Terraform)
+- **Trampelpfad:** mit dem Pfad-Werkzeug grob den Weg abstecken, dann im Pfad-Menü „Trampelpfad entlang der
+  Punkte“. Der Weg legt sich auf den Boden – über Hügel und durch Täler, egal wie hoch die Punkte gesetzt wurden.
+  Arten: **Erdweg** (Trampelpfad mit grober Erde), **Kiesweg** oder **Pflaster** (Bruchstein, bemoost). Die Ränder
+  fransen natürlich aus, Gras und Blumen auf dem Weg verschwinden, Bauwerke bleiben unberührt
+
 ## 0.40.0 – 21.10.2026 (nächtlicher Ausbau: Formen)
 - **Fachwerk:** neues Material im Formen-Menü – waagerechte Riegel, senkrechte Ständer und Andreaskreuze aus
   Muster 2 (z.B. dunkle Eiche), die Felder dazwischen aus Muster 1 (z.B. weißer Beton). Feldgröße über „Breite“.

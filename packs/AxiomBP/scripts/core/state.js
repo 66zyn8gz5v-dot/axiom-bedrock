@@ -40,6 +40,7 @@ export function defaultSettings() {
     bridge: { width: 1, arch: 3, railing: "oak_fence", deck: "", pillars: 0 },
     gradient: { axis: "y", blend: 3, reverse: false },
     thin: { percent: 30, replace: false },
+    trail: { width: 3, style: "dirt" },
     arcade: { span: 6, height: 4, depth: 1 },
     coast: { width: 8, side: "right", style: "beach", cliff: 6 },
     caves: { tunnels: 4, width: 3, chambers: 4 },
