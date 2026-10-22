@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.44.0 – 23.10.2026 (nächtlicher Ausbau: Formen)
+- **Gewölbe-Decken:** zwei neue Formen – **Tonnengewölbe** (eine durchgehende Rundwölbung) und **Kreuzgewölbe**
+  (zwei Tonnen über Kreuz, wie in Kirchen und Burgkellern). Unter der Wölbung bleibt alles frei, darüber wird bis
+  zur Oberkante gemauert. So geht's: den Deckenbereich einer Halle mit der Box-Auswahl markieren (z.B. die oberen
+  5 Lagen), Form „Kreuzgewölbe“, Platzierung „In die Auswahl einpassen“, benutzen
+
 ## 0.43.0 – 22.10.2026 (nächtlicher Ausbau: Terraform)
 - **Inselgruppe:** einen großen Bereich mit der Box-Auswahl markieren (z.B. 80×30×80), dann Axiom-Menü →
   Auswahl bearbeiten → „Inselgruppe im Meer erzeugen“. Es entsteht ein Meer mit mehreren Inseln: unregelmäßige

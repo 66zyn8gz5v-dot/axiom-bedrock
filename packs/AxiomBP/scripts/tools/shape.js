@@ -26,6 +26,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["onion", "Zwiebelturm (Kuppel mit Spitze)"],
   ["gothic", "Spitzbogen (gotisches Fenster/Tor, steht vor dir)"],
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
+  ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
+  ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
   ["tower", "Turm (Rundturm mit Zinnen, Schießscharten, Spitzdach)"],
   ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
   ["wedge", "Keil / Rampe (steigt von dir weg an)"],
@@ -144,6 +146,21 @@ export function shapeFn(c) {
         },
         ext: v(c.rx, c.ry, c.rx),
         yMin: -c.ry,
+      };
+    }
+    case "barrel":
+    case "groin": {
+      // Gewölbe-Decke: der Raum unter der Wölbung bleibt frei, darüber bis zur Oberkante massiv (mind. 1 Block Scheitel)
+      const ru = Math.max(0.5, c.ry - 0.5);
+      const under = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
+        const a = (x * x) / (rx * rx) + (y * y) / (ru * ru) < 1;
+        if (c.type === "barrel") return a;
+        return a || (z * z) / (rz * rz) + (y * y) / (ru * ru) < 1;
+      };
+      return {
+        inside: (x, y, z) => y >= 0 && y <= c.ry && Math.abs(x) <= c.rx && Math.abs(z) <= c.rz && !under(x, y, z),
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: 0,
       };
     }
     case "gothic": {
@@ -365,7 +382,7 @@ export function rotateShape(f, yaw, tilt, roll) {
 }
 
 /** Formen, die unten bei y = 0 beginnen: Anteil von Radius Y an der Höhe (zum Einpassen in eine Auswahl). */
-const BASE_SHAPES = /** @type {Record<string, number>} */ ({ hemisphere: 1, arch: 1, prism: 0.5, wedge: 0.5, disk: 0 });
+const BASE_SHAPES = /** @type {Record<string, number>} */ ({ hemisphere: 1, arch: 1, prism: 0.5, wedge: 0.5, disk: 0, barrel: 1, groin: 1 });
 
 /**
  * Form genau in eine Auswahl einpassen: Radien aus der Auswahlgröße, Mitte = Mitte der Auswahl.

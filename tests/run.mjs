@@ -128,7 +128,7 @@ for (const rot of [0, 90, 180, 270])
   }
 
 console.log("Formen");
-for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross", "onion", "gothic", "rose"]) {
+for (const type of ["sphere", "hemisphere", "cuboid", "cylinder", "cone", "pyramid", "torus", "arch", "prism", "spiral", "wedge", "tetra", "octa", "polygon", "ziggurat", "tube", "disk", "frustum", "star", "heart", "cross", "onion", "gothic", "rose", "barrel", "groin"]) {
   Object.assign(ses.s.shape, { type, rx: 4, ry: 3, rz: 4, hollow: type === "sphere", thick: 1, anchor: "center" });
   await roundTrip("Form " + type, () => use("axiom:shape", G));
 }
@@ -1678,6 +1678,29 @@ console.log("Inselgruppe");
   check(sand > 20 && grass > 20, "Inselgruppe: Strände und Wiesen (" + sand + "/" + grass + ")");
   check(dim._get(0, seaY, 0).type.id === "minecraft:water" || dim._get(47, seaY, 47).type.id === "minecraft:water", "Inselgruppe: Rand ist Meer");
   await undo();
+  dim.blocks.clear();
+}
+
+console.log("Gewölbe");
+{
+  dim.blocks.clear();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("stone_bricks");
+  // Halle 11 breit, 5 hoch, 11 tief – Gewölbe in die Auswahl einpassen
+  ses.sel = boxSel(dim.id, { x: 0, y: 70, z: 0 }, { x: 10, y: 74, z: 10 });
+  Object.assign(ses.s.shape, { type: "barrel", anchor: "sel", material: "single", hollow: false, wire: false, yaw: 0, tilt: 0, roll: 0 });
+  await roundTrip("Tonnengewölbe", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(5, 72, 5) === "minecraft:air" && id(5, 73, 5) === "minecraft:air" && id(5, 74, 5) === "minecraft:stone_bricks" && id(0, 73, 5) === "minecraft:stone_bricks", "Tonnengewölbe: Mitte frei, Scheitel und Seiten gemauert");
+  check(id(5, 74, 0) === id(5, 74, 10) && id(0, 73, 3) === id(0, 73, 7), "Tonnengewölbe: entlang Z gleich");
+  await undo();
+  ses.s.shape.type = "groin";
+  await use("axiom:shape", G);
+  check(id(5, 73, 0) === "minecraft:air" && id(0, 73, 5) === "minecraft:air" && id(0, 74, 0) === "minecraft:stone_bricks" && id(1, 73, 1) === "minecraft:stone_bricks", "Kreuzgewölbe: Tonnen in beide Richtungen, Ecken als Pfeiler-Ansatz");
+  await undo();
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, anchor: "center" });
   dim.blocks.clear();
 }
 
