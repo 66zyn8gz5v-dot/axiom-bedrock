@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.43.0 – 22.10.2026 (nächtlicher Ausbau: Terraform)
+- **Inselgruppe:** einen großen Bereich mit der Box-Auswahl markieren (z.B. 80×30×80), dann Axiom-Menü →
+  Auswahl bearbeiten → „Inselgruppe im Meer erzeugen“. Es entsteht ein Meer mit mehreren Inseln: unregelmäßige
+  Küsten, Sandstrände, Wiesen, Felsen und auf großen Inseln Gipfel. Einstellbar: Anzahl, Größe der Inseln und
+  Meereshöhe. Jedes Mal anders – nicht gefallen? Rückgängig und nochmal
+
 ## 0.42.0 – 22.10.2026 (nächtlicher Ausbau: Formen)
 - **Spitzbogen:** neue Form für gotische Fenster und Tore – unten gerade Seiten, oben zwei Bögen, die sich zur
   Spitze treffen. Steht quer vor dir. Tipp: mit Material „Ausschneiden“ schneidest du das Fenster direkt in eine

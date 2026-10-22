@@ -1644,6 +1644,43 @@ console.log("Spitzbogen & Rosette");
   check(filled > 40 && filled < 120, "Rosette: Maßwerk statt voller Scheibe (" + filled + ")");
 }
 
+console.log("Inselgruppe");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 50, z: 0 }, { x: 47, y: 79, z: 47 });
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const o = { count: 4, size: 45, sea: 40 };
+  await roundTrip("Inselgruppe", () => ops.opIslands(ses, o, rnd));
+  seed = 11;
+  ops.opIslands(ses, o, rnd);
+  await drain();
+  const seaY = 50 + Math.round(29 * 0.4);
+  let land = 0;
+  let sea = 0;
+  let sand = 0;
+  let grass = 0;
+  for (let x = 0; x <= 47; x++)
+    for (let z = 0; z <= 47; z++) {
+      for (let y = 79; y >= 50; y--) {
+        const id = dim._get(x, y, z).type.id;
+        if (id === "minecraft:air") continue;
+        if (id === "minecraft:water") sea++;
+        else {
+          land++;
+          if (id === "minecraft:sand") sand++;
+          if (id === "minecraft:grass_block") grass++;
+        }
+        break;
+      }
+    }
+  check(sea > 500 && land > 100, "Inselgruppe: Meer und Inseln (" + sea + "/" + land + ")");
+  check(sand > 20 && grass > 20, "Inselgruppe: Strände und Wiesen (" + sand + "/" + grass + ")");
+  check(dim._get(0, seaY, 0).type.id === "minecraft:water" || dim._get(47, seaY, 47).type.id === "minecraft:water", "Inselgruppe: Rand ist Meer");
+  await undo();
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

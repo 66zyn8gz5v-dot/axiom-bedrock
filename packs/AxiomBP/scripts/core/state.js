@@ -43,6 +43,7 @@ export function defaultSettings() {
     trail: { width: 3, style: "dirt" },
     arcade: { span: 6, height: 4, depth: 1 },
     coast: { width: 8, side: "right", style: "beach", cliff: 6 },
+    islands: { count: 4, size: 45, sea: 40 },
     caves: { tunnels: 4, width: 3, chambers: 4 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },

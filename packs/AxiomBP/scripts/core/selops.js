@@ -658,6 +658,18 @@ export function opLandscape(ses, o, seed = Math.random() * 1000) {
       const t = Math.pow(Math.min(1, Math.max(0, 0.5 + n * 0.9)), 1.2);
       H.set(x + "," + z, min.y + Math.round(t * (sy - 1) * (o.relief / 100)));
     }
+  writeTerrain(ses, sel, H, seaY, snowY, "Landschaft");
+}
+
+/**
+ * Höhenkarte in die Auswahl schreiben: Boden mit passender Oberfläche, darüber Wasser bis zur Meereshöhe, sonst Luft.
+ * @param {import("./state.js").Session} ses
+ * @param {import("./selection.js").Selection} sel
+ * @param {Map<string, number>} H Bodenhöhe je Spalte
+ * @param {number} seaY @param {number} snowY @param {string} label
+ */
+function writeTerrain(ses, sel, H, seaY, snowY, label) {
+  const { min, max } = sel;
   /** @type {Map<string, BlockPermutation>} */
   const cache = new Map();
   const P = (/** @type {string} */ id) => {
@@ -667,7 +679,7 @@ export function opLandscape(ses, o, seed = Math.random() * 1000) {
   };
   const W = P("minecraft:water");
   const A = air();
-  runEdit(ses.player, { label: "Landschaft", region: { min, max } }, function* (es) {
+  runEdit(ses.player, { label, region: { min, max } }, function* (es) {
     for (let x = min.x; x <= max.x; x++) {
       for (let z = min.z; z <= max.z; z++) {
         const h = /** @type {number} */ (H.get(x + "," + z));
@@ -691,6 +703,52 @@ export function opLandscape(ses, o, seed = Math.random() * 1000) {
       yield;
     }
   });
+}
+
+/**
+ * Inselgruppe in der Auswahl: Meer mit mehreren Inseln (Strand, Wiese, Fels, bei großen Inseln ein Gipfel).
+ * @param {import("./state.js").Session} ses
+ * @param {{count:number, size:number, sea:number}} o
+ * @param {() => number} [rand]
+ */
+export function opIslands(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  const seaY = min.y + Math.max(2, Math.round(((sy - 1) * o.sea) / 100));
+  const snowY = min.y + Math.round((sy - 1) * 0.9);
+  const base = Math.min(sx, sz);
+  /** @type {{x:number, z:number, r:number, h:number}[]} */
+  const isl = [];
+  for (let i = 0; i < o.count; i++) {
+    const r = Math.max(3, (base / 2) * (o.size / 100) * (0.5 + rand() * 0.6));
+    isl.push({
+      x: min.x + r * 0.6 + rand() * Math.max(1, sx - r * 1.2),
+      z: min.z + r * 0.6 + rand() * Math.max(1, sz - r * 1.2),
+      r,
+      h: (max.y - seaY) * (0.35 + rand() * 0.65),
+    });
+  }
+  const seed = rand() * 1000;
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      // Meeresgrund mit leichten Wellen, Inseln als Hügel mit unregelmäßiger Küste
+      let h = seaY - 4 + fbm(x / 12 + seed, 0.2, z / 12, 2) * 2;
+      for (const I of isl) {
+        const wob = 1 + fbm(x / 7 + seed, 0.6, z / 7 + I.x, 2) * 0.45;
+        const d = Math.hypot(x - I.x, z - I.z) / (I.r * wob);
+        if (d >= 1) continue;
+        const q = 1 - d;
+        h = Math.max(h, seaY - 2 + (I.h + 2) * Math.pow(q, 1.4) + (q > 0.15 ? 1.5 : 0));
+      }
+      H.set(x + "," + z, Math.max(min.y, Math.min(max.y, Math.round(h))));
+    }
+  writeTerrain(ses, sel, H, seaY, snowY, "Inselgruppe");
 }
 
 /**

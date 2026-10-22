@@ -182,6 +182,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Inselgruppe im Meer erzeugen",
+      run: async () => {
+        const c = ses.s.islands;
+        const r = await new Modal("Inselgruppe")
+          .slider("count", "Anzahl Inseln", 1, 12, 1, c.count)
+          .slider("size", "Größe der Inseln in %", 10, 100, 5, c.size)
+          .slider("sea", "Meereshöhe in % der Auswahlhöhe", 10, 80, 5, c.sea)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opIslands(ses, c);
+      },
+    },
+    {
       text: "Höhlen-Netz graben",
       run: async () => {
         const c = ses.s.caves;
