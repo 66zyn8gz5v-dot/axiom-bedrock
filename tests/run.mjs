@@ -1740,6 +1740,37 @@ console.log("Eis & Gletscher");
   dim.blocks.clear();
 }
 
+console.log("Leuchtturm");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("white_concrete");
+  ses.s.pattern2 = parsePattern("red_concrete");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  Object.assign(ses.s.shape, { type: "lighthouse", rx: 4, ry: 7, rz: 4, band: 2, anchor: "center", material: "single" });
+  await roundTrip("Leuchtturm", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  // Basis 65, Turm 15 hoch → Galerie auf 80
+  const walls = new Set();
+  for (let y = 66; y <= 78; y++) for (let x = -4; x <= 4; x++) {
+    const w = id(x, y, 0);
+    if (w.endsWith("_concrete")) walls.add(w);
+  }
+  check(walls.has("minecraft:white_concrete") && walls.has("minecraft:red_concrete"), "Leuchtturm: rot-weiß gestreift");
+  check(id(0, 70, 0) === "minecraft:air", "Leuchtturm: innen hohl");
+  check(id(0, 80, 0) === "minecraft:smooth_stone" && [...Array(9)].some((_, i) => id(i - 4, 81, 0) === "minecraft:iron_bars" || id(0, 81, i - 4) === "minecraft:iron_bars"), "Leuchtturm: Galerie mit Geländer");
+  check(id(0, 82, 0) === "minecraft:sea_lantern" && [...Array(7)].some((_, i) => id(i - 3, 82, 0) === "minecraft:glass"), "Leuchtturm: Laterne mit Licht");
+  let roof = 0;
+  for (let y = 85; y <= 90; y++) if (id(0, y, 0) === "minecraft:red_concrete") roof++;
+  check(roof >= 2, "Leuchtturm: Dach aus Muster 2");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, band: 1 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

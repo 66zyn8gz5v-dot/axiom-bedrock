@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["lighthouse", "Leuchtturm (gestreift, Galerie, Laterne mit Licht)"],
   ["tower", "Turm (Rundturm mit Zinnen, Schießscharten, Spitzdach)"],
   ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
   ["wedge", "Keil / Rampe (steigt von dir weg an)"],
@@ -618,7 +619,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -806,6 +807,73 @@ function buildTower(ses, c) {
   });
 }
 
+/**
+ * Leuchtturm-Baukasten: nach oben schmaler werdender Rundturm mit Streifen (Muster 1 / Muster 2, Breite = „Breite“),
+ * Tür, Galerie mit Eisengeländer, Laterne aus Glas mit Seelaterne als Licht und kleinem Dach (Muster 2).
+ * Radius X = Radius unten, Höhe des Turms = 2 × Radius Y + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildLighthouse(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R0 = Math.max(2, c.rx);
+  const H = Math.max(8, 2 * c.ry + 1);
+  const p1 = picker(ses.s.pattern);
+  const p2 = picker(ses.s.pattern2);
+  const band = Math.max(1, c.band ?? 2) + 1;
+  const A = air();
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const glass = P("minecraft:glass");
+  const bars = P("minecraft:iron_bars");
+  const light = P("minecraft:sea_lantern");
+  const deck = P("minecraft:smooth_stone");
+  runEdit(ses.player, { label: "Leuchtturm", symmetry: true }, function* (es) {
+    const rTop = Math.max(1.5, R0 * 0.65);
+    for (let y = 0; y < H; y++) {
+      const r = R0 + (rTop - R0) * (y / (H - 1));
+      for (let dx = -R0; dx <= R0; dx++)
+        for (let dz = -R0; dz <= R0; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > r + 0.5) continue;
+          const x = base.x + dx;
+          const z = base.z + dz;
+          if (y === 0) es.set(x, base.y, z, p1());
+          else if (d > r - 0.5) es.set(x, base.y + y, z, Math.floor((y - 1) / band) % 2 ? p2() : p1());
+          else es.set(x, base.y + y, z, A);
+        }
+      yield;
+    }
+    // Tür zur Blickrichtung
+    const dir = cardinal(ses.player.getViewDirection(), true);
+    for (let y = 1; y <= 2; y++) es.set(base.x - dir.x * R0, base.y + y, base.z - dir.z * R0, A);
+    // Galerie: Plattform 1 Block breiter als die Turmspitze, Eisengeländer am Rand
+    const gy = base.y + H;
+    const gr = Math.ceil(rTop) + 1;
+    for (let dx = -gr; dx <= gr; dx++)
+      for (let dz = -gr; dz <= gr; dz++) {
+        const d = Math.hypot(dx, dz);
+        if (d > gr + 0.5) continue;
+        es.set(base.x + dx, gy, base.z + dz, deck);
+        if (d > gr - 0.5) es.set(base.x + dx, gy + 1, base.z + dz, bars);
+      }
+    yield;
+    // Laterne: Glasring (3 hoch) um eine Seelaterne, darüber ein spitzes Dach aus Muster 2
+    const lr = Math.max(1, Math.floor(rTop) - 0);
+    for (let y = 1; y <= 3; y++)
+      for (let dx = -lr; dx <= lr; dx++)
+        for (let dz = -lr; dz <= lr; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > lr + 0.5) continue;
+          es.set(base.x + dx, gy + y, base.z + dz, d > lr - 0.5 ? glass : !dx && !dz && y === 2 ? light : A);
+        }
+    for (let k = 0; k <= lr + 1; k++) {
+      const r = lr + 1 - k;
+      for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) if (Math.hypot(dx, dz) <= r + 0.3) es.set(base.x + dx, gy + 4 + k, base.z + dz, p2());
+    }
+  });
+}
+
 /** @type {import("./registry.js").Tool} */
 export const shapeTool = {
   id: "axiom:shape",
@@ -816,6 +884,7 @@ export const shapeTool = {
     if (c.type === "pillar") return pillar(ses, c);
     if (c.type === "winding") return windingStairs(ses, c);
     if (c.type === "tower") return buildTower(ses, c);
+    if (c.type === "lighthouse") return buildLighthouse(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -866,7 +935,7 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (c.type === "pillar" || c.type === "winding" || c.type === "tower") return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

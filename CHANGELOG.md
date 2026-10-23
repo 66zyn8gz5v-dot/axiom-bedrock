@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.46.0 – 24.10.2026 (nächtlicher Ausbau: Formen)
+- **Leuchtturm-Baukasten:** neue Form „Leuchtturm“ – ein nach oben schmaler werdender Rundturm mit Streifen aus
+  Muster 1 und Muster 2 (z.B. weiß/rot, Streifenhöhe über „Breite“), Tür, Galerie mit Eisengeländer, Laterne aus
+  Glas mit leuchtender Seelaterne und kleinem Dach aus Muster 2. Radius X = Breite unten, Radius Y = Höhe
+
 ## 0.45.0 – 23.10.2026 (nächtlicher Ausbau: Terraform)
 - **Gletscher:** neuer Terrain-Stempel – eine Eiszunge aus Packeis zieht sich in Blickrichtung, hinten dick und
   mit Schnee bedeckt, vorne dünner mit blankem und blauem Eis. Mit „Streckung“ wird sie lang, Drehung wie bei allen

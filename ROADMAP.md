@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.46: Leuchtturm-Baukasten
 - [x] v0.45: Gletscher und Eisberg
 - [x] v0.44: Tonnen- und Kreuzgewölbe
 - [x] v0.43: Inselgruppe im Meer
@@ -128,7 +129,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Fachwerk-Muster** auf Wänden (v0.40)
 - [x] **Spitzbogen-Fenster** (gotisch) und **Rosettenfenster** als Formen (v0.42)
 - [x] **Tonnengewölbe / Kreuzgewölbe** in einer Auswahl (v0.44)
-- [ ] **Leuchtturm-Baukasten** (gestreifter Turm, Galerie mit Geländer, Laterne mit Licht)
+- [x] **Leuchtturm-Baukasten** (v0.46)
+- [ ] **Brunnen-Baukasten**: runder oder eckiger Brunnen mit Wasser, Rand und Dach
+- [ ] **Windmühle**: Turm mit Kegeldach und vier Flügeln (in Blickrichtung)
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
