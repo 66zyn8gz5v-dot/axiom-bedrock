@@ -102,6 +102,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Trampelpfad aufs Gelände** (v0.41): Weg entlang Pfad-Punkten, der dem Boden folgt (Erdpfad/Kies, Ränder ausgefranst)
 - [x] **Inselgruppe** (v0.43): in einer Auswahl mehrere Inseln mit Stränden im Meer erzeugen
 - [x] **Eis & Gletscher** (v0.45): Eisberge im Wasser, Gletscherzunge mit Packeis und Schnee
+- [ ] **Badlands/Mesa-Schichten**: Hänge in farbige Terrakotta-Bänder einfärben (rot, orange, weiß, braun)
+- [ ] **Sumpf**: flaches Wasser mit Schlamm, Seerosen, Schilf und Mangroven-Wurzeln in einer Fläche
+- [ ] **Lava-Vulkan**: Vulkan-Stempel wahlweise mit Lavasee im Krater, Basalt & Schwarzstein an den Flanken
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
