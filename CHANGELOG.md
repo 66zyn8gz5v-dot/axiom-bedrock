@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.45.0 – 23.10.2026 (nächtlicher Ausbau: Terraform)
+- **Gletscher:** neuer Terrain-Stempel – eine Eiszunge aus Packeis zieht sich in Blickrichtung, hinten dick und
+  mit Schnee bedeckt, vorne dünner mit blankem und blauem Eis. Mit „Streckung“ wird sie lang, Drehung wie bei allen
+  Stempeln
+- **Eisberg:** neuer Terrain-Stempel – auf eine Wasserfläche (oder den Meeresgrund) zielen: über Wasser ragt ein
+  zerklüfteter Eisgipfel mit Schneehaube auf, unter Wasser liegt der größere Teil aus Pack- und Blaueis.
+  Radius = Breite, Stärke = Höhe
+
 ## 0.44.0 – 23.10.2026 (nächtlicher Ausbau: Formen)
 - **Gewölbe-Decken:** zwei neue Formen – **Tonnengewölbe** (eine durchgehende Rundwölbung) und **Kreuzgewölbe**
   (zwei Tonnen über Kreuz, wie in Kirchen und Burgkellern). Unter der Wölbung bleibt alles frei, darüber wird bis

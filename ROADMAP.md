@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.45: Gletscher und Eisberg
 - [x] v0.44: Tonnen- und Kreuzgewölbe
 - [x] v0.43: Inselgruppe im Meer
 - [x] v0.42: Spitzbogen, Rosettenfenster
@@ -100,7 +101,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Terrassenfelder** (v0.39): Hang in begehbare Stufen mit Stützmauern umbauen
 - [x] **Trampelpfad aufs Gelände** (v0.41): Weg entlang Pfad-Punkten, der dem Boden folgt (Erdpfad/Kies, Ränder ausgefranst)
 - [x] **Inselgruppe** (v0.43): in einer Auswahl mehrere Inseln mit Stränden im Meer erzeugen
-- [ ] **Eis & Gletscher**: Eisberge im Wasser, Gletscherzunge mit Packeis und Schnee
+- [x] **Eis & Gletscher** (v0.45): Eisberge im Wasser, Gletscherzunge mit Packeis und Schnee
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

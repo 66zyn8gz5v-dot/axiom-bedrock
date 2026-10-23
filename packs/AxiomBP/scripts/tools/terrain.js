@@ -29,6 +29,8 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["snowpeak", "Stempel: Schneegipfel (Fels & Schnee oben)"],
   ["cliff", "Stempel: Klippe (Felswand quer vor dir)"],
   ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
+  ["glacier", "Stempel: Gletscher (Eiszunge in Blickrichtung)"],
+  ["iceberg", "Stempel: Eisberg (auf Wasser zielen)"],
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
   ["ridge", "Hügelkette entlang der Pfad-Punkte"],
   ["lake", "See: Mulde bis zum Überlauf mit Wasser füllen (in die Mulde zielen)"],
@@ -69,7 +71,7 @@ export function brushFalloff(d, R, brush) {
 }
 
 /** Stempel (ein Klick): Form über Zackigkeit, Drehung und Streckung einstellbar. */
-export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff", "rockarch", "cave"];
+export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff", "rockarch", "cave", "glacier", "iceberg"];
 
 /**
  * Längsachse eines Stempels: Blickrichtung (waagerecht), um `rot` Grad gedreht.
@@ -329,6 +331,49 @@ function rockArch(ses, t, c) {
         if (id && isSolidId(id)) break;
         es.set(x, y, z, permOf(rockId(x, y, z)));
       }
+    }
+  });
+}
+
+/**
+ * Eisberg: auf eine Wasserfläche zielen (oder auf den Grund darunter). Über Wasser ein zerklüfteter Eisgipfel mit
+ * Schnee oben, unter Wasser der größere Teil des Eisbergs. Radius = Breite, Stärke = Höhe über Wasser.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function iceberg(ses, t, c) {
+  const p = t.pos;
+  runEdit(ses.player, { label: "Eisberg", symmetry: true }, function* (es) {
+    // Wasserspiegel über dem Ziel suchen
+    let wl = null;
+    for (let y = p.y; y <= p.y + 40; y++) {
+      const id = es.id(p.x, y, p.z);
+      if (id.includes("water")) wl = y;
+      else if (wl !== null) break;
+    }
+    if (wl === null) return err(ses.player, "Für den Eisberg auf eine Wasserfläche zielen.");
+    const R = Math.max(2, c.radius);
+    const Ha = Math.max(2, c.strength * 2);
+    const Db = Math.min(Ha * 2, 30);
+    const PI = permOf("minecraft:packed_ice");
+    const BI = permOf("minecraft:blue_ice");
+    const SN = permOf("minecraft:snow");
+    for (let dy = -Db; dy <= Ha; dy++) {
+      const y = wl + dy;
+      const k = dy >= 0 ? Math.pow(Math.max(0, 1 - dy / (Ha + 0.5)), 0.7) : Math.pow(Math.max(0, 1 - -dy / (Db + 0.5)), 0.5);
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const x = p.x + dx;
+          const z = p.z + dz;
+          const wob = 1 + fbm(x / 4 + 5.1, y / 4, z / 4, 2) * 0.5 * (c.jag ? c.jag / 3 : 1);
+          if (Math.hypot(dx, dz) > R * k * wob + 0.3) continue;
+          const id = es.id(x, y, z);
+          if (id && isSolidId(id) && !id.includes("ice") && id !== "minecraft:snow") continue;
+          const topHere = Math.hypot(dx, dz) > R * Math.pow(Math.max(0, 1 - (dy + 1) / (Ha + 0.5)), 0.7) * wob + 0.3;
+          es.set(x, y, z, dy >= 0 && topHere ? SN : dy < -2 && hash01(x, z, y) < 0.3 ? BI : PI);
+        }
+      yield;
     }
   });
 }
@@ -850,6 +895,7 @@ export const terrainTool = {
     }
     if (c.mode === "waterfall") return waterfall(ses, t, c);
     if (c.mode === "rockarch") return rockArch(ses, t, c);
+    if (c.mode === "iceberg") return iceberg(ses, t, c);
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
     if (c.mode === "lake") return lake(ses, t);
@@ -993,6 +1039,15 @@ export const terrainTool = {
               const w = Math.max(1.5, R * 0.35);
               if (ac > w) break;
               target = h - Math.round(c.strength * 4 * (1 - (ac / w) ** 2) * (1 - (Math.abs(along) / (RR + 0.5)) ** 4));
+              break;
+            }
+            case "glacier": {
+              // Eiszunge: hinten dick, nach vorne (Blickrichtung) dünner, gerundete Ränder; oben Schnee, vorne Eis
+              const u = Math.max(-1, Math.min(1, along / (RR + 0.5)));
+              const side = Math.max(0, 1 - (across / (R + 0.5)) ** 2);
+              target = h + Math.round(c.strength * 2 * Math.sqrt(side) * (0.35 + 0.65 * (1 - u) / 2));
+              fillOverride = "minecraft:packed_ice";
+              topOverride = u < 0.2 ? "minecraft:snow" : hash01(x, z, 99) < 0.15 ? "minecraft:blue_ice" : "minecraft:packed_ice";
               break;
             }
             case "dune": {

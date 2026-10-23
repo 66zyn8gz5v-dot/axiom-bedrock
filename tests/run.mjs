@@ -1704,6 +1704,42 @@ console.log("Gewölbe");
   dim.blocks.clear();
 }
 
+console.log("Eis & Gletscher");
+{
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const ICE = ["minecraft:packed_ice", "minecraft:blue_ice", "minecraft:snow"];
+  dim.blocks.clear();
+  // Meer: Wasser y 58..64 über Sandgrund
+  ses.sel = boxSel(dim.id, { x: -12, y: 58, z: -12 }, { x: 12, y: 64, z: 12 });
+  ops.opFill(ses, parsePattern("water"));
+  await drain();
+  Object.assign(ses.s.terrain, { mode: "iceberg", radius: 4, strength: 3, jag: 3 });
+  await roundTrip("Eisberg", () => use("axiom:terrain", { x: 0, y: 57, z: 0 }));
+  await use("axiom:terrain", { x: 0, y: 57, z: 0 });
+  check(ICE.includes(id(0, 66, 0)) && ICE.includes(id(0, 60, 0)) && id(0, 75, 0) === "minecraft:air", "Eisberg: über und unter Wasser");
+  check(id(10, 64, 10) === "minecraft:water", "Eisberg: Meer drumherum bleibt");
+  await undo();
+  const m0 = player.messages.length;
+  dim.blocks.clear();
+  await use("axiom:terrain", G);
+  check(player.messages.slice(m0).some((m) => m.includes("Wasser")), "Eisberg: an Land kommt ein Hinweis");
+  const oldView = player.view;
+  player.view = { x: 1, y: 0, z: 0 };
+  Object.assign(ses.s.terrain, { mode: "glacier", radius: 5, strength: 4, jag: 0, rot: 0, stretch: 20, biome: false });
+  await roundTrip("Gletscher", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const top = (x, z) => {
+    for (let y = 100; y > 50; y--) if (id(x, y, z) !== "minecraft:air") return y;
+    return 0;
+  };
+  check(top(-8, 0) > top(8, 0) && top(8, 0) > 64, "Gletscher: hinten dick, vorne dünner (" + top(-8, 0) + "/" + top(8, 0) + ")");
+  check(id(-8, top(-8, 0), 0) === "minecraft:snow" && ICE.includes(id(8, top(8, 0), 0)) && id(0, 65, 0) === "minecraft:packed_ice", "Gletscher: Schnee oben, Eis vorne und innen");
+  await undo();
+  player.view = oldView;
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, jag: 3, stretch: 10 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
