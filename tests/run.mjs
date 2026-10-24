@@ -1793,6 +1793,35 @@ console.log("Badlands");
   dim.blocks.clear();
 }
 
+console.log("Brunnen");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("cobblestone");
+  ses.s.pattern2 = parsePattern("spruce_planks");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "well", rx: 2, ry: 4, rz: 2, sides: 6, anchor: "center", material: "single" });
+  await roundTrip("Brunnen", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  // Boden auf 64: Wasser 60..63, Rand auf 65, Boden 59
+  check(id(0, 62, 0) === "minecraft:water" && id(0, 63, 0) === "minecraft:water" && id(0, 59, 0) === "minecraft:cobblestone", "Brunnen: Schacht mit Wasser und Boden");
+  check(id(2, 65, 0) === "minecraft:cobblestone" && id(0, 65, 0) === "minecraft:air" && id(2, 61, 0) === "minecraft:cobblestone", "Brunnen: Rand und gemauerter Schacht");
+  check(id(2, 67, 0) === "minecraft:spruce_planks" && id(-2, 67, 0) === "minecraft:spruce_planks" && id(0, 69, 0) === "minecraft:spruce_planks", "Brunnen: Pfosten und Dach");
+  await undo();
+  ses.s.shape.sides = 4;
+  await use("axiom:shape", G);
+  check(id(2, 65, 2) === "minecraft:cobblestone", "Brunnen: eckig mit „4 Ecken“");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

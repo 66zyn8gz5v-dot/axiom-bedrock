@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["well", "Brunnen (Schacht mit Wasser, Rand, Pfosten & Dach)"],
   ["lighthouse", "Leuchtturm (gestreift, Galerie, Laterne mit Licht)"],
   ["tower", "Turm (Rundturm mit Zinnen, Schießscharten, Spitzdach)"],
   ["winding", "Wendeltreppe mit echten Treppen (Radius X, Höhe = 2×Radius Y+1)"],
@@ -619,7 +620,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -808,6 +809,54 @@ function buildTower(ses, c) {
 }
 
 /**
+ * Brunnen-Baukasten: in den Boden gegrabener Schacht mit Wasser, gemauerte Wand und Rand (Muster 1), zwei Pfosten,
+ * Querbalken und kleines Satteldach (Muster 2). Rund oder – mit „Anzahl Ecken“ = 4 – eckig.
+ * Radius X = Größe (innen Wasser), Radius Y = Tiefe des Schachts. Auf den Boden zielen.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildWell(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const g = t.hit ? t.pos : v(t.pos.x, t.pos.y - 1, t.pos.z);
+  const R = Math.max(2, c.rx);
+  const depth = Math.max(2, c.ry);
+  const square = (c.sides ?? 6) === 4;
+  const wall = picker(ses.s.pattern);
+  const wood = picker(ses.s.pattern2);
+  const W = BlockPermutation.resolve("minecraft:water");
+  const dist = (/** @type {number} */ dx, /** @type {number} */ dz) => (square ? Math.max(Math.abs(dx), Math.abs(dz)) : Math.hypot(dx, dz));
+  const dir = cardinal(ses.player.getViewDirection(), true);
+  // Pfosten quer zur Blickrichtung
+  const px = dir.x === 0 ? 1 : 0;
+  const pz = dir.x === 0 ? 0 : 1;
+  runEdit(ses.player, { label: "Brunnen", symmetry: true }, function* (es) {
+    for (let dy = -depth - 1; dy <= 1; dy++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const d = dist(dx, dz);
+          if (d > R + (square ? 0 : 0.5)) continue;
+          const x = g.x + dx;
+          const z = g.z + dz;
+          const y = g.y + dy;
+          const rim = d > R - (square ? 1 : 0.5);
+          if (dy === -depth - 1) es.set(x, y, z, wall());
+          else if (rim) es.set(x, y, z, wall());
+          else if (dy <= -1) es.set(x, y, z, W);
+          else es.set(x, y, z, air());
+        }
+      yield;
+    }
+    // Pfosten, Querbalken und Dach
+    const top = g.y + 4;
+    for (const s of [-R, R]) for (let y = g.y + 2; y <= top; y++) es.set(g.x + px * s, y, g.z + pz * s, wood());
+    for (let k = -R - 1; k <= R + 1; k++) {
+      es.set(g.x + px * k, top + 1, g.z + pz * k, wood());
+      for (const side of [-1, 1]) es.set(g.x + px * k + pz * side, top, g.z + pz * k + px * side, wood());
+    }
+  });
+}
+
+/**
  * Leuchtturm-Baukasten: nach oben schmaler werdender Rundturm mit Streifen (Muster 1 / Muster 2, Breite = „Breite“),
  * Tür, Galerie mit Eisengeländer, Laterne aus Glas mit Seelaterne als Licht und kleinem Dach (Muster 2).
  * Radius X = Radius unten, Höhe des Turms = 2 × Radius Y + 1.
@@ -885,6 +934,7 @@ export const shapeTool = {
     if (c.type === "winding") return windingStairs(ses, c);
     if (c.type === "tower") return buildTower(ses, c);
     if (c.type === "lighthouse") return buildLighthouse(ses, c);
+    if (c.type === "well") return buildWell(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -935,7 +985,7 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (["pillar", "winding", "tower", "lighthouse"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

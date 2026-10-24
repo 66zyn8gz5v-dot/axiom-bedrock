@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.48.0 – 25.10.2026 (nächtlicher Ausbau: Formen)
+- **Brunnen-Baukasten:** neue Form „Brunnen“ – auf den Boden zielen: ein Schacht wird gegraben und mit Wasser
+  gefüllt, Wand und Rand aus Muster 1 (z.B. Bruchstein), zwei Pfosten, Querbalken und ein kleines Dach aus Muster 2
+  (z.B. Fichtenbretter). Radius X = Größe, Radius Y = Tiefe. Rund – oder eckig, wenn „Anzahl Ecken“ auf 4 steht
+
 ## 0.47.0 – 24.10.2026 (nächtlicher Ausbau: Terraform)
 - **Badlands-Schichten:** neuer Terrain-Modus „Badlands“ – mit dem Pinsel über Felswände, Hänge und Hochplateaus
   fahren: freiliegende Seiten werden in waagerechte, leicht gewellte Terrakotta-Schichten gefärbt (orange, rot, weiß,
