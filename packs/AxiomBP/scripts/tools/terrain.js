@@ -31,6 +31,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
   ["glacier", "Stempel: Gletscher (Eiszunge in Blickrichtung)"],
   ["iceberg", "Stempel: Eisberg (auf Wasser zielen)"],
+  ["badlands", "Badlands: Hänge in bunte Terrakotta-Schichten färben (Pinsel)"],
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
   ["ridge", "Hügelkette entlang der Pfad-Punkte"],
   ["lake", "See: Mulde bis zum Überlauf mit Wasser füllen (in die Mulde zielen)"],
@@ -87,7 +88,7 @@ export function stampAxis(vd, rot) {
 
 /** Natürliche Bodenblöcke, die das Biom-Malen umfärben darf (Bauwerke bleiben unberührt). */
 export const NATURAL =
-  /^minecraft:(grass_block|grass|dirt|coarse_dirt|grass_path|podzol|mycelium|dirt_with_roots|stone|andesite|diorite|granite|tuff|calcite|deepslate|sand|red_sand|gravel|snow|clay|mud|moss_block|cobblestone|mossy_cobblestone)$/;
+  /^minecraft:(grass_block|grass|dirt|coarse_dirt|grass_path|podzol|mycelium|dirt_with_roots|stone|andesite|diorite|granite|tuff|calcite|deepslate|sand|red_sand|gravel|snow|clay|mud|moss_block|cobblestone|mossy_cobblestone|sandstone|red_sandstone|hardened_clay|\w+_terracotta)$/;
 
 /**
  * Passende Oberfläche für eine Spalte (Biom-Malen).
@@ -373,6 +374,69 @@ function iceberg(ses, t, c) {
           const topHere = Math.hypot(dx, dz) > R * Math.pow(Math.max(0, 1 - (dy + 1) / (Ha + 0.5)), 0.7) * wob + 0.3;
           es.set(x, y, z, dy >= 0 && topHere ? SN : dy < -2 && hash01(x, z, y) < 0.3 ? BI : PI);
         }
+      yield;
+    }
+  });
+}
+
+/** Schichtfolge der Badlands (von unten nach oben, wiederholt sich). */
+export const MESA_BANDS = [
+  "minecraft:orange_terracotta",
+  "minecraft:orange_terracotta",
+  "minecraft:red_terracotta",
+  "minecraft:white_terracotta",
+  "minecraft:orange_terracotta",
+  "minecraft:brown_terracotta",
+  "minecraft:yellow_terracotta",
+  "minecraft:orange_terracotta",
+  "minecraft:light_gray_terracotta",
+  "minecraft:red_terracotta",
+  "minecraft:red_terracotta",
+  "minecraft:orange_terracotta",
+];
+
+/**
+ * Badlands-Pinsel: freiliegende Hänge im Radius in waagerechte Terrakotta-Schichten färben (leicht gewellt),
+ * flache Oberseiten werden roter Sand. Nur natürlicher Boden wird verändert.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function badlands(ses, t, c) {
+  const ctr = t.pos;
+  const R = c.radius;
+  runEdit(ses.player, { label: "Badlands", stroke: strokeId(ses, "terrain"), symmetry: true }, function* (es) {
+    /** @type {Map<string, number|null>} */
+    const hm = new Map();
+    const H = (/** @type {number} */ x, /** @type {number} */ z) => {
+      const k = x + "," + z;
+      if (!hm.has(k)) hm.set(k, groundY(es, x, z, ctr.y + 48, 96));
+      return hm.get(k) ?? null;
+    };
+    const RS = permOf("minecraft:red_sand");
+    let n = 0;
+    for (let dx = -R; dx <= R; dx++) {
+      for (let dz = -R; dz <= R; dz++) {
+        if (dx * dx + dz * dz > (R + 0.5) ** 2) continue;
+        const x = ctr.x + dx;
+        const z = ctr.z + dz;
+        const g = H(x, z);
+        if (g === null) continue;
+        let low = g;
+        for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nh = H(x + ox, z + oz);
+          if (nh !== null) low = Math.min(low, nh);
+        }
+        const wave = Math.round(fbm(x / 18 + 3.7, 0.5, z / 18 + 1.3, 2) * 2);
+        for (let y = g; y >= Math.min(g, low + 1) - 1 && y > g - 48; y--) {
+          const id = es.id(x, y, z);
+          if (!NATURAL.test(id)) break;
+          const flatTop = y === g && low >= g - 1;
+          const band = MESA_BANDS[(((y + wave) % MESA_BANDS.length) + MESA_BANDS.length) % MESA_BANDS.length];
+          es.set(x, y, z, flatTop ? RS : permOf(band));
+        }
+        if (++n % 64 === 0) yield;
+      }
       yield;
     }
   });
@@ -896,6 +960,7 @@ export const terrainTool = {
     if (c.mode === "waterfall") return waterfall(ses, t, c);
     if (c.mode === "rockarch") return rockArch(ses, t, c);
     if (c.mode === "iceberg") return iceberg(ses, t, c);
+    if (c.mode === "badlands") return badlands(ses, t, c);
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
     if (c.mode === "lake") return lake(ses, t);

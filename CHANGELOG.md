@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.47.0 – 24.10.2026 (nächtlicher Ausbau: Terraform)
+- **Badlands-Schichten:** neuer Terrain-Modus „Badlands“ – mit dem Pinsel über Felswände, Hänge und Hochplateaus
+  fahren: freiliegende Seiten werden in waagerechte, leicht gewellte Terrakotta-Schichten gefärbt (orange, rot, weiß,
+  braun, gelb, hellgrau – wie im Badlands-Biom), flache Oberseiten werden roter Sand. Passt perfekt zu den Stempeln
+  „Hochplateau“ und „Schlucht“
+
 ## 0.46.0 – 24.10.2026 (nächtlicher Ausbau: Formen)
 - **Leuchtturm-Baukasten:** neue Form „Leuchtturm“ – ein nach oben schmaler werdender Rundturm mit Streifen aus
   Muster 1 und Muster 2 (z.B. weiß/rot, Streifenhöhe über „Breite“), Tür, Galerie mit Eisengeländer, Laterne aus

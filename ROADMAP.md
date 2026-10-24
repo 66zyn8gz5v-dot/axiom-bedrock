@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.47: Badlands-Schichten
 - [x] v0.46: Leuchtturm-Baukasten
 - [x] v0.45: Gletscher und Eisberg
 - [x] v0.44: Tonnen- und Kreuzgewölbe
@@ -103,7 +104,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Trampelpfad aufs Gelände** (v0.41): Weg entlang Pfad-Punkten, der dem Boden folgt (Erdpfad/Kies, Ränder ausgefranst)
 - [x] **Inselgruppe** (v0.43): in einer Auswahl mehrere Inseln mit Stränden im Meer erzeugen
 - [x] **Eis & Gletscher** (v0.45): Eisberge im Wasser, Gletscherzunge mit Packeis und Schnee
-- [ ] **Badlands/Mesa-Schichten**: Hänge in farbige Terrakotta-Bänder einfärben (rot, orange, weiß, braun)
+- [x] **Badlands/Mesa-Schichten** (v0.47): Hänge in farbige Terrakotta-Bänder einfärben (rot, orange, weiß, braun)
 - [ ] **Sumpf**: flaches Wasser mit Schlamm, Seerosen, Schilf und Mangroven-Wurzeln in einer Fläche
 - [ ] **Lava-Vulkan**: Vulkan-Stempel wahlweise mit Lavasee im Krater, Basalt & Schwarzstein an den Flanken
 

@@ -1771,6 +1771,28 @@ console.log("Leuchtturm");
   dim.blocks.clear();
 }
 
+console.log("Badlands");
+{
+  dim.blocks.clear();
+  // Steile Felswand: x>=3 bis y 80 aus Stein
+  ses.sel = boxSel(dim.id, { x: 3, y: 65, z: -6 }, { x: 10, y: 80, z: 6 });
+  ops.opFill(ses, parsePattern("stone"));
+  await drain();
+  Object.assign(ses.s.terrain, { mode: "badlands", radius: 6 });
+  await roundTrip("Badlands", () => use("axiom:terrain", { x: 3, y: 72, z: 0 }));
+  await use("axiom:terrain", { x: 3, y: 72, z: 0 });
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const colors = new Set();
+  for (let y = 66; y <= 79; y++) colors.add(id(3, y, 0));
+  check([...colors].every((c) => c.endsWith("_terracotta")) && colors.size >= 3, "Badlands: Wand in bunten Schichten (" + colors.size + ")");
+  check(id(3, 72, 0) === id(3, 72, 1), "Badlands: Schichten waagerecht");
+  check(id(6, 80, 0) === "minecraft:red_sand" && id(6, 75, 0) === "minecraft:stone", "Badlands: oben roter Sand, innen bleibt Stein");
+  check(id(0, 64, 0) === "minecraft:red_sand" || id(0, 64, 0).endsWith("_terracotta") || id(0, 64, 0) === "minecraft:grass_block", "Badlands: Boden davor");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
