@@ -1840,6 +1840,39 @@ console.log("Sumpf");
   dim.blocks.clear();
 }
 
+console.log("Windmühle");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("white_concrete");
+  ses.s.pattern2 = parsePattern("spruce_planks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  Object.assign(ses.s.shape, { type: "windmill", rx: 3, ry: 6, rz: 3, anchor: "center", material: "single" });
+  await roundTrip("Windmühle", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  // Turm 13 hoch ab 65, Dach ab 78, Nabe vor dem Turm (z negativ, zum Spieler) auf y 76
+  check(id(3, 66, 0) === "minecraft:white_concrete" && id(0, 70, 0) === "minecraft:air", "Windmühle: hohler Turm");
+  check(id(0, 78, 0) === "minecraft:spruce_planks", "Windmühle: Kegeldach");
+  let wool = 0;
+  let hubZ = null;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id === "minecraft:white_wool") {
+      wool++;
+      hubZ ??= Number(k.split(",")[2]);
+    }
+  }
+  check(wool > 20 && hubZ !== null && hubZ < -2, "Windmühle: vier Flügel mit Segeln vor dem Turm (" + wool + ", z=" + hubZ + ")");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

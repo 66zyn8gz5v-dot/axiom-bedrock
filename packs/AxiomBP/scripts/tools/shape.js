@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["windmill", "Windmühle (Turm, Kegeldach, vier Flügel zu dir)"],
   ["well", "Brunnen (Schacht mit Wasser, Rand, Pfosten & Dach)"],
   ["lighthouse", "Leuchtturm (gestreift, Galerie, Laterne mit Licht)"],
   ["tower", "Turm (Rundturm mit Zinnen, Schießscharten, Spitzdach)"],
@@ -620,7 +621,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -809,6 +810,73 @@ function buildTower(ses, c) {
 }
 
 /**
+ * Windmühle: nach oben schmaler Rundturm (Muster 1) mit Tür, Kegeldach (Muster 2) und vier Flügeln auf der Seite,
+ * die zu dir zeigt – Holme aus Muster 2, Segel aus weißer Wolle. Radius X = Turmradius, Radius Y = Turmhöhe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildWindmill(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R0 = Math.max(2, c.rx);
+  const H = Math.max(8, 2 * c.ry + 1);
+  const wall = picker(ses.s.pattern);
+  const wood = picker(ses.s.pattern2);
+  const sail = BlockPermutation.resolve("minecraft:white_wool");
+  const A = air();
+  const d = cardinal(ses.player.getViewDirection(), true);
+  // Seitliche Richtung (quer zur Blickrichtung)
+  const sx = -d.z;
+  const sz = d.x;
+  const rTop = Math.max(1.5, R0 * 0.7);
+  runEdit(ses.player, { label: "Windmühle", symmetry: true }, function* (es) {
+    for (let y = 0; y < H; y++) {
+      const r = R0 + (rTop - R0) * (y / (H - 1));
+      for (let dx = -R0; dx <= R0; dx++)
+        for (let dz = -R0; dz <= R0; dz++) {
+          const dd = Math.hypot(dx, dz);
+          if (dd > r + 0.5) continue;
+          es.set(base.x + dx, base.y + y, base.z + dz, y === 0 || dd > r - 0.5 ? wall() : A);
+        }
+      yield;
+    }
+    for (let y = 1; y <= 2; y++) es.set(base.x - d.x * R0, base.y + y, base.z - d.z * R0, A);
+    // Kegeldach
+    const rr = Math.ceil(rTop) + 1;
+    for (let k = 0; k <= rr + 1; k++) {
+      const r = rr - k * (rr / (rr + 1));
+      for (let dx = -rr; dx <= rr; dx++) for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3) es.set(base.x + dx, base.y + H + k, base.z + dz, wood());
+    }
+    yield;
+    // Flügel: Nabe vor dem Turm (zum Spieler hin), vier Arme im Kreuz, Segel jeweils auf einer Seite
+    const off = Math.ceil(rTop) + 1;
+    const hub = { x: base.x - d.x * off, y: base.y + H - 2, z: base.z - d.z * off };
+    es.set(hub.x + d.x, hub.y, hub.z + d.z, wood()); // Achse zum Turm
+    es.set(hub.x, hub.y, hub.z, wood());
+    const L = Math.max(4, Math.round(H * 0.55));
+    /** @type {[number, number, number, number][]} Arm-Richtung (seitlich, hoch) und Segelseite */
+    const arms = [
+      [0, 1, 1, 0],
+      [0, -1, -1, 0],
+      [1, 0, 0, -1],
+      [-1, 0, 0, 1],
+    ];
+    for (const [ax, ay, ox, oy] of arms)
+      for (let i = 1; i <= L; i++) {
+        const lx = ax * i;
+        const ly = ay * i;
+        es.set(hub.x + sx * lx, hub.y + ly, hub.z + sz * lx, wood());
+        if (i >= 2)
+          for (let w = 1; w <= 2; w++) {
+            const qx = lx + ox * w;
+            const qy = ly + oy * w;
+            es.set(hub.x + sx * qx, hub.y + qy, hub.z + sz * qx, sail);
+          }
+      }
+  });
+}
+
+/**
  * Brunnen-Baukasten: in den Boden gegrabener Schacht mit Wasser, gemauerte Wand und Rand (Muster 1), zwei Pfosten,
  * Querbalken und kleines Satteldach (Muster 2). Rund oder – mit „Anzahl Ecken“ = 4 – eckig.
  * Radius X = Größe (innen Wasser), Radius Y = Tiefe des Schachts. Auf den Boden zielen.
@@ -935,6 +1003,7 @@ export const shapeTool = {
     if (c.type === "tower") return buildTower(ses, c);
     if (c.type === "lighthouse") return buildLighthouse(ses, c);
     if (c.type === "well") return buildWell(ses, c);
+    if (c.type === "windmill") return buildWindmill(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -985,7 +1054,7 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (["pillar", "winding", "tower", "lighthouse", "well"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

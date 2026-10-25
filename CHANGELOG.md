@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.50.0 – 26.10.2026 (nächtlicher Ausbau: Formen)
+- **Windmühle:** neue Form – ein nach oben schmaler werdender Rundturm aus Muster 1 mit Tür, ein Kegeldach aus
+  Muster 2 und vier große Flügel mit weißen Segeln auf der Seite, die zu dir zeigt (Holme aus Muster 2).
+  Radius X = Turmbreite, Radius Y = Höhe – die Flügel wachsen mit
+
 ## 0.49.0 – 25.10.2026 (nächtlicher Ausbau: Terraform)
 - **Sumpf:** neuer Terrain-Modus – auf den Boden zielen und benutzen. Im Radius entstehen flache, verschlungene
   Wasserläufe zwischen Schlamm- und Grasinseln (auf der Höhe des Blickziels), mit Seerosen, Seegras,
