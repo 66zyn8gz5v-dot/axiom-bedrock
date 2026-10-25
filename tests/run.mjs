@@ -1822,6 +1822,24 @@ console.log("Brunnen");
   dim.blocks.clear();
 }
 
+console.log("Sumpf");
+{
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "swamp", radius: 10 });
+  await roundTrip("Sumpf", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const count = {};
+  for (const p of dim.blocks.values()) count[p.type.id] = (count[p.type.id] ?? 0) + 1;
+  check((count["minecraft:water"] ?? 0) > 20 && (count["minecraft:mud"] ?? 0) > 10, "Sumpf: Wasser und Schlamm " + JSON.stringify({ w: count["minecraft:water"], m: count["minecraft:mud"] }));
+  check((count["minecraft:waterlily"] ?? 0) > 0 && (count["minecraft:reeds"] ?? 0) + (count["minecraft:mangrove_roots"] ?? 0) > 0, "Sumpf: Seerosen und Schilf/Wurzeln");
+  let above = 0;
+  for (const [k, p] of dim.blocks) if (p.type.id === "minecraft:water" && Number(k.split(",")[1]) > 64) above++;
+  check(above === 0, "Sumpf: Wasser nur bis zur Zielhöhe");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

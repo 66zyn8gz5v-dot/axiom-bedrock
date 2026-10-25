@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.49.0 – 25.10.2026 (nächtlicher Ausbau: Terraform)
+- **Sumpf:** neuer Terrain-Modus – auf den Boden zielen und benutzen. Im Radius entstehen flache, verschlungene
+  Wasserläufe zwischen Schlamm- und Grasinseln (auf der Höhe des Blickziels), mit Seerosen, Seegras,
+  Mangrovenwurzeln im Wasser und Schilf (Zuckerrohr) und Gras am Ufer. Zum Rand hin wird es trockener, damit der
+  Sumpf weich ins Umland übergeht
+
 ## 0.48.0 – 25.10.2026 (nächtlicher Ausbau: Formen)
 - **Brunnen-Baukasten:** neue Form „Brunnen“ – auf den Boden zielen: ein Schacht wird gegraben und mit Wasser
   gefüllt, Wand und Rand aus Muster 1 (z.B. Bruchstein), zwei Pfosten, Querbalken und ein kleines Dach aus Muster 2

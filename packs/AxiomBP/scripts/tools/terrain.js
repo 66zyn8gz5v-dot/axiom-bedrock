@@ -31,6 +31,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
   ["glacier", "Stempel: Gletscher (Eiszunge in Blickrichtung)"],
   ["iceberg", "Stempel: Eisberg (auf Wasser zielen)"],
+  ["swamp", "Sumpf: Wasserläufe, Schlamm, Seerosen, Schilf (auf den Boden zielen)"],
   ["badlands", "Badlands: Hänge in bunte Terrakotta-Schichten färben (Pinsel)"],
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
   ["ridge", "Hügelkette entlang der Pfad-Punkte"],
@@ -375,6 +376,69 @@ function iceberg(ses, t, c) {
           es.set(x, y, z, dy >= 0 && topHere ? SN : dy < -2 && hash01(x, z, y) < 0.3 ? BI : PI);
         }
       yield;
+    }
+  });
+}
+
+/**
+ * Sumpf: Fläche im Radius wird zu flachen Wasserläufen und Schlamminseln auf Höhe des Blickziels.
+ * Dazu Seerosen, Seegras, Mangrovenwurzeln im Wasser und Schilf (Zuckerrohr) und Gras am Ufer.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function swamp(ses, t, c) {
+  const ctr = t.pos;
+  const R = Math.max(3, c.radius);
+  const wl = ctr.y;
+  const seed = Math.floor(Math.random() * 100000);
+  runEdit(ses.player, { label: "Sumpf", symmetry: true }, function* (es) {
+    /** @type {Map<string, {g:number, wet:boolean, deep:boolean, high:boolean}>} */
+    const cols = new Map();
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++) {
+        const d = Math.hypot(dx, dz);
+        if (d > R + 0.5) continue;
+        const x = ctr.x + dx;
+        const z = ctr.z + dz;
+        const g = groundY(es, x, z, wl + 16, 40);
+        if (g === null || !NATURAL.test(es.id(x, g, z))) continue;
+        const n = fbm(x / 6 + seed, 0.3, z / 6, 2) + Math.pow(d / (R + 0.5), 3) * 0.8;
+        cols.set(x + "," + z, { g, wet: n < 0.08, deep: n < -0.2, high: n > 0.35 });
+      }
+    yield;
+    const P = permOf;
+    const W = P("minecraft:water");
+    const A = air();
+    const near = (/** @type {number} */ x, /** @type {number} */ z) =>
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oz]) => cols.get(x + ox + "," + (z + oz))?.wet);
+    let n = 0;
+    for (const [k, col] of cols) {
+      const [x, z] = k.split(",").map(Number);
+      const r = hash01(x, z, seed);
+      for (let y = col.g; y > wl + 1; y--) es.set(x, y, z, A);
+      if (col.wet) {
+        const bottom = wl - (col.deep ? 2 : 1);
+        for (let y = Math.min(col.g, bottom); y < bottom; y++) es.set(x, y, z, P("minecraft:dirt"));
+        es.set(x, bottom, z, P("minecraft:mud"));
+        for (let y = bottom + 1; y <= wl; y++) es.set(x, y, z, W);
+        es.set(x, wl + 1, z, A);
+        if (r < 0.06 && near(x, z)) {
+          for (let y = bottom + 1; y <= wl + 1; y++) es.set(x, y, z, P("minecraft:mangrove_roots"));
+        } else if (r < 0.2) es.set(x, wl + 1, z, P("minecraft:waterlily"));
+        else if (r < 0.32 && wl - bottom >= 2) es.set(x, bottom + 1, z, P("minecraft:seagrass"));
+      } else {
+        const top = col.high ? wl + 1 : wl;
+        for (let y = Math.min(col.g, top); y < top; y++) es.set(x, y, z, P("minecraft:dirt"));
+        es.set(x, top, z, P(col.high || r > 0.45 ? "minecraft:grass_block" : "minecraft:mud"));
+        if (top === wl + 1) es.set(x, wl + 1, z, P("minecraft:grass_block"));
+        const above = top + 1;
+        if (near(x, z) && r < 0.18) {
+          const h = 1 + Math.floor(hash01(z, x, seed) * 3);
+          for (let i = 0; i < h; i++) es.set(x, above + i, z, P("minecraft:reeds"));
+        } else if (r > 0.6 && r < 0.8) es.set(x, above, z, P("minecraft:short_grass"));
+      }
+      if (++n % 64 === 0) yield;
     }
   });
 }
@@ -951,7 +1015,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if ([...STAMP_MODES, "waterfall", "ridge", "lake", "plant"].includes(c.mode)) {
+    if ([...STAMP_MODES, "waterfall", "ridge", "lake", "plant", "swamp"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -961,6 +1025,7 @@ export const terrainTool = {
     if (c.mode === "rockarch") return rockArch(ses, t, c);
     if (c.mode === "iceberg") return iceberg(ses, t, c);
     if (c.mode === "badlands") return badlands(ses, t, c);
+    if (c.mode === "swamp") return swamp(ses, t, c);
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
     if (c.mode === "lake") return lake(ses, t);
