@@ -217,6 +217,78 @@ function buildRiver(ses) {
 }
 
 /**
+ * Hängebrücke vom ersten zum letzten Punkt: gerader Belag (Muster 1), an beiden Enden Pfeilertürme (Muster 2) bis
+ * zum Boden, Tragketten im Bogen von Turm zu Turm und senkrechte Hängeketten zum Belag.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, tower:number}} o
+ */
+export function buildSuspension(ses, o) {
+  const pts = ses.pathPoints;
+  if (pts.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen (Anfang und Ende der Brücke).");
+  const A0 = pts[0];
+  const A1 = pts[pts.length - 1];
+  const dx = A1.x - A0.x;
+  const dz = A1.z - A0.z;
+  const L = Math.hypot(dx, dz);
+  if (L < 4) return err(ses.player, "Die Brücke muss mindestens 4 Blöcke lang sein.");
+  const ux = dx / L;
+  const uz = dz / L;
+  const W = Math.max(0, Math.floor((o.width - 1) / 2));
+  const TH = Math.max(4, o.tower);
+  const deck = picker(ses.s.pattern);
+  const pylon = picker(ses.s.pattern2);
+  let chain;
+  try {
+    chain = BlockPermutation.resolve("minecraft:chain");
+  } catch {
+    chain = BlockPermutation.resolve("minecraft:iron_bars");
+  }
+  runEdit(ses.player, { label: "Hängebrücke", symmetry: true }, function* (es) {
+    const at = (/** @type {number} */ s, /** @type {number} */ side) => ({
+      x: Math.round(A0.x + ux * s - uz * side),
+      z: Math.round(A0.z + uz * s + ux * side),
+      y: Math.round(A0.y + ((A1.y - A0.y) * s) / L) - 1,
+    });
+    // Belag
+    for (let s = 0; s <= L; s += 0.5) {
+      for (let k = -W; k <= W; k++) {
+        const p = at(s, k);
+        es.set(p.x, p.y, p.z, deck());
+      }
+    }
+    yield;
+    // Türme an beiden Enden, jeweils links und rechts neben dem Belag
+    for (const s of [0, L])
+      for (const side of [-(W + 1), W + 1]) {
+        const p = at(s, side);
+        for (let y = p.y + TH; y >= p.y - 40; y--) {
+          if (y < p.y) {
+            const id = es.id(p.x, y, p.z);
+            if (id && isSolidId(id)) break;
+          }
+          es.set(p.x, y, p.z, pylon());
+        }
+      }
+    yield;
+    // Tragketten (Bogen nach unten) und Hängeketten
+    for (const side of [-(W + 1), W + 1]) {
+      let lastHanger = -9;
+      for (let s = 0.5; s < L; s += 0.5) {
+        const p = at(s, side);
+        const t = (2 * s) / L - 1;
+        const cy = p.y + 1 + Math.round((TH - 1) * t * t);
+        es.set(p.x, cy, p.z, chain);
+        if (s - lastHanger >= 2 && cy > p.y + 1) {
+          lastHanger = s;
+          for (let y = p.y + 1; y < cy; y++) es.set(p.x, y, p.z, chain);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Bogengang (Arkaden) entlang der Punkte: Säulen aus Muster 2 im festen Abstand, dazwischen Rundbögen aus Muster 1,
  * oben ein durchgehender Balken. Die Unterkante folgt der Höhe der Punkte.
  * @param {import("../core/state.js").Session} ses
@@ -393,6 +465,26 @@ export const pathTool = {
           Object.assign(c, { width: r.width, depth: r.depth, bed: String(r.bed) || "sand", banks: r.banks });
           markDirty(ses);
           buildRiver(ses);
+        },
+      },
+      {
+        text: "Hängebrücke vom ersten zum letzten Punkt",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.suspension;
+          const r = await new Modal("Hängebrücke")
+            .slider("width", "Breite des Belags", 1, 7, 1, c.width)
+            .slider("tower", "Höhe der Türme über dem Belag", 4, 24, 1, c.tower)
+            .toggle("pat", "Danach Blöcke wählen (Belag = Muster 1, Türme = Muster 2)", false)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { width: r.width, tower: r.tower });
+          markDirty(ses);
+          if (r.pat) {
+            await patternMenu(ses);
+            await patternMenu(ses, "pattern2");
+          }
+          buildSuspension(ses, c);
         },
       },
       {

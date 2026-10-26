@@ -1897,6 +1897,33 @@ console.log("Lava-Vulkan");
   dim.blocks.clear();
 }
 
+console.log("Hängebrücke");
+{
+  const { buildSuspension } = await import("../packs/AxiomBP/scripts/tools/path.js");
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("oak_planks");
+  ses.s.pattern2 = parsePattern("stone_bricks");
+  ses.pathPoints = [{ x: 0, y: 71, z: 0 }, { x: 20, y: 71, z: 0 }];
+  await roundTrip("Hängebrücke", () => buildSuspension(ses, { width: 3, tower: 8 }));
+  buildSuspension(ses, { width: 3, tower: 8 });
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  check(id(10, 70, 0) === "minecraft:oak_planks" && id(10, 70, 1) === "minecraft:oak_planks" && id(10, 69, 0) === "minecraft:air", "Hängebrücke: Belag frei in der Luft");
+  check(id(0, 78, 2) === "minecraft:stone_bricks" && id(0, 66, 2) === "minecraft:stone_bricks" && id(20, 78, -2) === "minecraft:stone_bricks", "Hängebrücke: Türme bis zum Boden");
+  check(id(10, 71, 2) === "minecraft:chain" && id(3, 75, 2) === "minecraft:chain", "Hängebrücke: Ketten im Bogen");
+  ses.pathPoints = [{ x: 0, y: 71, z: 0 }, { x: 2, y: 71, z: 0 }];
+  const m0 = player.messages.length;
+  buildSuspension(ses, { width: 3, tower: 8 });
+  check(player.messages.slice(m0).some((m) => m.includes("4 Blöcke")), "Hängebrücke: zu kurz wird abgelehnt");
+  await undo();
+  ses.pathPoints = [];
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

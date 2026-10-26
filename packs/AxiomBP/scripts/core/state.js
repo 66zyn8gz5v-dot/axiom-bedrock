@@ -41,6 +41,7 @@ export function defaultSettings() {
     gradient: { axis: "y", blend: 3, reverse: false },
     thin: { percent: 30, replace: false },
     trail: { width: 3, style: "dirt" },
+    suspension: { width: 3, tower: 8 },
     arcade: { span: 6, height: 4, depth: 1 },
     coast: { width: 8, side: "right", style: "beach", cliff: 6 },
     islands: { count: 4, size: 45, sea: 40 },

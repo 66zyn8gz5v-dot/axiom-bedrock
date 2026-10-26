@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.52.0 – 27.10.2026 (nächtlicher Ausbau: Formen)
+- **Hängebrücke:** mit dem Pfad-Werkzeug Anfang und Ende der Brücke setzen (z.B. an zwei Klippenrändern), dann im
+  Pfad-Menü „Hängebrücke vom ersten zum letzten Punkt“. Es entstehen ein gerader Belag aus Muster 1, an beiden Enden
+  Pfeilertürme aus Muster 2 bis hinunter zum Boden, Tragketten, die sich von Turm zu Turm durchhängen, und
+  senkrechte Hängeketten zum Belag. Einstellbar: Breite des Belags und Turmhöhe
+
 ## 0.51.0 – 26.10.2026 (nächtlicher Ausbau: Terraform)
 - **Lava-Vulkan:** im Terrain-Menü „Vulkan-Stempel: mit Lavasee, Basalt & Magma“ einschalten, dann den Stempel
   „Vulkan“ setzen. Im Krater steht ein Lavasee (nie höher als der niedrigste Kraterrand – es läuft nichts über),
