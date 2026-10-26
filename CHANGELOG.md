@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.51.0 – 26.10.2026 (nächtlicher Ausbau: Terraform)
+- **Lava-Vulkan:** im Terrain-Menü „Vulkan-Stempel: mit Lavasee, Basalt & Magma“ einschalten, dann den Stempel
+  „Vulkan“ setzen. Im Krater steht ein Lavasee (nie höher als der niedrigste Kraterrand – es läuft nichts über),
+  am Rand glüht Magma, die Flanken sind aus Basalt und Schwarzstein. Ausgeschaltet bleibt der Vulkan wie bisher
+
 ## 0.50.0 – 26.10.2026 (nächtlicher Ausbau: Formen)
 - **Windmühle:** neue Form – ein nach oben schmaler werdender Rundturm aus Muster 1 mit Tür, ein Kegeldach aus
   Muster 2 und vier große Flügel mit weißen Segeln auf der Seite, die zu dir zeigt (Holme aus Muster 2).

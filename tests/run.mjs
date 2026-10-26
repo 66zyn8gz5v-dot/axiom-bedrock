@@ -1873,6 +1873,30 @@ console.log("Windmühle");
   dim.blocks.clear();
 }
 
+console.log("Lava-Vulkan");
+{
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "volcano", radius: 10, strength: 3, lava: true, jag: 6, rot: 0, stretch: 10, biome: false, falloff: true });
+  await roundTrip("Lava-Vulkan", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const count = {};
+  for (const p of dim.blocks.values()) count[p.type.id] = (count[p.type.id] ?? 0) + 1;
+  check((count["minecraft:lava"] ?? 0) > 0, "Lava-Vulkan: Lavasee im Krater (" + (count["minecraft:lava"] ?? 0) + ")");
+  check((count["minecraft:basalt"] ?? 0) + (count["minecraft:blackstone"] ?? 0) > 30 && (count["minecraft:magma"] ?? 0) > 0, "Lava-Vulkan: Basalt, Schwarzstein, Magma");
+  let lavaHigh = 0;
+  for (const [k, p] of dim.blocks) if (p.type.id === "minecraft:lava" && Number(k.split(",")[1]) > 64 + Math.round(3 * 5 * 0.82) - 2) lavaHigh++;
+  check(lavaHigh === 0, "Lava-Vulkan: Lava läuft nicht über den Rand");
+  await undo();
+  ses.s.terrain.lava = false;
+  await use("axiom:terrain", G);
+  let lava = 0;
+  for (const p of dim.blocks.values()) if (p.type.id === "minecraft:lava") lava++;
+  check(lava === 0, "Vulkan ohne Lava wie bisher");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, jag: 3 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

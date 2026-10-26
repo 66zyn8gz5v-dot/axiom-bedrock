@@ -1066,7 +1066,7 @@ export const terrainTool = {
       };
       /** @type {Map<string, number>|null} */
       const eroded = c.mode === "rain" ? rainErosion(H, ctr.x, ctr.z, R, c.strength) : null;
-      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string, fillOverride?:string}[]} */
+      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string, fillOverride?:string, lavaTo?:number}[]} */
       const plan = [];
       /** @type {Map<string, number>} */
       const newH = new Map();
@@ -1100,6 +1100,8 @@ export const terrainTool = {
           let topOverride;
           /** @type {string|undefined} */
           let fillOverride;
+          /** @type {number|undefined} Lava bis zu dieser Höhe auffüllen */
+          let lavaTo;
           let target = h;
           switch (c.mode) {
             case "raise":
@@ -1147,6 +1149,15 @@ export const terrainTool = {
               const cone = c.strength * 5 * Math.max(0, 1 - q);
               const pit = q < 0.18 ? c.strength * 2.5 * (1 - q / 0.18) : 0;
               target = h + Math.round(cone - pit);
+              if (c.lava) {
+                // Lava-Vulkan: Basalt & Schwarzstein an den Flanken, Magma am Kraterrand, Lavasee im Krater
+                fillOverride = "minecraft:blackstone";
+                if (q < 0.18) topOverride = "minecraft:magma";
+                else if (q < 0.3) topOverride = hash01(x, z, 7) < 0.5 ? "minecraft:magma" : "minecraft:blackstone";
+                else if (q < 0.75) topOverride = hash01(x, z, 8) < 0.5 ? "minecraft:basalt" : "minecraft:blackstone";
+                if (q < 0.18) lavaTo = h + Math.round(c.strength * 5 * 0.82) - 2;
+                else if (q < 0.3) lavaTo = -Infinity; // Kraterrand (für die Begrenzung unten)
+              }
               break;
             }
             case "mesa": {
@@ -1245,7 +1256,7 @@ export const terrainTool = {
             target = h + Math.round((target - h) * Math.max(0, 1 + n * c.jag * 0.12));
           }
           if (target === h && !topOverride && !c.biome) continue;
-          plan.push({ x, z, h, target, topOverride, fillOverride });
+          plan.push({ x, z, h, target, topOverride, fillOverride, lavaTo });
           newH.set(x + "," + z, target);
         }
         yield;
@@ -1308,6 +1319,16 @@ export const terrainTool = {
         }
         if (++n % 64 === 0) yield;
       }
+      // Lavasee im Krater (nur Luft wird zu Lava)
+      const lava = perm("minecraft:lava");
+      // Nie höher als der niedrigste Kraterrand (auch mit Zackigkeit) – sonst liefe die Lava über
+      let rim = Infinity;
+      for (const q of plan) if (q.lavaTo === -Infinity) rim = Math.min(rim, q.target);
+      for (const { x, z, target, lavaTo: lt } of plan) {
+        if (lt === undefined || lt === -Infinity) continue;
+        const lavaTo = Math.min(lt, rim - 1);
+        for (let y = target + 1; y <= lavaTo; y++) if (es.id(x, y, z) === "minecraft:air") es.set(x, y, z, lava);
+      }
       if (c.mode === "fields") {
         // Stützmauern: wo der Nachbar tiefer liegt, wird die freie Seite der Stufe gemauert
         const wall = perm(c.wall || "minecraft:stone_bricks");
@@ -1357,6 +1378,7 @@ export const terrainTool = {
       .slider("radius", "Radius", 1, 32, 1, c.radius)
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
       .text("wall", "Terrassenfelder: Mauerblock", "stone_bricks", (c.wall ?? "minecraft:stone_bricks").replace("minecraft:", ""))
+      .toggle("lava", "Vulkan-Stempel: mit Lavasee, Basalt & Magma", c.lava ?? false)
       .dropdown("veg", "Bepflanzen: Art (Stärke = Dichte)", VEGETATION, c.veg ?? "mix")
       .dropdown("brush", "Pinselform (Anheben, Absenken, Einebnen, Glätten, Hügel, Terrassen)", BRUSHES, c.falloff === false ? "hard" : c.brush ?? "soft")
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)
