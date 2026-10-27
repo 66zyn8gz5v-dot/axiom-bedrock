@@ -1949,6 +1949,31 @@ console.log("Wasserfall-Kaskade");
   dim.blocks.clear();
 }
 
+console.log("Gerade Treppe");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("oak_planks");
+  Object.assign(ses.s.shape, { type: "straight", rx: 1 });
+  ses.shapeA = undefined;
+  const snap = dim.snapshot();
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  check(eqSnap(snap, dim.snapshot()) && !!ses.shapeA, "Gerade Treppe: erster Klick merkt Punkt A");
+  await roundTrip("Gerade Treppe", () => use("axiom:shape", { x: 20, y: 75, z: 2 }));
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 20, y: 75, z: 2 });
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  // A = (0,65,0), B = (20,76,2) → 11 Stufen in +x, Podest nach 8 Stufen
+  check(id(0, 65, 0) === "minecraft:oak_stairs" && id(1, 66, 0) === "minecraft:oak_stairs" && id(1, 66, 1) === "minecraft:oak_stairs", "Gerade Treppe: Stufen aus Eichentreppen, 3 breit");
+  check(id(8, 72, 0) === "minecraft:oak_planks" && id(9, 72, 0) === "minecraft:oak_planks" && id(10, 73, 0) === "minecraft:oak_stairs", "Gerade Treppe: Podest nach 8 Stufen");
+  check(id(5, 66, 0) === "minecraft:oak_planks", "Gerade Treppe: massive Wange darunter");
+  check(dim._get(0, 65, 0).getAllStates().weirdo_direction === 0, "Gerade Treppe: Stufen steigen nach Osten an");
+  await undo();
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

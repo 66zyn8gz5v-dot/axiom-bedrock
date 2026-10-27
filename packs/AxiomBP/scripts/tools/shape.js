@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["straight", "Gerade Treppe mit Podest (Punkt A unten, Punkt B oben)"],
   ["windmill", "Windmühle (Turm, Kegeldach, vier Flügel zu dir)"],
   ["well", "Brunnen (Schacht mit Wasser, Rand, Pfosten & Dach)"],
   ["lighthouse", "Leuchtturm (gestreift, Galerie, Laterne mit Licht)"],
@@ -621,7 +622,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -805,6 +806,76 @@ function buildTower(ses, c) {
           for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3 || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, roof());
         yield;
       }
+    }
+  });
+}
+
+/**
+ * Gerade Treppe: 1. Benutzen = Punkt A (unten), 2. Benutzen = Punkt B (oben). Die Treppe läuft in der Hauptrichtung
+ * von A nach B und steigt bis zur Höhe von B. Alle 8 Stufen ein Podest (2 Blöcke flach). Stufen aus echten
+ * Treppenblöcken passend zu Muster 1, darunter eine massive Wange aus Muster 1. Breite = 2 × Radius X + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildStraightStairs(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.adjacent : t.pos;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, `Treppe: unten (Punkt A) gesetzt – jetzt auf die obere Stelle (Punkt B) zielen und benutzen.`);
+  }
+  let A = ses.shapeA;
+  let B = p;
+  ses.shapeA = undefined;
+  if (B.y < A.y) [A, B] = [B, A];
+  const rise = B.y - A.y;
+  if (rise < 1) return err(ses.player, "Punkt B muss höher liegen als Punkt A.");
+  const ddx = B.x - A.x;
+  const ddz = B.z - A.z;
+  const [sx, sz] = Math.abs(ddx) >= Math.abs(ddz) ? [Math.sign(ddx) || 1, 0] : [0, Math.sign(ddz) || 1];
+  const dir = STAIR_DIRS.find(([a, b]) => a === sx && b === sz)?.[2] ?? 0;
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:stone";
+  let stairId = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:stone_stairs";
+  }
+  const step = BlockPermutation.resolve(stairId, { weirdo_direction: dir, upside_down_bit: false });
+  const solid = picker(ses.s.pattern);
+  const W = Math.max(0, c.rx);
+  // seitliche Richtung
+  const qx = -sz;
+  const qz = sx;
+  runEdit(ses.player, { label: "Gerade Treppe", symmetry: true }, function* (es) {
+    let along = 0;
+    for (let k = 0; k < rise; k++) {
+      // Podest nach je 8 Stufen (nicht am Anfang)
+      if (k > 0 && k % 8 === 0) {
+        for (let pl = 0; pl < 2; pl++) {
+          for (let w = -W; w <= W; w++) {
+            const x = A.x + sx * along + qx * w;
+            const z = A.z + sz * along + qz * w;
+            for (let y = A.y; y < A.y + k; y++) es.set(x, y, z, solid());
+          }
+          along++;
+        }
+      }
+      const y = A.y + k;
+      for (let w = -W; w <= W; w++) {
+        const x = A.x + sx * along + qx * w;
+        const z = A.z + sz * along + qz * w;
+        for (let yy = A.y; yy < y; yy++) es.set(x, yy, z, solid());
+        es.set(x, y, z, step);
+      }
+      along++;
+      yield;
+    }
+    // Austritt oben: ein flacher Block auf Höhe B
+    for (let w = -W; w <= W; w++) {
+      const x = A.x + sx * along + qx * w;
+      const z = A.z + sz * along + qz * w;
+      for (let yy = A.y; yy < B.y; yy++) es.set(x, yy, z, solid());
     }
   });
 }
@@ -1004,6 +1075,7 @@ export const shapeTool = {
     if (c.type === "lighthouse") return buildLighthouse(ses, c);
     if (c.type === "well") return buildWell(ses, c);
     if (c.type === "windmill") return buildWindmill(ses, c);
+    if (c.type === "straight") return buildStraightStairs(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1054,7 +1126,8 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

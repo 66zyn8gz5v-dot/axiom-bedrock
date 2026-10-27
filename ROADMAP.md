@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.54: Gerade Treppe mit Podest
 - [x] v0.53: Wasserfall-Kaskade
 - [x] v0.52: Hängebrücke
 - [x] v0.51: Lava-Vulkan
@@ -143,7 +144,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Brunnen-Baukasten** (v0.48): runder oder eckiger Brunnen mit Wasser, Rand und Dach
 - [x] **Windmühle** (v0.50)
 - [x] **Brücken-Baukasten mit Türmen** (v0.52): Hängebrücke mit Seilen (Ketten) und Pfeilertürmen entlang Pfad-Punkten
-- [ ] **Treppenhaus**: gerade Treppe zwischen zwei Punkten aus echten Treppenblöcken mit Podest
+- [x] **Treppenhaus** (v0.54): gerade Treppe zwischen zwei Punkten aus echten Treppenblöcken mit Podest
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

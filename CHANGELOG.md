@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.54.0 – 28.10.2026 (nächtlicher Ausbau: Formen)
+- **Gerade Treppe:** neue Form – 1. Benutzen auf den Fuß der Treppe (Punkt A), 2. Benutzen auf die obere Stelle
+  (Punkt B). Die Treppe läuft in Hauptrichtung von A nach B hinauf bis zur Höhe von B, aus echten Treppenblöcken
+  passend zum Muster (Holz → Holztreppe, Stein → Steintreppe …), mit massiver Wange darunter und alle 8 Stufen einem
+  Podest. Breite = 2 × Radius X + 1. Schlagen verwirft Punkt A
+
 ## 0.53.0 – 27.10.2026 (nächtlicher Ausbau: Terraform)
 - **Wasserfall-Kaskade:** mit dem Pfad-Werkzeug einen Hang hinunter Punkte setzen (oben anfangen), dann im
   Pfad-Menü „Wasserfall-Kaskade entlang der Punkte“. An jedem Punkt entsteht ein Becken mit Wasser, Kiesgrund und
