@@ -145,6 +145,8 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Windmühle** (v0.50)
 - [x] **Brücken-Baukasten mit Türmen** (v0.52): Hängebrücke mit Seilen (Ketten) und Pfeilertürmen entlang Pfad-Punkten
 - [x] **Treppenhaus** (v0.54): gerade Treppe zwischen zwei Punkten aus echten Treppenblöcken mit Podest
+- [ ] **Stadtmauer entlang Pfad-Punkten**: Mauer mit Zinnen, Wehrgang und Türmen an den Ecken
+- [ ] **Pavillon**: runder oder achteckiger Pavillon mit Säulen, Geländer und Kuppel-/Zeltdach
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
