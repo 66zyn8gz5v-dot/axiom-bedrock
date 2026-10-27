@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.53.0 – 27.10.2026 (nächtlicher Ausbau: Terraform)
+- **Wasserfall-Kaskade:** mit dem Pfad-Werkzeug einen Hang hinunter Punkte setzen (oben anfangen), dann im
+  Pfad-Menü „Wasserfall-Kaskade entlang der Punkte“. An jedem Punkt entsteht ein Becken mit Wasser, Kiesgrund und
+  bemoostem Rand, dazwischen eine Rinne, durch die das Wasser zum nächsten Becken läuft – wo das Gelände eine Stufe
+  hat, wird daraus ein Wasserfall. Beckengröße einstellbar
+
 ## 0.52.0 – 27.10.2026 (nächtlicher Ausbau: Formen)
 - **Hängebrücke:** mit dem Pfad-Werkzeug Anfang und Ende der Brücke setzen (z.B. an zwei Klippenrändern), dann im
   Pfad-Menü „Hängebrücke vom ersten zum letzten Punkt“. Es entstehen ein gerader Belag aus Muster 1, an beiden Enden

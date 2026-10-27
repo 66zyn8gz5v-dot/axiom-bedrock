@@ -176,7 +176,7 @@ PAGES = [
     (
         [("h", "6. Pfad & Co."),
          ("tool", "path", "Pfad", "Benutzen setzt Punkte. Schleichen + Benutzen zum Bauen."),
-         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Küste · Trampelpfad · Hügel · Bogengang · Hängebrücke"),
+         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Kaskade · Küste · Pfad · Hügel · Bogengang · Hängebrücke"),
          ("img", "bridge")],
         [("h", "Text & Pixel-Art"),
          ("tool", "text", "Text", "Schreibt Wörter aus Blöcken – an die Wand oder auf den Boden."),

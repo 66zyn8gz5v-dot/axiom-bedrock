@@ -894,6 +894,74 @@ export function trail(ses, o) {
   });
 }
 
+/**
+ * Wasserfall-Kaskade entlang der Pfad-Punkte (von oben nach unten setzen): an jedem Punkt ein Becken mit Wasser,
+ * dazwischen eine Rinne im Boden, in der das Wasser zum nächsten Becken hinunterläuft. Stufen im Gelände werden so
+ * zu Wasserfällen. Rand der Becken aus bemoostem Bruchstein.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{pool:number}} o
+ */
+export function cascade(ses, o) {
+  const pts = ses.pathPoints;
+  if (pts.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug Punkte setzen – oben anfangen, unten aufhören.");
+  const r = Math.max(1, o.pool);
+  runEdit(ses.player, { label: "Wasserfall-Kaskade", symmetry: true }, function* (es) {
+    const W = permOf("minecraft:water");
+    const RIM = permOf("minecraft:mossy_cobblestone");
+    const BED = permOf("minecraft:gravel");
+    const A = air();
+    /** @param {number} x @param {number} z @param {number} near */
+    const ground = (x, z, near) => groundY(es, x, z, near + 12, 40);
+    // Becken
+    /** @type {Set<string>} */
+    const poolCols = new Set();
+    for (const p of pts) {
+      const g = ground(p.x, p.z, p.y);
+      if (g === null) continue;
+      for (let dx = -r - 1; dx <= r + 1; dx++)
+        for (let dz = -r - 1; dz <= r + 1; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > r + 1.5) continue;
+          const x = p.x + dx;
+          const z = p.z + dz;
+          if (d > r + 0.5) {
+            // Rand auf Wasserhöhe, damit nichts seitlich ausläuft
+            es.set(x, g, z, RIM);
+            continue;
+          }
+          poolCols.add(x + "," + z);
+          for (let y = g + 1; y <= g + 3; y++) es.set(x, y, z, A);
+          es.set(x, g - 2, z, BED);
+          es.set(x, g - 1, z, W);
+          es.set(x, g, z, W);
+        }
+      yield;
+    }
+    // Rinnen zwischen den Becken
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const L = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z)));
+      let lastSource = -99;
+      for (let s = 0; s <= L; s++) {
+        const x = Math.round(a.x + ((b.x - a.x) * s) / L);
+        const z = Math.round(a.z + ((b.z - a.z) * s) / L);
+        if (poolCols.has(x + "," + z)) continue;
+        const g = ground(x, z, Math.round(a.y + ((b.y - a.y) * s) / L));
+        if (g === null) continue;
+        for (let y = g + 1; y <= g + 2; y++) es.set(x, y, z, A);
+        es.set(x, g - 1, z, BED);
+        // Quellen in Abständen, damit das Wasser auch über lange Strecken fließt
+        if (s - lastSource >= 6) {
+          es.set(x, g, z, W);
+          lastSource = s;
+        } else es.set(x, g, z, A);
+      }
+      yield;
+    }
+  });
+}
+
 export const VEGETATION = /** @type {[string,string][]} */ ([
   ["mix", "Gemischt (Bäume, Büsche, Wiese)"],
   ["forest", "Laubwald (dicht, Eiche & Birke)"],

@@ -1924,6 +1924,31 @@ console.log("Hängebrücke");
   dim.blocks.clear();
 }
 
+console.log("Wasserfall-Kaskade");
+{
+  const { cascade } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  dim.blocks.clear();
+  // Treppenförmiger Hang: x 0..5 Höhe 72, 6..11 Höhe 68, ab 12 flach (64)
+  for (let x = 0; x <= 11; x++)
+    for (let z = -4; z <= 4; z++) {
+      const h = x <= 5 ? 72 : 68;
+      for (let y = 65; y <= h; y++) dim._set(x, y, z, BlockPermutation.resolve(y === h ? "minecraft:grass_block" : "minecraft:dirt"));
+    }
+  ses.pathPoints = [{ x: 2, y: 73, z: 0 }, { x: 8, y: 69, z: 0 }, { x: 16, y: 65, z: 0 }];
+  await roundTrip("Kaskade", () => cascade(ses, { pool: 1 }));
+  cascade(ses, { pool: 1 });
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  check(id(2, 72, 0) === "minecraft:water" && id(8, 68, 0) === "minecraft:water" && id(16, 64, 0) === "minecraft:water", "Kaskade: Becken auf jeder Stufe");
+  check(id(2, 70, 0) === "minecraft:gravel" && id(2, 72, 2) === "minecraft:mossy_cobblestone", "Kaskade: Kiesboden und bemooster Rand");
+  let groove = 0;
+  for (let x = 4; x <= 14; x++) for (let y = 62; y <= 73; y++) if (id(x, y, 0) === "minecraft:gravel") groove++;
+  check(groove >= 5, "Kaskade: Rinnen zwischen den Becken (" + groove + ")");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

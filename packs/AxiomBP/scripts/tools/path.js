@@ -568,6 +568,18 @@ export const pathTool = {
         },
       },
       {
+        text: "Wasserfall-Kaskade entlang der Punkte (oben → unten)",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const r = await new Modal("Wasserfall-Kaskade").slider("pool", "Größe der Becken (Radius)", 1, 5, 1, ses.s.cascade.pool).show(ses.player);
+          if (!r) return;
+          ses.s.cascade.pool = r.pool;
+          markDirty(ses);
+          const { cascade } = await import("./terrain.js");
+          cascade(ses, ses.s.cascade);
+        },
+      },
+      {
         text: "Hügelkette entlang der Punkte",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
