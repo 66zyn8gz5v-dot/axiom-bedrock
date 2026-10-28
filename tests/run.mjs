@@ -1974,6 +1974,34 @@ console.log("Gerade Treppe");
   dim.blocks.clear();
 }
 
+console.log("Schlucht mit Fluss");
+{
+  dim.blocks.clear();
+  const oldView = player.view;
+  player.view = { x: 1, y: 0, z: 0 };
+  Object.assign(ses.s.terrain, { mode: "canyon", radius: 10, strength: 3, river: true, jag: 0, rot: 0, stretch: 10, biome: false });
+  await roundTrip("Schlucht mit Fluss", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const riverY = 64 - 12;
+  let water = 0;
+  let wrong = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== "minecraft:water") continue;
+    water++;
+    if (Number(k.split(",")[1]) > riverY) wrong++;
+  }
+  check(water > 3 && wrong === 0, "Schlucht: Fluss am Grund auf einer Höhe (" + water + ")");
+  let gravel = 0;
+  for (const p of dim.blocks.values()) if (p.type.id === "minecraft:gravel") gravel++;
+  check(gravel > 3, "Schlucht: Kies-Ufer und Flussbett");
+  check(id(0, 60, 6) !== "minecraft:air", "Schlucht: Ränder bleiben stehen");
+  await undo();
+  player.view = oldView;
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2, river: false, jag: 3 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

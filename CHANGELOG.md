@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.55.0 – 28.10.2026 (nächtlicher Ausbau: Terraform)
+- **Schlucht mit Fluss:** im Terrain-Menü „Schlucht-Stempel: mit Fluss am Grund“ einschalten, dann den Stempel
+  „Schlucht“ setzen. In der Mitte des Schluchtgrunds fließt ein Fluss (überall auf derselben Höhe, damit nichts
+  ausläuft), mit Kiesbett und Kies-Ufern. Mit „Streckung“ wird die Schlucht – und der Fluss – lang
+
 ## 0.54.0 – 28.10.2026 (nächtlicher Ausbau: Formen)
 - **Gerade Treppe:** neue Form – 1. Benutzen auf den Fuß der Treppe (Punkt A), 2. Benutzen auf die obere Stelle
   (Punkt B). Die Treppe läuft in Hauptrichtung von A nach B hinauf bis zur Höhe von B, aus echten Treppenblöcken

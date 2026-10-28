@@ -1132,9 +1132,11 @@ export const terrainTool = {
         }
         return p;
       };
+      // Wasserspiegel des Schlucht-Flusses: knapp über dem tiefsten Punkt, überall gleich hoch
+      const riverY = (H(ctr.x, ctr.z) ?? ctr.y) - Math.round(c.strength * 4);
       /** @type {Map<string, number>|null} */
       const eroded = c.mode === "rain" ? rainErosion(H, ctr.x, ctr.z, R, c.strength) : null;
-      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string, fillOverride?:string, lavaTo?:number}[]} */
+      /** @type {{x:number, z:number, h:number, target:number, topOverride?:string, fillOverride?:string, lavaTo?:number, waterTo?:number}[]} */
       const plan = [];
       /** @type {Map<string, number>} */
       const newH = new Map();
@@ -1170,6 +1172,8 @@ export const terrainTool = {
           let fillOverride;
           /** @type {number|undefined} Lava bis zu dieser Höhe auffüllen */
           let lavaTo;
+          /** @type {number|undefined} Wasser bis zu dieser Höhe auffüllen */
+          let waterTo;
           let target = h;
           switch (c.mode) {
             case "raise":
@@ -1248,6 +1252,16 @@ export const terrainTool = {
               const w = Math.max(1.5, R * 0.35);
               if (ac > w) break;
               target = h - Math.round(c.strength * 4 * (1 - (ac / w) ** 2) * (1 - (Math.abs(along) / (RR + 0.5)) ** 4));
+              if (c.river) {
+                // Fluss am Grund: Rinne in der Mitte mit Wasser auf fester Höhe, Kies-Ufer daneben
+                if (ac < Math.max(1, w * 0.35)) {
+                  target -= 1;
+                  if (target < riverY) {
+                    waterTo = riverY;
+                    topOverride = "minecraft:gravel";
+                  }
+                } else if (ac < w * 0.65 && target < h) topOverride = "minecraft:gravel";
+              }
               break;
             }
             case "glacier": {
@@ -1324,7 +1338,7 @@ export const terrainTool = {
             target = h + Math.round((target - h) * Math.max(0, 1 + n * c.jag * 0.12));
           }
           if (target === h && !topOverride && !c.biome) continue;
-          plan.push({ x, z, h, target, topOverride, fillOverride, lavaTo });
+          plan.push({ x, z, h, target, topOverride, fillOverride, lavaTo, waterTo });
           newH.set(x + "," + z, target);
         }
         yield;
@@ -1397,6 +1411,12 @@ export const terrainTool = {
         const lavaTo = Math.min(lt, rim - 1);
         for (let y = target + 1; y <= lavaTo; y++) if (es.id(x, y, z) === "minecraft:air") es.set(x, y, z, lava);
       }
+      // Fluss in der Schlucht (nur Luft wird zu Wasser)
+      const riverWater = perm("minecraft:water");
+      for (const { x, z, target, waterTo } of plan) {
+        if (waterTo === undefined) continue;
+        for (let y = target + 1; y <= waterTo; y++) if (es.id(x, y, z) === "minecraft:air") es.set(x, y, z, riverWater);
+      }
       if (c.mode === "fields") {
         // Stützmauern: wo der Nachbar tiefer liegt, wird die freie Seite der Stufe gemauert
         const wall = perm(c.wall || "minecraft:stone_bricks");
@@ -1447,6 +1467,7 @@ export const terrainTool = {
       .slider("strength", "Stärke (Blöcke pro Anwendung / Stufenhöhe)", 1, 10, 1, c.strength)
       .text("wall", "Terrassenfelder: Mauerblock", "stone_bricks", (c.wall ?? "minecraft:stone_bricks").replace("minecraft:", ""))
       .toggle("lava", "Vulkan-Stempel: mit Lavasee, Basalt & Magma", c.lava ?? false)
+      .toggle("river", "Schlucht-Stempel: mit Fluss am Grund", c.river ?? false)
       .dropdown("veg", "Bepflanzen: Art (Stärke = Dichte)", VEGETATION, c.veg ?? "mix")
       .dropdown("brush", "Pinselform (Anheben, Absenken, Einebnen, Glätten, Hügel, Terrassen)", BRUSHES, c.falloff === false ? "hard" : c.brush ?? "soft")
       .toggle("slab", "Treppen-Modus: Stufen (Platten) statt Treppen", c.slab)

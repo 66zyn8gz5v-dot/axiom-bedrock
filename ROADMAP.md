@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.55: Schlucht mit Fluss
 - [x] v0.54: Gerade Treppe mit Podest
 - [x] v0.53: Wasserfall-Kaskade
 - [x] v0.52: Hängebrücke
@@ -115,7 +116,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Sumpf** (v0.49): flaches Wasser mit Schlamm, Seerosen, Schilf und Mangroven-Wurzeln in einer Fläche
 - [x] **Lava-Vulkan** (v0.51): Vulkan-Stempel wahlweise mit Lavasee im Krater, Basalt & Schwarzstein an den Flanken
 - [x] **Wasserfall-Kaskade** (v0.53): mehrere Stufen mit Becken entlang Pfad-Punkten einen Hang hinunter
-- [ ] **Schlucht mit Fluss**: Schlucht-Stempel wahlweise mit Fluss am Grund und Kies-Ufern
+- [x] **Schlucht mit Fluss** (v0.55): Schlucht-Stempel wahlweise mit Fluss am Grund und Kies-Ufern
 - [ ] **Blumenwiese malen**: Pinsel, der passende Blumen nach Höhe/Biom verteilt (Tulpen, Mohn, Kornblumen …)
 
 ### Formen (Figuren) vertiefen
