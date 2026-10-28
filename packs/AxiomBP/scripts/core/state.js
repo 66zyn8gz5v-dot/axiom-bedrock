@@ -42,6 +42,7 @@ export function defaultSettings() {
     thin: { percent: 30, replace: false },
     cascade: { pool: 2 },
     trail: { width: 3, style: "dirt" },
+    citywall: { height: 6, thick: 3, towers: true },
     suspension: { width: 3, tower: 8 },
     arcade: { span: 6, height: 4, depth: 1 },
     coast: { width: 8, side: "right", style: "beach", cliff: 6 },

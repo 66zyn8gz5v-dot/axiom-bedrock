@@ -217,6 +217,77 @@ function buildRiver(ses) {
 }
 
 /**
+ * Stadtmauer entlang der Punkte (gerade Abschnitte): Mauer aus Muster 1 vom Boden bis zur Wehrgang-Höhe, Zinnen auf
+ * beiden Seiten, an jedem Punkt ein runder, hohler Turm mit Zinnenkranz.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{height:number, thick:number, towers:boolean}} o
+ */
+export function buildCityWall(ses, o) {
+  const pts = ses.pathPoints;
+  if (pts.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+  const wall = picker(ses.s.pattern);
+  const T = Math.max(1, o.thick);
+  const Hh = Math.max(3, o.height);
+  const half = (T - 1) / 2;
+  const A = air();
+  /** @param {any} es @param {number} x @param {number} z @param {number} from */
+  const down = (es, x, z, from) => {
+    for (let y = from; y > from - 40; y--) {
+      const id = es.id(x, y, z);
+      if (id && isSolidId(id)) return y;
+    }
+    return from - 40;
+  };
+  runEdit(ses.player, { label: "Stadtmauer", symmetry: true }, function* (es) {
+    /** @type {Set<string>} */
+    const done = new Set();
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const L = Math.max(1, Math.hypot(b.x - a.x, b.z - a.z));
+      const ux = (b.x - a.x) / L;
+      const uz = (b.z - a.z) / L;
+      for (let s = 0; s <= L; s += 0.5) {
+        const base = Math.round(a.y + ((b.y - a.y) * s) / L) - 1;
+        const top = base + Hh;
+        for (let k = -half - 0.01; k <= half + 0.01; k += 0.5) {
+          const x = Math.round(a.x + ux * s - uz * k);
+          const z = Math.round(a.z + uz * s + ux * k);
+          const key = x + "," + z;
+          if (done.has(key)) continue;
+          done.add(key);
+          const g = down(es, x, z, base);
+          for (let y = g + 1; y <= top; y++) es.set(x, y, z, wall());
+          // Zinnen an den Außenkanten, jeder zweite Block
+          const edge = Math.abs(k) >= half - 0.01;
+          if (edge && Math.floor(s) % 2 === 0) es.set(x, top + 1, z, wall());
+        }
+      }
+      yield;
+    }
+    if (o.towers === false) return;
+    // Türme an allen Punkten
+    const r = Math.ceil(half) + 2;
+    for (const p of pts) {
+      const base = p.y - 1;
+      const top = base + Hh + 3;
+      for (let dx = -r; dx <= r; dx++)
+        for (let dz = -r; dz <= r; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > r + 0.5) continue;
+          const x = p.x + dx;
+          const z = p.z + dz;
+          const ring = d > r - 0.5;
+          const g = down(es, x, z, base);
+          for (let y = g + 1; y <= top; y++) es.set(x, y, z, ring || y === base + Hh || y <= g + 1 ? wall() : A);
+          if (ring && (dx + dz) % 2 === 0) es.set(x, top + 1, z, wall());
+        }
+      yield;
+    }
+  });
+}
+
+/**
  * Hängebrücke vom ersten zum letzten Punkt: gerader Belag (Muster 1), an beiden Enden Pfeilertürme (Muster 2) bis
  * zum Boden, Tragketten im Bogen von Turm zu Turm und senkrechte Hängeketten zum Belag.
  * @param {import("../core/state.js").Session} ses
@@ -465,6 +536,24 @@ export const pathTool = {
           Object.assign(c, { width: r.width, depth: r.depth, bed: String(r.bed) || "sand", banks: r.banks });
           markDirty(ses);
           buildRiver(ses);
+        },
+      },
+      {
+        text: "Stadtmauer mit Türmen entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.citywall;
+          const r = await new Modal("Stadtmauer")
+            .slider("height", "Höhe der Mauer (bis zum Wehrgang)", 3, 20, 1, c.height)
+            .slider("thick", "Dicke der Mauer", 1, 5, 1, c.thick)
+            .toggle("towers", "Türme an jedem Punkt", c.towers)
+            .toggle("pat", "Danach Block wählen (Muster 1)", false)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { height: r.height, thick: r.thick, towers: r.towers });
+          markDirty(ses);
+          if (r.pat) await patternMenu(ses);
+          buildCityWall(ses, c);
         },
       },
       {

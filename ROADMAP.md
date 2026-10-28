@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.56: Stadtmauer mit Türmen
 - [x] v0.55: Schlucht mit Fluss
 - [x] v0.54: Gerade Treppe mit Podest
 - [x] v0.53: Wasserfall-Kaskade
@@ -146,7 +147,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Windmühle** (v0.50)
 - [x] **Brücken-Baukasten mit Türmen** (v0.52): Hängebrücke mit Seilen (Ketten) und Pfeilertürmen entlang Pfad-Punkten
 - [x] **Treppenhaus** (v0.54): gerade Treppe zwischen zwei Punkten aus echten Treppenblöcken mit Podest
-- [ ] **Stadtmauer entlang Pfad-Punkten**: Mauer mit Zinnen, Wehrgang und Türmen an den Ecken
+- [x] **Stadtmauer entlang Pfad-Punkten** (v0.56): Mauer mit Zinnen, Wehrgang und Türmen an den Ecken
 - [ ] **Pavillon**: runder oder achteckiger Pavillon mit Säulen, Geländer und Kuppel-/Zeltdach
 
 ### Sonstiges

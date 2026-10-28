@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.56.0 – 29.10.2026 (nächtlicher Ausbau: Formen)
+- **Stadtmauer:** mit dem Pfad-Werkzeug die Ecken der Mauer abstecken, dann im Pfad-Menü „Stadtmauer mit Türmen
+  entlang der Punkte“. Es entsteht eine Mauer aus Muster 1, die vom Boden bis zum Wehrgang reicht (passt sich dem
+  Gelände an), mit Zinnen auf beiden Seiten und einem runden, hohlen Turm mit Zinnenkranz an jedem Punkt.
+  Einstellbar: Höhe, Dicke, Türme an/aus
+
 ## 0.55.0 – 28.10.2026 (nächtlicher Ausbau: Terraform)
 - **Schlucht mit Fluss:** im Terrain-Menü „Schlucht-Stempel: mit Fluss am Grund“ einschalten, dann den Stempel
   „Schlucht“ setzen. In der Mitte des Schluchtgrunds fließt ein Fluss (überall auf derselben Höhe, damit nichts

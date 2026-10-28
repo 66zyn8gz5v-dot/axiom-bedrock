@@ -2002,6 +2002,30 @@ console.log("Schlucht mit Fluss");
   dim.blocks.clear();
 }
 
+console.log("Stadtmauer");
+{
+  const { buildCityWall } = await import("../packs/AxiomBP/scripts/tools/path.js");
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.pathPoints = [{ x: 0, y: 65, z: 0 }, { x: 20, y: 65, z: 0 }, { x: 20, y: 65, z: 16 }];
+  await roundTrip("Stadtmauer", () => buildCityWall(ses, { height: 6, thick: 3, towers: true }));
+  buildCityWall(ses, { height: 6, thick: 3, towers: true });
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const SB = "minecraft:stone_bricks";
+  check(id(10, 65, 0) === SB && id(10, 70, 1) === SB && id(10, 70, -1) === SB && id(10, 71, 0) === "minecraft:air", "Stadtmauer: 3 dick, Wehrgang oben frei");
+  let crenel = 0;
+  for (let x = 6; x <= 14; x++) if (id(x, 71, 1) === SB) crenel++;
+  check(crenel >= 3 && crenel <= 6, "Stadtmauer: Zinnen mit Lücken (" + crenel + ")");
+  check(id(20, 72, 8) === "minecraft:air" && id(20, 70, 8) === SB, "Stadtmauer: Ecke folgt dem zweiten Abschnitt");
+  check(id(0, 73, 3) === SB && id(0, 72, 0) === "minecraft:air", "Stadtmauer: hohler Turm am Punkt");
+  await undo();
+  ses.pathPoints = [];
+  ses.s.pattern = oldP;
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
