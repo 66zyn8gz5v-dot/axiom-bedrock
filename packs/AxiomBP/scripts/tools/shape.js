@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["pavilion", "Pavillon (Säulen, Geländer, Zeltdach – Ecken über den Ecken-Regler)"],
   ["straight", "Gerade Treppe mit Podest (Punkt A unten, Punkt B oben)"],
   ["windmill", "Windmühle (Turm, Kegeldach, vier Flügel zu dir)"],
   ["well", "Brunnen (Schacht mit Wasser, Rand, Pfosten & Dach)"],
@@ -622,7 +623,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -806,6 +807,79 @@ function buildTower(ses, c) {
           for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3 || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, roof());
         yield;
       }
+    }
+  });
+}
+
+/**
+ * Pavillon: erhöhter Boden (Muster 1), Säulen (Muster 2) an den Ecken eines Vielecks (Anzahl = Ecken-Regler),
+ * Geländer zwischen den Säulen mit Eingang zur Blickrichtung, Zeltdach (Muster 2) mit Überstand.
+ * Radius X = Größe, Höhe der Säulen = 2 × Radius Y + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildPavilion(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(2, c.rx);
+  const H = Math.max(3, 2 * c.ry + 1);
+  const n = Math.max(4, Math.min(12, c.sides ?? 8));
+  const floor = picker(ses.s.pattern);
+  const col = picker(ses.s.pattern2);
+  const wood = /^minecraft:(\w+)_planks$/.exec(ses.s.pattern2[0]?.id ?? "")?.[1];
+  let fence;
+  try {
+    fence = BlockPermutation.resolve(wood ? `minecraft:${wood}_fence` : "minecraft:oak_fence");
+  } catch {
+    fence = BlockPermutation.resolve("minecraft:oak_fence");
+  }
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const entrance = Math.atan2(-d.z, -d.x); // Richtung zum Spieler
+  runEdit(ses.player, { label: "Pavillon", symmetry: true }, function* (es) {
+    // Boden: Vieleck mit Radius R
+    const ap = Math.cos(Math.PI / n);
+    const insidePoly = (/** @type {number} */ x, /** @type {number} */ z, /** @type {number} */ r) => {
+      for (let k = 0; k < n; k++) {
+        const a = (k * 2 * Math.PI) / n + Math.PI / n;
+        if (x * Math.cos(a) + z * Math.sin(a) > r * ap + 0.3) return false;
+      }
+      return true;
+    };
+    for (let dx = -R; dx <= R; dx++) for (let dz = -R; dz <= R; dz++) if (insidePoly(dx, dz, R)) es.set(base.x + dx, base.y, base.z + dz, floor());
+    yield;
+    // Säulen an den Ecken
+    /** @type {{x:number,z:number,a:number}[]} */
+    const corners = [];
+    for (let k = 0; k < n; k++) {
+      const a = (k * 2 * Math.PI) / n;
+      const x = Math.round(Math.cos(a) * (R - 0.3));
+      const z = Math.round(Math.sin(a) * (R - 0.3));
+      corners.push({ x, z, a });
+      for (let y = 1; y <= H; y++) es.set(base.x + x, base.y + y, base.z + z, col());
+    }
+    // Geländer zwischen benachbarten Säulen, außer am Eingang
+    for (let k = 0; k < n; k++) {
+      const p = corners[k];
+      const q = corners[(k + 1) % n];
+      const mid = Math.atan2((p.z + q.z) / 2, (p.x + q.x) / 2);
+      let diff = Math.abs(mid - entrance) % (2 * Math.PI);
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      if (diff < Math.PI / n) continue;
+      const L = Math.max(Math.abs(q.x - p.x), Math.abs(q.z - p.z));
+      for (let i = 1; i < L; i++) {
+        const x = Math.round(p.x + ((q.x - p.x) * i) / L);
+        const z = Math.round(p.z + ((q.z - p.z) * i) / L);
+        es.set(base.x + x, base.y + 1, base.z + z, fence);
+      }
+    }
+    yield;
+    // Zeltdach mit Überstand
+    const rr = R + 1;
+    const rh = Math.max(2, Math.round(rr * 0.8));
+    for (let k = 0; k <= rh; k++) {
+      const r = rr * (1 - k / (rh + 1));
+      for (let dx = -rr; dx <= rr; dx++) for (let dz = -rr; dz <= rr; dz++) if (insidePoly(dx, dz, r) || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, col());
+      yield;
     }
   });
 }
@@ -1076,6 +1150,7 @@ export const shapeTool = {
     if (c.type === "well") return buildWell(ses, c);
     if (c.type === "windmill") return buildWindmill(ses, c);
     if (c.type === "straight") return buildStraightStairs(ses, c);
+    if (c.type === "pavilion") return buildPavilion(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1127,7 +1202,7 @@ export const shapeTool = {
   preview(ses) {
     const c = ses.s.shape;
     if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

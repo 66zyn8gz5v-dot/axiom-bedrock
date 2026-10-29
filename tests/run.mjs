@@ -2064,6 +2064,37 @@ console.log("Blumenwiese");
   dim.blocks.clear();
 }
 
+console.log("Pavillon");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("smooth_stone");
+  ses.s.pattern2 = parsePattern("spruce_planks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "pavilion", rx: 4, ry: 1, rz: 4, sides: 8, anchor: "center" });
+  await roundTrip("Pavillon", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let cols = 0;
+  let fence = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (p.type.id === "minecraft:spruce_planks" && y === 67) cols++;
+    if (p.type.id === "minecraft:spruce_fence") fence++;
+  }
+  check(id(0, 65, 0) === "minecraft:smooth_stone" && cols === 8, "Pavillon: Boden und 8 Säulen (" + cols + ")");
+  check(fence > 5 && id(0, 66, -4) !== "minecraft:spruce_fence", "Pavillon: Geländer mit Eingang zum Spieler (" + fence + ")");
+  check(id(0, 69, 0) === "minecraft:spruce_planks" && id(0, 66, 0) === "minecraft:air", "Pavillon: Dach, innen frei");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

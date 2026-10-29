@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.58.0 – 30.10.2026 (nächtlicher Ausbau: Formen)
+- **Pavillon:** neue Form – auf den Boden zielen: ein erhöhter Boden aus Muster 1, Säulen aus Muster 2 an den Ecken
+  eines Vielecks (4–12 Ecken über „Anzahl Ecken“, z.B. 8 für einen achteckigen Gartenpavillon), ein Zaun-Geländer
+  zwischen den Säulen mit Eingang auf deiner Seite (bei Holz-Muster der passende Zaun) und ein Zeltdach mit
+  Überstand. Radius X = Größe, Radius Y = Säulenhöhe
+
 ## 0.57.0 – 29.10.2026 (nächtlicher Ausbau: Terraform)
 - **Blumenwiese malen:** neuer Terrain-Modus „Blumenwiese“ – mit gedrückter Taste über eine Wiese malen. Auf freie
   Grasblöcke kommen Blumen in natürlichen Gruppen (jede Gruppe eine Sorte) und dazwischen Gras. Die Sorten passen

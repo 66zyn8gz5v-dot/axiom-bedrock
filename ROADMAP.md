@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.58: Pavillon
 - [x] v0.57: Blumenwiese-Pinsel
 - [x] v0.56: Stadtmauer mit Türmen
 - [x] v0.55: Schlucht mit Fluss
@@ -152,7 +153,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Brücken-Baukasten mit Türmen** (v0.52): Hängebrücke mit Seilen (Ketten) und Pfeilertürmen entlang Pfad-Punkten
 - [x] **Treppenhaus** (v0.54): gerade Treppe zwischen zwei Punkten aus echten Treppenblöcken mit Podest
 - [x] **Stadtmauer entlang Pfad-Punkten** (v0.56): Mauer mit Zinnen, Wehrgang und Türmen an den Ecken
-- [ ] **Pavillon**: runder oder achteckiger Pavillon mit Säulen, Geländer und Kuppel-/Zeltdach
+- [x] **Pavillon** (v0.58): runder oder achteckiger Pavillon mit Säulen, Geländer und Kuppel-/Zeltdach
+- [ ] **Säulenhalle (Tempel)**: Rechteck aus Säulen mit Giebeldach und Stufen-Sockel in einer Box-Auswahl
+- [ ] **Kuppel mit Laterne**: Kuppel mit Fensterkranz und kleinem Türmchen oben (wie bei Kirchen)
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
