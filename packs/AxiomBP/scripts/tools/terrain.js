@@ -31,6 +31,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
   ["glacier", "Stempel: Gletscher (Eiszunge in Blickrichtung)"],
   ["iceberg", "Stempel: Eisberg (auf Wasser zielen)"],
+  ["flowers", "Blumenwiese malen (Pinsel, Blumen in Gruppen passend zur Höhe)"],
   ["swamp", "Sumpf: Wasserläufe, Schlamm, Seerosen, Schilf (auf den Boden zielen)"],
   ["badlands", "Badlands: Hänge in bunte Terrakotta-Schichten färben (Pinsel)"],
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
@@ -439,6 +440,48 @@ function swamp(ses, t, c) {
         } else if (r > 0.6 && r < 0.8) es.set(x, above, z, P("minecraft:short_grass"));
       }
       if (++n % 64 === 0) yield;
+    }
+  });
+}
+
+/** Blumen je Höhenlage: Tal, Wiese, Bergwiese. */
+export const FLOWER_SETS = {
+  low: ["minecraft:poppy", "minecraft:dandelion", "minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:blue_orchid"],
+  mid: ["minecraft:oxeye_daisy", "minecraft:dandelion", "minecraft:poppy", "minecraft:pink_tulip", "minecraft:white_tulip", "minecraft:allium"],
+  high: ["minecraft:cornflower", "minecraft:azure_bluet", "minecraft:oxeye_daisy", "minecraft:lily_of_the_valley"],
+};
+
+/**
+ * Blumenwiese-Pinsel: setzt auf freie Grasblöcke im Radius Blumen in natürlichen Gruppen (jede Gruppe eine Sorte),
+ * dazwischen Gras. Die Sorten richten sich nach der Höhe (Tal, Wiese, Bergwiese nahe der Schneegrenze).
+ * Dichte = Stärke.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function flowers(ses, t, c) {
+  const ctr = t.pos;
+  const R = c.radius;
+  const dens = Math.max(1, c.strength) / 10;
+  runEdit(ses.player, { label: "Blumenwiese", stroke: strokeId(ses, "terrain"), symmetry: true }, function* (es) {
+    const SG = permOf("minecraft:short_grass");
+    let n = 0;
+    for (let dx = -R; dx <= R; dx++) {
+      for (let dz = -R; dz <= R; dz++) {
+        if (dx * dx + dz * dz > (R + 0.5) ** 2) continue;
+        const x = ctr.x + dx;
+        const z = ctr.z + dz;
+        const g = groundY(es, x, z, ctr.y + 12, 32);
+        if (g === null || es.id(x, g, z) !== "minecraft:grass_block" || es.id(x, g + 1, z) !== "minecraft:air") continue;
+        const r = hash01(x, z, 4242);
+        if (r > dens) continue;
+        const set = g >= c.snowY - 30 ? FLOWER_SETS.high : g <= 64 ? FLOWER_SETS.low : FLOWER_SETS.mid;
+        // Gruppen: Rauschen wählt die Sorte, sodass Nachbarn meist dieselbe Blume bekommen
+        const k = Math.floor((fbm(x / 6 + 9.1, 0.4, z / 6 + 2.7, 2) + 1) * 0.5 * set.length * 1.6) % set.length;
+        es.set(x, g + 1, z, r < dens * 0.6 ? permOf(set[(k + set.length) % set.length]) : SG);
+        if (++n % 64 === 0) yield;
+      }
+      yield;
     }
   });
 }
@@ -1094,6 +1137,7 @@ export const terrainTool = {
     if (c.mode === "iceberg") return iceberg(ses, t, c);
     if (c.mode === "badlands") return badlands(ses, t, c);
     if (c.mode === "swamp") return swamp(ses, t, c);
+    if (c.mode === "flowers") return flowers(ses, t, c);
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
     if (c.mode === "lake") return lake(ses, t);

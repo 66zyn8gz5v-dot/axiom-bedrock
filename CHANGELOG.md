@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.57.0 – 29.10.2026 (nächtlicher Ausbau: Terraform)
+- **Blumenwiese malen:** neuer Terrain-Modus „Blumenwiese“ – mit gedrückter Taste über eine Wiese malen. Auf freie
+  Grasblöcke kommen Blumen in natürlichen Gruppen (jede Gruppe eine Sorte) und dazwischen Gras. Die Sorten passen
+  zur Höhe: im Tal Mohn, Löwenzahn, Tulpen und Orchideen, auf der Wiese Margeriten, Tulpen und Zierlauch, auf
+  Bergwiesen Kornblumen, Porzellansternchen und Maiglöckchen. Dichte = Stärke
+
 ## 0.56.0 – 29.10.2026 (nächtlicher Ausbau: Formen)
 - **Stadtmauer:** mit dem Pfad-Werkzeug die Ecken der Mauer abstecken, dann im Pfad-Menü „Stadtmauer mit Türmen
   entlang der Punkte“. Es entsteht eine Mauer aus Muster 1, die vom Boden bis zum Wehrgang reicht (passt sich dem

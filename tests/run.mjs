@@ -2026,6 +2026,44 @@ console.log("Stadtmauer");
   dim.blocks.clear();
 }
 
+console.log("Blumenwiese");
+{
+  const { FLOWER_SETS } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  dim.blocks.clear();
+  Object.assign(ses.s.terrain, { mode: "flowers", radius: 8, strength: 6, snowY: 120 });
+  await roundTrip("Blumenwiese", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const all = new Set([...FLOWER_SETS.low, ...FLOWER_SETS.mid, ...FLOWER_SETS.high]);
+  /** @type {Map<string,string>} */
+  const fl = new Map();
+  let grass = 0;
+  for (const [k, p] of dim.blocks) {
+    if (all.has(p.type.id)) fl.set(k, p.type.id);
+    if (p.type.id === "minecraft:short_grass") grass++;
+  }
+  check(fl.size > 20 && grass > 5, "Blumenwiese: Blumen und Gras (" + fl.size + "/" + grass + ")");
+  check([...fl.values()].every((id) => FLOWER_SETS.low.includes(id)), "Blumenwiese: im Tal Tal-Blumen");
+  // Gruppen: Nachbarn haben oft dieselbe Sorte
+  let same = 0;
+  let pairs = 0;
+  for (const [k, id] of fl) {
+    const [x, y, z] = k.split(",").map(Number);
+    const nb = fl.get(x + 1 + "," + y + "," + z);
+    if (nb) {
+      pairs++;
+      if (nb === id) same++;
+    }
+  }
+  check(pairs > 0 && same / pairs > 0.4, "Blumenwiese: Blumen in Gruppen (" + same + "/" + pairs + ")");
+  // Auf belegte Blöcke und Stein wird nichts gesetzt
+  const snap = dim.snapshot();
+  await use("axiom:terrain", G);
+  check(eqSnap(snap, dim.snapshot()), "Blumenwiese: zweimal malen ändert nichts mehr");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
