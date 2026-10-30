@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.59.0 – 30.10.2026 (nächtlicher Ausbau: Terraform)
+- **Felsnadeln (Hoodoos):** neuer Terrain-Stempel – im Radius wachsen mehrere schlanke Steinsäulen aus dem Boden,
+  unten etwas breiter, oben schmal und mit einem breiteren Deckstein obendrauf. Auf Sand bestehen sie aus
+  geschichtetem Sand- und rotem Sandstein (wie im Wilden Westen), sonst aus Stein und Andesit. Stärke = Anzahl und
+  Höhe
+
 ## 0.58.0 – 30.10.2026 (nächtlicher Ausbau: Formen)
 - **Pavillon:** neue Form – auf den Boden zielen: ein erhöhter Boden aus Muster 1, Säulen aus Muster 2 an den Ecken
   eines Vielecks (4–12 Ecken über „Anzahl Ecken“, z.B. 8 für einen achteckigen Gartenpavillon), ein Zaun-Geländer

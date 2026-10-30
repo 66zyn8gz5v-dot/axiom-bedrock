@@ -31,6 +31,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["rockarch", "Stempel: Felsbogen (steht quer vor dir)"],
   ["glacier", "Stempel: Gletscher (Eiszunge in Blickrichtung)"],
   ["iceberg", "Stempel: Eisberg (auf Wasser zielen)"],
+  ["hoodoos", "Stempel: Felsnadeln (schlanke Steinsäulen mit Deckstein)"],
   ["flowers", "Blumenwiese malen (Pinsel, Blumen in Gruppen passend zur Höhe)"],
   ["swamp", "Sumpf: Wasserläufe, Schlamm, Seerosen, Schilf (auf den Boden zielen)"],
   ["badlands", "Badlands: Hänge in bunte Terrakotta-Schichten färben (Pinsel)"],
@@ -74,7 +75,7 @@ export function brushFalloff(d, R, brush) {
 }
 
 /** Stempel (ein Klick): Form über Zackigkeit, Drehung und Streckung einstellbar. */
-export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff", "rockarch", "cave", "glacier", "iceberg"];
+export const STAMP_MODES = ["mountain", "crater", "volcano", "mesa", "island", "canyon", "dune", "snowpeak", "cliff", "rockarch", "cave", "glacier", "iceberg", "hoodoos"];
 
 /**
  * Längsachse eines Stempels: Blickrichtung (waagerecht), um `rot` Grad gedreht.
@@ -544,6 +545,50 @@ function badlands(ses, t, c) {
         }
         if (++n % 64 === 0) yield;
       }
+      yield;
+    }
+  });
+}
+
+/**
+ * Felsnadeln (Hoodoos): mehrere schlanke Steinsäulen im Radius, unten etwas breiter, oben schmal mit breiterem
+ * Deckstein. Auf Sand aus Sandstein in Schichten, sonst aus Stein/Andesit. Anzahl & Höhe = Stärke.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function hoodoos(ses, t, c) {
+  const ctr = t.pos;
+  const R = Math.max(3, c.radius);
+  const count = Math.max(1, Math.round(c.strength * 1.5));
+  const seed = Math.floor(Math.random() * 100000);
+  runEdit(ses.player, { label: "Felsnadeln", symmetry: true }, function* (es) {
+    /** @type {{x:number, z:number}[]} */
+    const placed = [];
+    for (let i = 0; i < count * 4 && placed.length < count; i++) {
+      const a = hash01(i, 1, seed) * Math.PI * 2;
+      const d = Math.sqrt(hash01(i, 2, seed)) * R;
+      const x = Math.round(ctr.x + Math.cos(a) * d);
+      const z = Math.round(ctr.z + Math.sin(a) * d);
+      if (placed.some((p) => Math.hypot(p.x - x, p.z - z) < 4)) continue;
+      const g = groundY(es, x, z, ctr.y + 16, 40);
+      if (g === null) continue;
+      placed.push({ x, z });
+      const sandy = /sand|terracotta/.test(es.id(x, g, z));
+      const H = 4 + Math.floor(hash01(i, 3, seed) * (2 + c.strength * 2.5));
+      const layer = (/** @type {number} */ y) =>
+        sandy
+          ? permOf(["minecraft:sandstone", "minecraft:red_sandstone", "minecraft:sandstone", "minecraft:smooth_sandstone"][Math.floor(y / 2) % 4])
+          : permOf(rockId(x, y, z));
+      for (let k = 1; k <= H; k++) {
+        const f = k / H;
+        const r = f < 0.25 ? 1.5 : f < 0.8 ? 1 : 0.6;
+        for (let dx = -2; dx <= 2; dx++)
+          for (let dz = -2; dz <= 2; dz++) if (Math.hypot(dx, dz) <= r + 0.2) es.set(x + dx, g + k, z + dz, layer(g + k));
+      }
+      // Deckstein
+      const cap = permOf(sandy ? "minecraft:red_sandstone" : "minecraft:cobblestone");
+      for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) if (Math.hypot(dx, dz) <= 1.6) es.set(x + dx, g + H + 1, z + dz, cap);
       yield;
     }
   });
@@ -1135,6 +1180,7 @@ export const terrainTool = {
     if (c.mode === "waterfall") return waterfall(ses, t, c);
     if (c.mode === "rockarch") return rockArch(ses, t, c);
     if (c.mode === "iceberg") return iceberg(ses, t, c);
+    if (c.mode === "hoodoos") return hoodoos(ses, t, c);
     if (c.mode === "badlands") return badlands(ses, t, c);
     if (c.mode === "swamp") return swamp(ses, t, c);
     if (c.mode === "flowers") return flowers(ses, t, c);

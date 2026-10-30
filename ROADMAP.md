@@ -44,6 +44,7 @@ Neue Ideen unten anhängen.
 - [x] v0.18: Handbuch-Design (Leder, Pergament, Banner, Slots, 3D-Blockbilder mit Original-Texturen)
 - [x] v0.19: Biom-Malen beim Terraformen (Gras, Sand am Wasser, Stein an Hängen, Schnee), Modus „Nur Oberfläche“, Erosion (Regen, Wind/Schmelzen)
 - [x] v0.20: Formen-Vorschau (Partikel-Umriss, Vorschau-Modus), 11 neue Formen (Keil, Tetraeder, Oktaeder, Vieleck, Stufenpyramide, Rohr, Scheibe, Kegelstumpf, Stern, Herz, Kreuz)
+- [x] v0.59: Felsnadeln
 - [x] v0.58: Pavillon
 - [x] v0.57: Blumenwiese-Pinsel
 - [x] v0.56: Stadtmauer mit Türmen
@@ -121,7 +122,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Wasserfall-Kaskade** (v0.53): mehrere Stufen mit Becken entlang Pfad-Punkten einen Hang hinunter
 - [x] **Schlucht mit Fluss** (v0.55): Schlucht-Stempel wahlweise mit Fluss am Grund und Kies-Ufern
 - [x] **Blumenwiese malen** (v0.57): Pinsel, der passende Blumen nach Höhe/Biom verteilt (Tulpen, Mohn, Kornblumen …)
-- [ ] **Felsnadeln (Hoodoos)**: Stempel für mehrere schlanke Steinsäulen mit Deckstein, z.B. in der Wüste
+- [x] **Felsnadeln (Hoodoos)** (v0.59): Stempel für mehrere schlanke Steinsäulen mit Deckstein, z.B. in der Wüste
 - [ ] **Oase**: kleiner See mit Palmen, Gras und Schilf mitten im Sand
 - [ ] **Mondlandschaft**: viele Krater unterschiedlicher Größe in einer Auswahl (grauer Stein, Staub)
 

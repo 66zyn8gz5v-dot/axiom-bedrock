@@ -169,7 +169,7 @@ PAGES = [
          ("tip", "Terrain-Modi: „See“ füllt Mulden mit Wasser, „Bepflanzen“ setzt Bäume & Blumen, „Blumenwiese“, „Sumpf“ & „Badlands“ ganze Biome.")],
         [("h", "Terrain"),
          ("tool", "terrain", "Terrain", "Gelände anheben, absenken, einebnen, glätten, Erosion – Pinsel spitz, rund oder flach."),
-         ("p", "14 Stempel: Berg, Krater, Vulkan, Plateau, Insel, Schlucht, Düne, Gipfel, Klippe, Felsbogen, Höhle, Gletscher, Eisberg, Wasserfall."),
+         ("p", "15 Stempel: Berg, Krater, Vulkan, Plateau, Insel, Schlucht, Düne, Gipfel, Klippe, Felsbogen, Felsnadeln, Höhle, Gletscher, Eisberg, Wasserfall."),
          ("img", "terrain"),
          ("tip", "Biom-Malen einschalten: Gras, Sand am Wasser, Stein an Hängen, Schnee auf Gipfeln.")],
     ),

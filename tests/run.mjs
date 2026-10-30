@@ -2095,6 +2095,30 @@ console.log("Pavillon");
   dim.blocks.clear();
 }
 
+console.log("Felsnadeln");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: -12, y: 64, z: -12 }, { x: 12, y: 64, z: 12 });
+  ops.opFill(ses, parsePattern("sand"));
+  await drain();
+  Object.assign(ses.s.terrain, { mode: "hoodoos", radius: 8, strength: 4 });
+  await roundTrip("Felsnadeln", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  // Säulen zählen: Spalten mit Sandstein in Höhe 68
+  let cols = 0;
+  let caps = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (y === 68 && /sandstone/.test(p.type.id)) cols++;
+    if (y > 69 && p.type.id === "minecraft:red_sandstone") caps++;
+  }
+  check(cols >= 3, "Felsnadeln: mehrere Säulen aus Sandstein (" + cols + ")");
+  check(caps > 0, "Felsnadeln: Decksteine");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
