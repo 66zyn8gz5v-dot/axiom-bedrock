@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.60.0 – 31.10.2026 (nächtlicher Ausbau: Formen)
+- **Säulenhalle (Tempel):** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen, dann mit dem
+  Formen-Werkzeug benutzen. Es entsteht ein Stufen-Sockel (1–3 Stufen je nach Breite), rundherum eine Säulenreihe
+  (etwa alle 3 Blöcke, Ecken immer), darüber das Gebälk mit Überstand und ein flaches Giebeldach aus Muster 2 mit
+  Giebelwänden vorn und hinten. Der First läuft entlang der längeren Seite; mit „Dach“ aus gibt es ein Flachdach.
+  Innen wird Platz frei gemacht. Ist die Auswahl zu schmal (unter 5×5) oder zu niedrig, sagt das Werkzeug Bescheid
+
 ## 0.59.0 – 30.10.2026 (nächtlicher Ausbau: Terraform)
 - **Felsnadeln (Hoodoos):** neuer Terrain-Stempel – im Radius wachsen mehrere schlanke Steinsäulen aus dem Boden,
   unten etwas breiter, oben schmal und mit einem breiteren Deckstein obendrauf. Auf Sand bestehen sie aus

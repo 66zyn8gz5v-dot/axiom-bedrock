@@ -155,7 +155,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Treppenhaus** (v0.54): gerade Treppe zwischen zwei Punkten aus echten Treppenblöcken mit Podest
 - [x] **Stadtmauer entlang Pfad-Punkten** (v0.56): Mauer mit Zinnen, Wehrgang und Türmen an den Ecken
 - [x] **Pavillon** (v0.58): runder oder achteckiger Pavillon mit Säulen, Geländer und Kuppel-/Zeltdach
-- [ ] **Säulenhalle (Tempel)**: Rechteck aus Säulen mit Giebeldach und Stufen-Sockel in einer Box-Auswahl
+- [x] **Säulenhalle (Tempel)** (v0.60): Rechteck aus Säulen mit Giebeldach und Stufen-Sockel in einer Box-Auswahl
 - [ ] **Kuppel mit Laterne**: Kuppel mit Fensterkranz und kleinem Türmchen oben (wie bei Kirchen)
 
 ### Sonstiges

@@ -2119,6 +2119,47 @@ console.log("Felsnadeln");
   dim.blocks.clear();
 }
 
+console.log("Säulenhalle");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("quartz_block");
+  ses.s.pattern2 = parsePattern("bricks");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  // 15 lang (X), 11 breit (Z), 12 hoch
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 14, y: 76, z: 10 });
+  Object.assign(ses.s.shape, { type: "temple", anchor: "center", roof: true });
+  await roundTrip("Säulenhalle", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  let cols = 0;
+  for (const [k, p] of dim.blocks) if (p.type.id === "minecraft:quartz_block" && Number(k.split(",")[1]) === 68) cols++;
+  check(id(0, 65, 0) === "minecraft:quartz_block" && id(7, 65, 5) === "minecraft:quartz_block", "Säulenhalle: Stufen-Sockel");
+  check(cols === 14 && id(1, 66, 1) === "minecraft:quartz_block" && id(2, 66, 1) === "minecraft:air" && id(7, 68, 5) === "minecraft:air", "Säulenhalle: 14 Säulen, dazwischen frei (" + cols + ")");
+  check(id(7, 73, 5) === "minecraft:quartz_block" && id(0, 73, 5) === "minecraft:quartz_block" && id(-1, 73, 5) === "minecraft:air", "Säulenhalle: Gebälk mit Überstand bis zum Rand");
+  check(id(7, 74, 0) === "minecraft:bricks" && id(7, 76, 5) === "minecraft:bricks" && id(7, 74, 5) === "minecraft:air" && id(7, 77, 5) === "minecraft:air", "Säulenhalle: Giebeldach mit First entlang X");
+  check(id(1, 74, 5) === "minecraft:quartz_block" && id(13, 75, 5) === "minecraft:quartz_block", "Säulenhalle: Giebelwände vorn und hinten");
+  await undo();
+  // Flachdach, Säulen dann höher
+  ses.s.shape.roof = false;
+  await use("axiom:shape", G);
+  check(id(1, 75, 1) === "minecraft:quartz_block" && id(7, 76, 5) === "minecraft:quartz_block" && id(7, 77, 5) === "minecraft:air", "Säulenhalle: ohne Dach = Flachdach");
+  await undo();
+  ses.s.shape.roof = true;
+  // zu niedrig / zu schmal: nichts passiert
+  const snap = dim.snapshot();
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 14, y: 70, z: 10 });
+  await use("axiom:shape", G);
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 3, y: 76, z: 10 });
+  await use("axiom:shape", G);
+  check(eqSnap(snap, dim.snapshot()), "Säulenhalle: zu niedrige oder schmale Auswahl ändert nichts");
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

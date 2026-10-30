@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
   ["pavilion", "Pavillon (Säulen, Geländer, Zeltdach – Ecken über den Ecken-Regler)"],
   ["straight", "Gerade Treppe mit Podest (Punkt A unten, Punkt B oben)"],
   ["windmill", "Windmühle (Turm, Kegeldach, vier Flügel zu dir)"],
@@ -623,7 +624,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -807,6 +808,83 @@ function buildTower(ses, c) {
           for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3 || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, roof());
         yield;
       }
+    }
+  });
+}
+
+/**
+ * Säulenhalle (Tempel) in der Box-Auswahl: Stufen-Sockel, Säulenreihe rundherum, Gebälk und Giebeldach.
+ * Sockel, Säulen und Gebälk aus Muster 1, Dach aus Muster 2 („Dach“ aus = Flachdach). Der First läuft entlang
+ * der längeren Seite. Innen wird Platz frei gemacht.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildTemple(ses, c) {
+  const sel = ses.sel;
+  if (!sel) return err(ses.player, "Für die Säulenhalle erst eine Box-Auswahl machen (Grundfläche und Höhe).");
+  const { min, max } = sel;
+  const W = max.x - min.x + 1;
+  const D = max.z - min.z + 1;
+  const H = max.y - min.y + 1;
+  if (Math.min(W, D) < 5) return err(ses.player, "Die Auswahl ist zu schmal – mindestens 5×5 Blöcke.");
+  const alongX = W >= D; // First entlang der längeren Seite
+  const short = alongX ? D : W;
+  const steps = Math.max(1, Math.min(3, Math.floor(short / 6)));
+  const roofH = c.roof === false ? 0 : Math.ceil((short - 1) / 4);
+  const colH = H - steps - 1 - roofH;
+  if (colH < 2) return err(ses.player, `Die Auswahl ist zu niedrig – für diese Breite mindestens §e${H - colH + 2}§r Blöcke hoch.`);
+  const stone = picker(ses.s.pattern);
+  const roof = picker(ses.s.pattern2);
+  const A = air();
+  // Säulen stehen einen Block innerhalb der obersten Stufe
+  const x0 = min.x + steps;
+  const x1 = max.x - steps;
+  const z0 = min.z + steps;
+  const z1 = max.z - steps;
+  /** Gleichmäßig verteilte Säulen-Positionen (ca. alle 3 Blöcke, Ecken immer). @param {number} a @param {number} b */
+  const spots = (a, b) => {
+    const n = Math.max(1, Math.round((b - a) / 3));
+    const out = new Set();
+    for (let i = 0; i <= n; i++) out.add(a + Math.round(((b - a) * i) / n));
+    return out;
+  };
+  const xs = spots(x0, x1);
+  const zs = spots(z0, z1);
+  const isCol = (/** @type {number} */ x, /** @type {number} */ z) => ((x === x0 || x === x1) && zs.has(z)) || ((z === z0 || z === z1) && xs.has(x));
+  const yCol = min.y + steps;
+  const yBeam = yCol + colH;
+  runEdit(ses.player, { label: "Säulenhalle", symmetry: true, region: { min, max } }, function* (es) {
+    // Stufen-Sockel: jede Stufe einen Block schmaler
+    for (let i = 0; i < steps; i++) {
+      for (let x = min.x + i; x <= max.x - i; x++) for (let z = min.z + i; z <= max.z - i; z++) es.set(x, min.y + i, z, stone());
+      yield;
+    }
+    // Säulen, dazwischen frei
+    for (let y = yCol; y < yBeam; y++) {
+      for (let x = min.x + steps - 1; x <= max.x - steps + 1; x++)
+        for (let z = min.z + steps - 1; z <= max.z - steps + 1; z++) es.set(x, y, z, isCol(x, z) ? stone() : A);
+      yield;
+    }
+    // Gebälk: Decke über der ganzen Halle mit einem Block Überstand
+    for (let x = x0 - 1; x <= x1 + 1; x++) for (let z = z0 - 1; z <= z1 + 1; z++) es.set(x, yBeam, z, stone());
+    yield;
+    // Giebeldach: steigt quer zum First alle 2 Blöcke um 1, Giebel vorn und hinten aus Muster 1
+    const mid = alongX ? (min.z + max.z) / 2 : (min.x + max.x) / 2;
+    for (let k = 1; k <= roofH; k++) {
+      const half = short / 2 - 2 * (k - 1);
+      for (let x = min.x; x <= max.x; x++)
+        for (let z = min.z; z <= max.z; z++) {
+          const u = alongX ? z : x;
+          const w = alongX ? x : z;
+          if (Math.abs(u - mid) > half - 0.5) continue;
+          const w0 = alongX ? x0 : z0;
+          const w1 = alongX ? x1 : z1;
+          const edge = Math.abs(u - mid) > half - 2.5 || k === roofH;
+          if (edge) es.set(x, yBeam + k, z, roof());
+          else if (w === w0 || w === w1) es.set(x, yBeam + k, z, stone()); // Giebelwand
+          else if (w > w0 && w < w1) es.set(x, yBeam + k, z, A);
+        }
+      yield;
     }
   });
 }
@@ -1151,6 +1229,7 @@ export const shapeTool = {
     if (c.type === "windmill") return buildWindmill(ses, c);
     if (c.type === "straight") return buildStraightStairs(ses, c);
     if (c.type === "pavilion") return buildPavilion(ses, c);
+    if (c.type === "temple") return buildTemple(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1202,6 +1281,7 @@ export const shapeTool = {
   preview(ses) {
     const c = ses.s.shape;
     if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if (c.type === "temple") return; // die Auswahl ist schon sichtbar
     if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
