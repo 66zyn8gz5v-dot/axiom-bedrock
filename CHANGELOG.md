@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.61.0 – 31.10.2026 (nächtlicher Ausbau: Terraform)
+- **Oase:** neuer Terrain-Modus – auf Sand (oder anderen Boden) zielen und benutzen. In der Mitte entsteht ein
+  runder See bis 3 Blöcke tief mit Sandgrund, Seerosen und Seegras. Rundherum wächst ein grünes Ufer mit Gras, Farn,
+  Schilf direkt am Wasser und ein paar Palmen (Tropenholz-Stamm, Blätterstern mit herabhängenden Wedeln). Nach außen
+  geht die Oase sanft in den Sand bzw. den alten Boden über. Wasserspiegel = Höhe des Blickziels, Radius = Größe
+
 ## 0.60.0 – 31.10.2026 (nächtlicher Ausbau: Formen)
 - **Säulenhalle (Tempel):** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen, dann mit dem
   Formen-Werkzeug benutzen. Es entsteht ein Stufen-Sockel (1–3 Stufen je nach Breite), rundherum eine Säulenreihe

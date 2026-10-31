@@ -123,7 +123,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Schlucht mit Fluss** (v0.55): Schlucht-Stempel wahlweise mit Fluss am Grund und Kies-Ufern
 - [x] **Blumenwiese malen** (v0.57): Pinsel, der passende Blumen nach Höhe/Biom verteilt (Tulpen, Mohn, Kornblumen …)
 - [x] **Felsnadeln (Hoodoos)** (v0.59): Stempel für mehrere schlanke Steinsäulen mit Deckstein, z.B. in der Wüste
-- [ ] **Oase**: kleiner See mit Palmen, Gras und Schilf mitten im Sand
+- [x] **Oase** (v0.61): kleiner See mit Palmen, Gras und Schilf mitten im Sand
 - [ ] **Mondlandschaft**: viele Krater unterschiedlicher Größe in einer Auswahl (grauer Stein, Staub)
 
 ### Formen (Figuren) vertiefen

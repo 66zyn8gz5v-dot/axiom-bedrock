@@ -2160,6 +2160,31 @@ console.log("Säulenhalle");
   dim.blocks.clear();
 }
 
+console.log("Oase");
+{
+  dim.blocks.clear();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  Object.assign(ses.s.terrain, { mode: "oasis", radius: 8 });
+  await roundTrip("Oase", () => use("axiom:terrain", G));
+  await use("axiom:terrain", G);
+  const count = (pred) => {
+    let k = 0;
+    for (const [key, p] of dim.blocks) if (pred(p.type.id, Number(key.split(",")[1]))) k++;
+    return k;
+  };
+  const water = count((b) => b === "minecraft:water");
+  check(id(0, 64, 0) === "minecraft:water" && ["minecraft:water", "minecraft:seagrass"].includes(id(0, 62, 0)) && id(0, 61, 0) === "minecraft:sand" && water > 40, "Oase: See in der Mitte, 3 tief mit Sandgrund (" + water + ")");
+  check(count((b, y) => b === "minecraft:water" && y > 64) === 0, "Oase: Wasser nicht über dem Spiegel");
+  const logs = count((b) => b === "minecraft:jungle_log");
+  const leaves = count((b) => b === "minecraft:jungle_leaves");
+  check(logs >= 10 && leaves >= 20, "Oase: Palmen am Ufer (" + logs + " Stamm, " + leaves + " Blätter)");
+  check(count((b) => b === "minecraft:reeds") > 0 && count((b, y) => b === "minecraft:grass_block" && y === 65) > 5, "Oase: grünes Ufer mit Schilf");
+  check(count((b, y) => b === "minecraft:sand" && y === 64) > 10, "Oase: außen Sand");
+  await undo();
+  Object.assign(ses.s.terrain, { mode: "raise", radius: 6, strength: 2 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

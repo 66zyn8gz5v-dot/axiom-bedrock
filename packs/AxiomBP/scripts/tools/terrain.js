@@ -33,6 +33,7 @@ export const TERRAIN_MODES = /** @type {[string,string][]} */ ([
   ["iceberg", "Stempel: Eisberg (auf Wasser zielen)"],
   ["hoodoos", "Stempel: Felsnadeln (schlanke Steinsäulen mit Deckstein)"],
   ["flowers", "Blumenwiese malen (Pinsel, Blumen in Gruppen passend zur Höhe)"],
+  ["oasis", "Oase: kleiner See mit Palmen, Gras und Schilf (auf Sand zielen)"],
   ["swamp", "Sumpf: Wasserläufe, Schlamm, Seerosen, Schilf (auf den Boden zielen)"],
   ["badlands", "Badlands: Hänge in bunte Terrakotta-Schichten färben (Pinsel)"],
   ["cave", "Stempel: Höhleneingang (in einen Hang zielen)"],
@@ -443,6 +444,126 @@ function swamp(ses, t, c) {
       if (++n % 64 === 0) yield;
     }
   });
+}
+
+/**
+ * Oase: in der Mitte ein runder See (bis 3 tief, Sandgrund, Seerosen, Seegras), rundherum ein grünes Ufer mit Gras,
+ * Farn, Schilf am Wasser und ein paar Palmen; nach außen geht es sanft in den Sand bzw. den alten Boden über.
+ * Wasserspiegel = Höhe des Blickziels, Radius = Größe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/util.js").Target} t
+ * @param {import("../core/state.js").Settings["terrain"]} c
+ */
+function oasis(ses, t, c) {
+  const ctr = t.pos;
+  const R = Math.max(5, c.radius);
+  const wl = ctr.y;
+  const seed = Math.floor(Math.random() * 100000);
+  const pondR = R * 0.45;
+  const greenR = R * 0.78;
+  runEdit(ses.player, { label: "Oase", symmetry: true }, function* (es) {
+    const P = permOf;
+    const W = P("minecraft:water");
+    const A = air();
+    const SAND = P("minecraft:sand");
+    /** @type {Map<string, {g:number, d:number, wet:boolean, top:number, green:boolean}>} */
+    const cols = new Map();
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++) {
+        // leicht unregelmäßiger Rand
+        const wob = 1 + fbm((ctr.x + dx) / 5 + seed, 0.7, (ctr.z + dz) / 5, 2) * 0.12;
+        const d = Math.hypot(dx, dz) * wob;
+        if (d > R + 0.5) continue;
+        const x = ctr.x + dx;
+        const z = ctr.z + dz;
+        const g = groundY(es, x, z, wl + 16, 40);
+        if (g === null || !NATURAL.test(es.id(x, g, z))) continue;
+        const wet = d < pondR;
+        const f = wet ? 0 : Math.pow(Math.min(1, (d - pondR) / (R - pondR)), 1.5);
+        const top = wet ? wl : Math.round(wl + 1 + (g - wl - 1) * f);
+        cols.set(x + "," + z, { g, d, wet, top, green: !wet && d < greenR + (hash01(x, z, seed) - 0.5) * 1.5 });
+      }
+    yield;
+    const near = (/** @type {number} */ x, /** @type {number} */ z) =>
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oz]) => cols.get(x + ox + "," + (z + oz))?.wet);
+    /** @type {{x:number, z:number, y:number}[]} */
+    const spots = [];
+    let n = 0;
+    for (const [k, col] of cols) {
+      const [x, z] = k.split(",").map(Number);
+      const r = hash01(x, z, seed + 1);
+      for (let y = Math.max(col.g, col.top + 2); y > col.top; y--) es.set(x, y, z, A);
+      if (col.wet) {
+        const depth = 1 + Math.round(2 * (1 - col.d / pondR));
+        const bottom = wl - depth;
+        for (let y = Math.min(col.g, bottom); y < bottom; y++) es.set(x, y, z, SAND);
+        es.set(x, bottom, z, SAND);
+        for (let y = bottom + 1; y <= wl; y++) es.set(x, y, z, W);
+        if (r < 0.1) es.set(x, wl + 1, z, P("minecraft:waterlily"));
+        else if (r < 0.3 && depth >= 2) es.set(x, bottom + 1, z, P("minecraft:seagrass"));
+      } else {
+        for (let y = Math.min(col.g, col.top - 3); y < col.top; y++) es.set(x, y, z, col.green ? P("minecraft:dirt") : SAND);
+        es.set(x, col.top, z, col.green ? P("minecraft:grass_block") : SAND);
+        const above = col.top + 1;
+        if (col.green) {
+          if (near(x, z) && col.top === wl + 1 && r < 0.35) {
+            // Schilf (Zuckerrohr) direkt am Wasser
+            const h = 1 + Math.floor(hash01(z, x, seed) * 3);
+            for (let i = 0; i < h; i++) es.set(x, above + i, z, P("minecraft:reeds"));
+          } else if (r < 0.12) spots.push({ x, z, y: above });
+          else if (r < 0.45) es.set(x, above, z, P(r < 0.3 ? "minecraft:short_grass" : "minecraft:fern"));
+        } else if (r > 0.97) es.set(x, above, z, P("minecraft:deadbush"));
+      }
+      if (++n % 64 === 0) yield;
+    }
+    yield;
+    // Palmen: einige Stellen am grünen Ufer, mit Abstand
+    const want = Math.max(2, Math.round(R / 3));
+    /** @type {{x:number, z:number}[]} */
+    const palms = [];
+    spots.sort((a, b) => hash01(a.x, a.z, seed + 9) - hash01(b.x, b.z, seed + 9));
+    for (const s of spots) {
+      if (palms.length >= want) break;
+      if (!palms.every((p) => Math.abs(p.x - s.x) + Math.abs(p.z - s.z) >= 4)) continue;
+      growPalm(es, s.x, s.y, s.z, hash01(s.z, s.x, seed));
+      palms.push(s);
+      yield;
+    }
+  });
+}
+
+/**
+ * Palme: schlanker Stamm (Tropenholz), oben ein Blätterstern mit herabhängenden Wedeln.
+ * @param {import("../core/edit.js").EditSession} es
+ * @param {number} x @param {number} y Boden + 1 @param {number} z @param {number} r Zufall 0..1
+ */
+function growPalm(es, x, y, z, r) {
+  const log = permOf("minecraft:jungle_log");
+  const leaves = BlockPermutation.resolve("minecraft:jungle_leaves", { persistent_bit: true });
+  const H = 5 + Math.floor(r * 3);
+  // leicht schräger Stamm: ab der Hälfte einen Block zur Seite
+  const [lx, lz] = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(r * 4) % 4];
+  let cx = x;
+  let cz = z;
+  for (let i = 0; i < H; i++) {
+    if (i === Math.ceil(H / 2) && r > 0.4) {
+      cx += lx;
+      cz += lz;
+    }
+    es.set(cx, y + i, cz, log);
+  }
+  const top = y + H;
+  const leaf = (/** @type {number} */ a, /** @type {number} */ b, /** @type {number} */ c) => {
+    const id = es.id(a, b, c);
+    if (!id || !isSolidId(id)) es.set(a, b, c, leaves);
+  };
+  leaf(cx, top, cz);
+  for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+    const diag = ox && oz;
+    const len = diag ? 2 : 3;
+    for (let i = 1; i <= len; i++) leaf(cx + ox * i, top - (i === len ? 1 : 0), cz + oz * i);
+    if (!diag) leaf(cx + ox * (len + 1), top - 2, cz + oz * (len + 1));
+  }
 }
 
 /** Blumen je Höhenlage: Tal, Wiese, Bergwiese. */
@@ -1171,7 +1292,7 @@ export const terrainTool = {
     const t = target(ses.player, ses.s);
     if (!t) return;
     const c = { ...ses.s.terrain };
-    if ([...STAMP_MODES, "waterfall", "ridge", "lake", "plant", "swamp"].includes(c.mode)) {
+    if ([...STAMP_MODES, "waterfall", "ridge", "lake", "plant", "swamp", "oasis"].includes(c.mode)) {
       // Stempel nur einmal pro Tastendruck
       const last = ses.floodLast ?? -100;
       ses.floodLast = now();
@@ -1183,6 +1304,7 @@ export const terrainTool = {
     if (c.mode === "hoodoos") return hoodoos(ses, t, c);
     if (c.mode === "badlands") return badlands(ses, t, c);
     if (c.mode === "swamp") return swamp(ses, t, c);
+    if (c.mode === "oasis") return oasis(ses, t, c);
     if (c.mode === "flowers") return flowers(ses, t, c);
     if (c.mode === "cave") return cave(ses, t, c);
     if (c.mode === "ridge") return ridge(ses, c);
