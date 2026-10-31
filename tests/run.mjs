@@ -2185,6 +2185,36 @@ console.log("Oase");
   dim.blocks.clear();
 }
 
+console.log("Kuppel mit Laterne");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("copper_block");
+  Object.assign(ses.s.shape, { type: "lanterndome", rx: 5, ry: 3, rz: 5, sides: 8, anchor: "center" });
+  await roundTrip("Kuppel mit Laterne", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let win = 0;
+  let low = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (p.type.id === "minecraft:glass" && y === 67) win++;
+    if (p.type.id === "minecraft:glass" && y < 67) low++;
+  }
+  check(id(0, 65, 0) === "minecraft:stone_bricks" && id(5, 66, 0) === "minecraft:stone_bricks" && id(0, 66, 0) === "minecraft:air", "Kuppel mit Laterne: Boden und Tambour, innen frei");
+  check(win >= 8 && low === 0, "Kuppel mit Laterne: Fensterkranz im Tambour (" + win + ")");
+  check(id(0, 72, 3) === "minecraft:copper_block" && id(0, 70, 0) === "minecraft:air" && id(0, 73, 0) === "minecraft:air", "Kuppel mit Laterne: hohle Kuppel mit Öffnung oben");
+  check(id(1, 75, 0) === "minecraft:stone_bricks" && id(1, 75, 1) === "minecraft:glass" && id(0, 76, 0) === "minecraft:lantern", "Kuppel mit Laterne: Laterne aus Pfosten, Glas und Licht");
+  check(id(0, 79, 0) === "minecraft:copper_block" && id(0, 80, 0) === "minecraft:lightning_rod" && id(0, 81, 0) === "minecraft:air", "Kuppel mit Laterne: Spitzdach mit Blitzableiter");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

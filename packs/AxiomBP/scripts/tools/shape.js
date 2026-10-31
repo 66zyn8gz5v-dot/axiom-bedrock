@@ -28,6 +28,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
   ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
   ["pavilion", "Pavillon (Säulen, Geländer, Zeltdach – Ecken über den Ecken-Regler)"],
   ["straight", "Gerade Treppe mit Podest (Punkt A unten, Punkt B oben)"],
@@ -624,7 +625,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -809,6 +810,99 @@ function buildTower(ses, c) {
         yield;
       }
     }
+  });
+}
+
+/**
+ * Kuppel mit Laterne (wie bei Kirchen): runder Boden und Tambour (Muster 1) mit Fensterkranz aus Glas
+ * (Anzahl = Ecken-Regler), darauf eine hohle Kuppel (Muster 2) mit Öffnung oben und darüber die Laterne – ein kleines
+ * Türmchen aus Pfosten und Glas mit Licht, Spitzdach (Muster 2) und Blitzableiter als Spitze.
+ * Radius X = Kuppelradius, Radius Y = Höhe des Tambours. Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildLanternDome(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const hd = Math.max(2, c.ry);
+  const nWin = Math.max(4, Math.min(12, c.sides ?? 8));
+  const wall = picker(ses.s.pattern);
+  const dome = picker(ses.s.pattern2);
+  const A = air();
+  const glass = BlockPermutation.resolve("minecraft:glass");
+  let light;
+  try {
+    light = BlockPermutation.resolve("minecraft:lantern", { hanging: true });
+  } catch {
+    light = BlockPermutation.resolve("minecraft:sea_lantern");
+  }
+  let rod;
+  try {
+    rod = BlockPermutation.resolve("minecraft:lightning_rod");
+  } catch {
+    rod = BlockPermutation.resolve("minecraft:iron_bars");
+  }
+  const lr = Math.max(1, Math.round(R / 4));
+  const yc = base.y + hd; // Mittelpunkt der Kuppel = Oberkante des Tambours
+  const top = yc + R;
+  /** Liegt die Spalte in einem Fenster? (Winkelabstand zur nächsten Fenstermitte) @param {number} dx @param {number} dz */
+  const inWindow = (dx, dz) => {
+    const a = Math.atan2(dz, dx);
+    const step = (2 * Math.PI) / nWin;
+    const rel = ((a % step) + step) % step;
+    return Math.min(rel, step - rel) * Math.hypot(dx, dz) < 0.75;
+  };
+  runEdit(ses.player, { label: "Kuppel mit Laterne", symmetry: true }, function* (es) {
+    // Boden und Tambour mit Fensterkranz (mittlere Reihen)
+    for (let y = 0; y <= hd; y++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const d = Math.hypot(dx, dz);
+          if (d > R + 0.5) continue;
+          const x = base.x + dx;
+          const z = base.z + dz;
+          if (y === 0) es.set(x, base.y, z, wall());
+          else if (d <= R - 0.5) es.set(x, base.y + y, z, A);
+          else if (y > (hd >= 3 ? 1 : 0) && y < hd && inWindow(dx, dz)) es.set(x, base.y + y, z, glass);
+          else es.set(x, base.y + y, z, wall());
+        }
+      yield;
+    }
+    // Hohle Kuppel mit Öffnung (Opaion) unter der Laterne
+    for (let dy = 1; dy <= R; dy++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const h = Math.hypot(dx, dz);
+          const d = Math.hypot(h, dy);
+          if (d > R + 0.5) continue;
+          const shell = d > R - 1;
+          es.set(base.x + dx, yc + dy, base.z + dz, shell && h > lr - 0.5 ? dome() : A);
+        }
+      yield;
+    }
+    // Laterne: Ring aus Pfosten (Muster 1) und Glas, 3 hoch, unten bis auf die Kuppel verlängert
+    for (let dx = -lr; dx <= lr; dx++)
+      for (let dz = -lr; dz <= lr; dz++) {
+        const d = Math.hypot(dx, dz);
+        if (d > lr + 0.5) continue;
+        if (d <= lr - 0.5) {
+          for (let y = top + 1; y <= top + 3; y++) es.set(base.x + dx, y, base.z + dz, A);
+          continue;
+        }
+        const post = dx === 0 || dz === 0 || (lr > 1 && Math.abs(dx) === Math.abs(dz));
+        const from = yc + Math.floor(Math.sqrt(Math.max(0, R * R - d * d)));
+        for (let y = from; y <= top + 3; y++) es.set(base.x + dx, y, base.z + dz, post || y <= top ? wall() : glass);
+      }
+    yield;
+    // Spitzdach der Laterne, Licht darunter, Blitzableiter obendrauf
+    const cr = lr + 1;
+    for (let k = 0; k <= cr; k++) {
+      const r = cr - k;
+      for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) if (Math.hypot(dx, dz) <= r + 0.3) es.set(base.x + dx, top + 4 + k, base.z + dz, dome());
+    }
+    es.set(base.x, top + 3, base.z, light);
+    es.set(base.x, top + 5 + cr, base.z, rod);
   });
 }
 
@@ -1230,6 +1324,7 @@ export const shapeTool = {
     if (c.type === "straight") return buildStraightStairs(ses, c);
     if (c.type === "pavilion") return buildPavilion(ses, c);
     if (c.type === "temple") return buildTemple(ses, c);
+    if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1282,7 +1377,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

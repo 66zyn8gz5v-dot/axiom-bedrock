@@ -30,6 +30,7 @@ export class BlockPermutation {
     const def = {};
     if (/_log$/.test(id)) def.pillar_axis = "y";
     if (/_leaves$/.test(id)) def.persistent_bit = false;
+    if (/^minecraft:(soul_)?lantern$/.test(id)) def.hanging = false;
     if (/_stairs$/.test(id)) {
       def.weirdo_direction = 0;
       def.upside_down_bit = false;

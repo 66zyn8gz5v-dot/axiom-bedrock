@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.62.0 – 01.11.2026 (nächtlicher Ausbau: Formen)
+- **Kuppel mit Laterne:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein runder Boden mit einem
+  Tambour (runde Mauer aus Muster 1) und einem Fensterkranz aus Glas (Anzahl Fenster über „Anzahl Ecken“), darauf eine
+  hohle Kuppel aus Muster 2 mit Öffnung oben. Obendrauf sitzt die Laterne: ein kleines Türmchen aus Pfosten und Glas
+  mit einer hängenden Laterne als Licht, Spitzdach und Blitzableiter. Radius X = Kuppelradius, Radius Y = Höhe des
+  Tambours
+
 ## 0.61.0 – 31.10.2026 (nächtlicher Ausbau: Terraform)
 - **Oase:** neuer Terrain-Modus – auf Sand (oder anderen Boden) zielen und benutzen. In der Mitte entsteht ein
   runder See bis 3 Blöcke tief mit Sandgrund, Seerosen und Seegras. Rundherum wächst ein grünes Ufer mit Gras, Farn,
