@@ -1463,6 +1463,48 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Mondlandschaft");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 47, y: 75, z: 47 });
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Mondlandschaft", () => ops.opMoon(ses, { count: 14, size: 60 }, rnd));
+  seed = 11;
+  ops.opMoon(ses, { count: 14, size: 60 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let lo = 99;
+  let hi = 0;
+  let loId = "";
+  let grass = 0;
+  for (let x = 0; x <= 47; x++)
+    for (let z = 0; z <= 47; z++) {
+      let y = 75;
+      while (y > 60 && id(x, y, z) === "minecraft:air") y--;
+      if (id(x, y, z) === "minecraft:tuff" && id(x, y - 1, z) !== "minecraft:andesite" && id(x, y - 1, z) !== "minecraft:stone") y--; // Felsbrocken
+      if (y < lo) {
+        lo = y;
+        loId = id(x, y, z);
+      }
+      hi = Math.max(hi, y);
+      if (id(x, y, z) === "minecraft:grass_block") grass++;
+    }
+  let dust = 0;
+  let floor = 0;
+  for (const [, p] of dim.blocks) {
+    if (p.type.id === "minecraft:light_gray_concrete_powder") dust++;
+    if (p.type.id === "minecraft:gray_concrete_powder") floor++;
+  }
+  check(lo <= 65 && hi >= 69 && loId === "minecraft:gray_concrete_powder", "Mondlandschaft: tiefe Krater mit dunklem Boden, Ränder höher (" + lo + "–" + hi + ")");
+  check(dust > 150 && floor > 40 && grass === 0, "Mondlandschaft: grauer Staub, kein Gras (" + dust + "/" + floor + ")");
+  check(id(48, 64, 5) === "minecraft:grass_block" && id(5, 64, 48) === "minecraft:grass_block", "Mondlandschaft: nur in der Auswahl");
+  await undo();
+  check(id(5, 64, 5) === "minecraft:grass_block", "Mondlandschaft: Rückgängig");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Höhlen-Netz");
 {
   dim.blocks.clear();

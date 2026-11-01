@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.63.0 – 01.11.2026 (nächtlicher Ausbau: Terraform)
+- **Mondlandschaft:** neu im Auswahl-Menü („Mondlandschaft (Krater) erzeugen“) – füllt eine Box-Auswahl mit einem
+  grauen Boden voller Krater: viele kleine und wenige große, runde Mulden mit aufgeworfenem Rand, die sich auch
+  überlappen. Oben liegt hellgrauer Staub, die Kraterböden sind dunkler, die Ränder aus Andesit und Tuff, dazwischen
+  ein paar Felsbrocken. Anzahl der Krater und Größe der größten Krater sind einstellbar
+
 ## 0.62.0 – 01.11.2026 (nächtlicher Ausbau: Formen)
 - **Kuppel mit Laterne:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein runder Boden mit einem
   Tambour (runde Mauer aus Muster 1) und einem Fensterkranz aus Glas (Anzahl Fenster über „Anzahl Ecken“), darauf eine

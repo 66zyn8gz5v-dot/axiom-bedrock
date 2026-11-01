@@ -752,6 +752,82 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Mondlandschaft in der Auswahl: flacher grauer Boden mit vielen Kratern unterschiedlicher Größe (viele kleine,
+ * wenige große) – runde Mulden mit aufgeworfenem Rand, die sich auch überlappen. Oben grauer Staub, Kraterböden
+ * dunkler, Ränder aus Andesit und Tuff, ab und zu ein Felsbrocken. Die Auswahl wird komplett neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{count:number, size:number}} o
+ * @param {() => number} [rand]
+ */
+export function opMoon(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  const ground = min.y + Math.max(3, Math.round((sy - 1) * 0.5));
+  const big = Math.max(3, (Math.min(sx, sz) / 2) * (o.size / 100));
+  /** @type {{x:number, z:number, r:number, d:number}[]} */
+  const craters = [];
+  for (let i = 0; i < o.count; i++) {
+    // Potenzverteilung: meist kleine Krater, selten große
+    const r = Math.max(2, big * Math.pow(rand(), 2.2) + 1.5);
+    craters.push({ x: min.x + rand() * sx, z: min.z + rand() * sz, r, d: Math.min(ground - min.y - 1, r * (0.35 + rand() * 0.15)) });
+  }
+  const seed = rand() * 1000;
+  /** @type {Map<string, {h:number, kind:"floor"|"rim"|"plain"}>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      let h = ground + fbm(x / 14 + seed, 0.5, z / 14, 2) * 1.5;
+      /** @type {"floor"|"rim"|"plain"} */
+      let kind = "plain";
+      for (const C of craters) {
+        const q = Math.hypot(x - C.x, z - C.z) / C.r;
+        if (q < 1) {
+          // Schüssel
+          h -= C.d * (1 - q * q) - C.d * 0.15;
+          if (q < 0.6) kind = "floor";
+          else if (kind !== "floor") kind = "rim";
+        } else if (q < 1.45) {
+          // aufgeworfener Rand, nach außen auslaufend
+          h += C.d * 0.3 * Math.pow(1 - (q - 1) / 0.45, 2);
+          if (kind === "plain" && q < 1.2) kind = "rim";
+        }
+      }
+      H.set(x + "," + z, { h: Math.max(min.y + 1, Math.min(max.y - 1, Math.round(h))), kind });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Mondlandschaft", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, kind } = /** @type {{h:number, kind:string}} */ (H.get(x + "," + z));
+        const n = fbm(x / 3 + seed, 1.3, z / 3, 1);
+        const top =
+          kind === "floor" ? "minecraft:gray_concrete_powder" : kind === "rim" ? (n > 0 ? "minecraft:andesite" : "minecraft:tuff") : n > 0.35 ? "minecraft:andesite" : "minecraft:light_gray_concrete_powder";
+        const boulder = kind !== "floor" && fbm(x / 1.7 + seed, 4.1, z / 1.7, 1) > 0.62;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y === h + 1 && boulder) es.set(x, y, z, P("minecraft:tuff"));
+          else if (y > h) es.set(x, y, z, A);
+          else if (y === h) es.set(x, y, z, P(top));
+          else es.set(x, y, z, P(h - y <= 2 ? "minecraft:andesite" : "minecraft:stone"));
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Höhlen-Netz in der Auswahl: mehrere „Würmer“ graben sich in Schlangenlinien durch festen Boden, verzweigen sich
  * und öffnen unterwegs größere Kammern. Nur feste Blöcke werden zu Luft (Wasser, Luft bleiben).
  * @param {import("./state.js").Session} ses

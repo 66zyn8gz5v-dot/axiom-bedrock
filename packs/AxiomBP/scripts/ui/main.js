@@ -197,6 +197,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Mondlandschaft (Krater) erzeugen",
+      run: async () => {
+        const c = ses.s.moon;
+        const r = await new Modal("Mondlandschaft")
+          .slider("count", "Anzahl Krater", 1, 40, 1, c.count)
+          .slider("size", "Größe der größten Krater in %", 10, 100, 5, c.size)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opMoon(ses, c);
+      },
+    },
+    {
       text: "Höhlen-Netz graben",
       run: async () => {
         const c = ses.s.caves;
