@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.64.0 – 02.11.2026 (nächtlicher Ausbau: Formen)
+- **Obelisk:** neue Grundform – ein vierkantiger Schaft, der nach oben auf etwa 60 % schmaler wird, mit einer kleinen
+  Pyramide als Spitze. Radius X/Z = halbe Breite unten, Radius Y = halbe Höhe (z.B. 2 / 10 / 2 für einen 21 Blöcke
+  hohen Obelisken). Weil er eine normale Form ist, geht alles, was Formen können: drehen und kippen, hohl, in die
+  Auswahl einpassen, von Punkt A nach B ziehen und Materialien wie „Verlauf“ (z.B. unten Sandstein, oben Gold)
+
 ## 0.63.0 – 01.11.2026 (nächtlicher Ausbau: Terraform)
 - **Mondlandschaft:** neu im Auswahl-Menü („Mondlandschaft (Krater) erzeugen“) – füllt eine Box-Auswahl mit einem
   grauen Boden voller Krater: viele kleine und wenige große, runde Mulden mit aufgeworfenem Rand, die sich auch

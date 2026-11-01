@@ -151,7 +151,7 @@ PAGES = [
     ),
     (
         [("h", "4. Formen"),
-         ("tool", "shape", "Formen", "36 Formen: Kugel, Pyramide, Burgturm, Leuchtturm, Tempel, Laternen-Kuppel …"),
+         ("tool", "shape", "Formen", "37 Formen: Kugel, Pyramide, Obelisk, Burgturm, Leuchtturm, Tempel, Kuppel …"),
          ("p", "Schleichen + Benutzen: Form, Größe, hohl, offen oder nur Kanten, drehen & kippen, in die Auswahl einpassen oder von Punkt A nach B ziehen."),
          ("p", "Benutzen setzt die Form dort, wo du hinschaust – auch in der Luft. Der Umriss aus Partikeln zeigt sie vorher."),
          ("img", "sphere")],

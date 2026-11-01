@@ -18,6 +18,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["cylinder", "Zylinder (senkrecht)"],
   ["cone", "Kegel"],
   ["pyramid", "Pyramide"],
+  ["obelisk", "Obelisk (schlanke Säule, oben schmaler, mit Spitze)"],
   ["torus", "Torus (Ring)"],
   ["arch", "Bogen"],
   ["prism", "Prisma (Dach, entlang X)"],
@@ -258,6 +259,23 @@ export function shapeFn(c) {
             if (X * Math.cos(a) + Z * Math.sin(a) > ap) return false;
           }
           return true;
+        },
+        ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "obelisk": {
+      // Vierkantiger Schaft, nach oben auf 60 % verjüngt, darauf eine kleine Pyramide (Pyramidion) mit Spitze
+      const H = 2 * c.ry + 1;
+      const top = 0.6;
+      const ph = Math.min(H - 1, Math.max(2, Math.round(Math.max(c.rx, c.rz) * top * 2)));
+      const shaft = H - ph;
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const yy = y + c.ry;
+          const f = yy < shaft ? 1 - (1 - top) * (shaft > 1 ? yy / (shaft - 1) : 0) : (top * (ph - 1 - (yy - shaft))) / ph;
+          return Math.abs(x) <= c.rx * f + 0.5 && Math.abs(z) <= c.rz * f + 0.5;
         },
         ext: v(c.rx, c.ry, c.rz),
         yMin: -c.ry,

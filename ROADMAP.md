@@ -159,7 +159,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Pavillon** (v0.58): runder oder achteckiger Pavillon mit Säulen, Geländer und Kuppel-/Zeltdach
 - [x] **Säulenhalle (Tempel)** (v0.60): Rechteck aus Säulen mit Giebeldach und Stufen-Sockel in einer Box-Auswahl
 - [x] **Kuppel mit Laterne** (v0.62): Kuppel mit Fensterkranz und kleinem Türmchen oben (wie bei Kirchen)
-- [ ] **Obelisk**: schlanke, nach oben schmaler werdende Säule mit Pyramiden-Spitze
+- [x] **Obelisk** (v0.64): schlanke, nach oben schmaler werdende Säule mit Pyramiden-Spitze
 - [ ] **Treppenpyramide mit Tempel** (Maya): Stufenpyramide mit Treppen an allen vier Seiten und Häuschen oben
 
 ### Sonstiges

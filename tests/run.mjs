@@ -2257,6 +2257,26 @@ console.log("Kuppel mit Laterne");
   dim.blocks.clear();
 }
 
+console.log("Obelisk");
+{
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const f = shapeFn({ type: "obelisk", rx: 2, ry: 8, rz: 2 });
+  const width = (y) => {
+    let w = 0;
+    for (let x = -3; x <= 3; x++) if (f.inside(x, y, 0)) w++;
+    return w;
+  };
+  const ws = [];
+  for (let y = -8; y <= 8; y++) ws.push(width(y));
+  check(ws[0] === 5 && ws[16] === 1 && ws.every((w, i) => i === 0 || w <= ws[i - 1]), "Obelisk: unten breit, nach oben schmaler, Spitze (" + ws.join(",") + ")");
+  check(f.inside(2, -8, 2) && !f.inside(2, 4, 2) && f.inside(1, 4, 1) && !f.inside(1, 8, 0), "Obelisk: vierkantiger Schaft");
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "obelisk", rx: 2, ry: 8, rz: 2, anchor: "base", hollow: false, wire: false, material: "single", yaw: 0, tilt: 0, roll: 0, confirm: false });
+  await roundTrip("Obelisk", () => use("axiom:shape", G));
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, anchor: "center" });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
