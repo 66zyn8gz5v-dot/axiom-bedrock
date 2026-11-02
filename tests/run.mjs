@@ -2248,8 +2248,12 @@ console.log("Oase");
   dim.blocks.clear();
   const id = (x, y, z) => dim._get(x, y, z).type.id;
   Object.assign(ses.s.terrain, { mode: "oasis", radius: 8 });
+  // fester Zufall, damit Palmen und Schilf immer gleich wachsen
+  const realRandom = Math.random;
+  Math.random = () => 0.4242;
   await roundTrip("Oase", () => use("axiom:terrain", G));
   await use("axiom:terrain", G);
+  Math.random = realRandom;
   const count = (pred) => {
     let k = 0;
     for (const [key, p] of dim.blocks) if (pred(p.type.id, Number(key.split(",")[1]))) k++;
