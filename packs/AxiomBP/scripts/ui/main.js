@@ -197,6 +197,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Dünenfeld erzeugen (Wind in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.dunes;
+        const r = await new Modal("Dünenfeld")
+          .slider("height", "Dünenhöhe in % der Auswahlhöhe", 10, 100, 5, c.height)
+          .slider("spacing", "Abstand der Dünenkämme", 6, 40, 1, c.spacing)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opDunes(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Mondlandschaft (Krater) erzeugen",
       run: async () => {
         const c = ses.s.moon;

@@ -125,7 +125,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Felsnadeln (Hoodoos)** (v0.59): Stempel für mehrere schlanke Steinsäulen mit Deckstein, z.B. in der Wüste
 - [x] **Oase** (v0.61): kleiner See mit Palmen, Gras und Schilf mitten im Sand
 - [x] **Mondlandschaft** (v0.63): viele Krater unterschiedlicher Größe in einer Auswahl (grauer Stein, Staub)
-- [ ] **Dünenfeld**: viele Wanderdünen in einer Auswahl, alle in Windrichtung ausgerichtet
+- [x] **Dünenfeld** (v0.65): viele Wanderdünen in einer Auswahl, alle in Windrichtung ausgerichtet
 - [ ] **Flussdelta**: Fluss, der sich zum Meer hin in mehrere Arme mit Sandbänken aufteilt
 
 ### Formen (Figuren) vertiefen

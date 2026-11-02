@@ -1463,6 +1463,47 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Dünenfeld");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 63, y: 75, z: 31 });
+  await roundTrip("Dünenfeld", () => ops.opDunes(ses, { height: 70, spacing: 16 }, { x: 1, z: 0 }, 3.3));
+  ops.opDunes(ses, { height: 70, spacing: 16 }, { x: 1, z: 0 }, 3.3);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const top = (x, z) => {
+    let y = 75;
+    while (y > 60 && (id(x, y, z) === "minecraft:air" || id(x, y, z) === "minecraft:deadbush")) y--;
+    return y;
+  };
+  let up = 0;
+  let down = 0;
+  let maxUp = 0;
+  let maxDown = 0;
+  let lo = 99;
+  let hi = 0;
+  let notSand = 0;
+  for (let z = 0; z <= 31; z += 2) {
+    let prev = top(0, z);
+    for (let x = 1; x <= 63; x++) {
+      const h = top(x, z);
+      if (h > prev) (up++, (maxUp = Math.max(maxUp, h - prev)));
+      if (h < prev) (down++, (maxDown = Math.max(maxDown, prev - h)));
+      lo = Math.min(lo, h);
+      hi = Math.max(hi, h);
+      if (id(x, h, z) !== "minecraft:sand") notSand++;
+      prev = h;
+    }
+  }
+  check(hi - lo >= 6, "Dünenfeld: hohe Dünen und Täler (" + lo + "–" + hi + ")");
+  check(up > down && maxDown > maxUp, "Dünenfeld: Luv flach, Lee steil (" + up + "/" + down + ", " + maxUp + "/" + maxDown + ")");
+  check(notSand === 0 && id(64, 64, 5) === "minecraft:grass_block" && id(5, 64, 32) === "minecraft:grass_block", "Dünenfeld: alles Sand, nur in der Auswahl");
+  await undo();
+  check(id(5, 64, 5) === "minecraft:grass_block", "Dünenfeld: Rückgängig");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Mondlandschaft");
 {
   dim.blocks.clear();

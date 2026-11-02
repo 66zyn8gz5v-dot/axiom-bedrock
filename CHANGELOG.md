@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.65.0 – 02.11.2026 (nächtlicher Ausbau: Terraform)
+- **Dünenfeld:** neu im Auswahl-Menü („Dünenfeld erzeugen“) – füllt eine Box-Auswahl mit vielen Wanderdünen. Der
+  Wind weht in deine Blickrichtung: Die Dünen steigen auf der Wind-Seite flach an und fallen dahinter steil ab, die
+  Kämme sind geschwungen und in einzelne Dünen unterbrochen. Oben Sand, darunter Sandstein, in den Tälern ab und zu
+  ein toter Busch. Dünenhöhe und Abstand der Kämme sind einstellbar
+
 ## 0.64.0 – 02.11.2026 (nächtlicher Ausbau: Formen)
 - **Obelisk:** neue Grundform – ein vierkantiger Schaft, der nach oben auf etwa 60 % schmaler wird, mit einer kleinen
   Pyramide als Spitze. Radius X/Z = halbe Breite unten, Radius Y = halbe Höhe (z.B. 2 / 10 / 2 für einen 21 Blöcke

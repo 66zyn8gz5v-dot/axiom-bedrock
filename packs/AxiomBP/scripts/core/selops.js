@@ -752,6 +752,64 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Dünenfeld in der Auswahl: viele Wanderdünen quer zum Wind – auf der Wind-Seite flach ansteigend, auf der
+ * windabgewandten Seite steil abfallend. Die Kämme sind unterbrochen und leicht geschwungen, sodass einzelne Dünen
+ * entstehen. Oben Sand, darunter Sandstein, in den Tälern ab und zu ein toter Busch. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{height:number, spacing:number}} o height = Dünenhöhe in % der Auswahlhöhe, spacing = Abstand der Kämme
+ * @param {{x:number, z:number}} wind Windrichtung (wohin der Wind weht)
+ * @param {number} [seed]
+ */
+export function opDunes(ses, o, wind, seed = Math.random() * 1000) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  const L = Math.hypot(wind.x, wind.z) || 1;
+  const wx = wind.x / L;
+  const wz = wind.z / L;
+  const base = min.y + Math.min(sy - 2, Math.max(1, Math.round((sy - 1) * 0.2)));
+  const amp = Math.max(2, (max.y - 1 - base) * (o.height / 100));
+  const lam = Math.max(6, o.spacing);
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const u = x * wx + z * wz; // entlang des Windes
+      const w = -x * wz + z * wx; // quer zum Wind
+      // geschwungene Kämme: Phase verschiebt sich quer zum Wind
+      const ph = u / lam + fbm(w / (lam * 1.5) + seed, 0.3, seed * 0.1, 2) * 0.6;
+      const t = ph - Math.floor(ph);
+      // Sägezahn: 80 % flacher Anstieg (Luv), 20 % steiler Abfall (Lee)
+      const prof = t < 0.8 ? Math.pow(t / 0.8, 1.3) : 1 - (t - 0.8) / 0.2;
+      // Kämme in einzelne Dünen zerlegen
+      const k = Math.max(0, Math.min(1, 0.8 + fbm(w / lam + seed, 2.7, Math.floor(ph) * 3.1, 2) * 1.1));
+      const h = base + amp * prof * k + fbm(x / 9 + seed, 5.5, z / 9, 2) * 0.8;
+      H.set(x + "," + z, Math.max(min.y, Math.min(max.y - 1, Math.round(h))));
+    }
+  const SAND = BlockPermutation.resolve("minecraft:sand");
+  const STONE = BlockPermutation.resolve("minecraft:sandstone");
+  const BUSH = BlockPermutation.resolve("minecraft:deadbush");
+  const A = air();
+  runEdit(ses.player, { label: "Dünenfeld", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = /** @type {number} */ (H.get(x + "," + z));
+        const low = h <= base;
+        const bush = low && fbm(x / 1.3 + seed, 7.7, z / 1.3, 1) > 0.6;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y === h + 1 && bush) es.set(x, y, z, BUSH);
+          else if (y > h) es.set(x, y, z, A);
+          else es.set(x, y, z, h - y <= 3 + (h - base) ? SAND : STONE);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Mondlandschaft in der Auswahl: flacher grauer Boden mit vielen Kratern unterschiedlicher Größe (viele kleine,
  * wenige große) – runde Mulden mit aufgeworfenem Rand, die sich auch überlappen. Oben grauer Staub, Kraterböden
  * dunkler, Ränder aus Andesit und Tuff, ab und zu ein Felsbrocken. Die Auswahl wird komplett neu gefüllt.
