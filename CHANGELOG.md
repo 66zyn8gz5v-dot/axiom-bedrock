@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.66.0 – 03.11.2026 (nächtlicher Ausbau: Formen)
+- **Maya-Pyramide:** neue Form – auf den Boden zielen und benutzen. Es entsteht eine Stufenpyramide aus Muster 1
+  mit breiten Treppen aus echten Treppenblöcken an allen vier Seiten, die bis zur obersten Plattform hinaufführen.
+  Oben steht ein kleiner Tempel aus Muster 2 mit Türen in alle Richtungen, Flachdach und Dachkamm. Radius X = halbe
+  Breite unten (die Anzahl der Stufen ergibt sich daraus), „Stufenpyramide: Stufenhöhe“ = Höhe jeder Stufe
+
 ## 0.65.0 – 02.11.2026 (nächtlicher Ausbau: Terraform)
 - **Dünenfeld:** neu im Auswahl-Menü („Dünenfeld erzeugen“) – füllt eine Box-Auswahl mit vielen Wanderdünen. Der
   Wind weht in deine Blickrichtung: Die Dünen steigen auf der Wind-Seite flach an und fallen dahinter steil ab, die

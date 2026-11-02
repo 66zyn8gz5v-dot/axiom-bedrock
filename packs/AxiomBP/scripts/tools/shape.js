@@ -29,6 +29,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
   ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
   ["pavilion", "Pavillon (Säulen, Geländer, Zeltdach – Ecken über den Ecken-Regler)"],
@@ -643,7 +644,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -828,6 +829,71 @@ function buildTower(ses, c) {
         yield;
       }
     }
+  });
+}
+
+/**
+ * Maya-Pyramide: Stufenpyramide (Muster 1) mit breiten Treppen aus echten Treppenblöcken an allen vier Seiten, die bis
+ * zur obersten Plattform führen, und einem kleinen Tempel (Muster 2) mit vier Türen, Flachdach und Dachkamm.
+ * Radius X = halbe Breite unten, „Stufenpyramide: Stufenhöhe“ = Höhe jeder Stufe. Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildMaya(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(5, c.rx);
+  const th = Math.max(1, Math.min(4, c.step ?? 2));
+  const n = Math.floor((R - 3) / 2) + 1; // Anzahl Stufen, oben bleibt eine Plattform mit halber Breite ≥ 3
+  const Rt = R - 2 * (n - 1);
+  const Ht = n * th;
+  const body = picker(ses.s.pattern);
+  const temple = picker(ses.s.pattern2);
+  const A = air();
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:stone";
+  let stairId = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:stone_stairs";
+  }
+  /** Treppe, die zur Mitte hin ansteigt. @param {number} sx @param {number} sz */
+  const stairTo = (sx, sz) => BlockPermutation.resolve(stairId, { weirdo_direction: STAIR_DIRS.find(([a, b]) => a === sx && b === sz)?.[2] ?? 0, upside_down_bit: false });
+  runEdit(ses.player, { label: "Maya-Pyramide", symmetry: true }, function* (es) {
+    // Stufenkörper
+    for (let k = 0; k < n; k++) {
+      const r = R - 2 * k;
+      for (let y = k * th; y < (k + 1) * th; y++) for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) es.set(base.x + dx, base.y + y, base.z + dz, body());
+      yield;
+    }
+    // Treppen an allen vier Seiten (3 breit), darunter massiv
+    for (const [nx, nz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const step = stairTo(-nx, -nz);
+      for (let j = 0; j < Ht; j++) {
+        const dist = Rt + Ht - j;
+        for (let w = -1; w <= 1; w++) {
+          const x = base.x + nx * dist + nz * w;
+          const z = base.z + nz * dist + nx * w;
+          for (let y = 0; y < j; y++) es.set(x, base.y + y, z, body());
+          es.set(x, base.y + j, z, step);
+          es.set(x, base.y + j + 1, z, A);
+          es.set(x, base.y + j + 2, z, A);
+        }
+      }
+      yield;
+    }
+    // Tempel oben: Wände 3 hoch, Türen in alle Richtungen, Flachdach, Dachkamm
+    const tr = Rt - 1;
+    const y0 = base.y + Ht;
+    for (let y = 0; y < 3; y++)
+      for (let dx = -tr; dx <= tr; dx++)
+        for (let dz = -tr; dz <= tr; dz++) {
+          const wall = Math.abs(dx) === tr || Math.abs(dz) === tr;
+          const door = y < 2 && (dx === 0 || dz === 0);
+          es.set(base.x + dx, y0 + y, base.z + dz, wall && !door ? temple() : A);
+        }
+    for (let dx = -tr; dx <= tr; dx++) for (let dz = -tr; dz <= tr; dz++) es.set(base.x + dx, y0 + 3, base.z + dz, temple());
+    for (let k = 1; k <= 2; k++) for (let w = -(tr - k); w <= tr - k; w++) es.set(base.x + w, y0 + 3 + k, base.z, temple());
   });
 }
 
@@ -1343,6 +1409,7 @@ export const shapeTool = {
     if (c.type === "pavilion") return buildPavilion(ses, c);
     if (c.type === "temple") return buildTemple(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
+    if (c.type === "maya") return buildMaya(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1395,7 +1462,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

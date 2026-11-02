@@ -2318,6 +2318,32 @@ console.log("Obelisk");
   dim.blocks.clear();
 }
 
+console.log("Maya-Pyramide");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("chiseled_sandstone");
+  Object.assign(ses.s.shape, { type: "maya", rx: 8, ry: 4, rz: 8, step: 2, anchor: "center" });
+  await roundTrip("Maya-Pyramide", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const SB = "minecraft:stone_bricks";
+  const ST = "minecraft:stone_brick_stairs";
+  check(id(8, 65, 8) === SB && id(9, 65, 9) === "minecraft:air" && id(6, 67, 6) === SB && id(7, 67, 6) === "minecraft:air" && id(4, 70, 4) === SB, "Maya-Pyramide: drei Stufen");
+  check(id(10, 65, 0) === ST && id(-10, 65, 0) === ST && id(0, 65, 10) === ST && id(0, 70, -5) === ST && id(1, 68, 7) === ST, "Maya-Pyramide: Treppen an allen vier Seiten bis oben");
+  const dir = (x, y, z) => dim._get(x, y, z).getAllStates().weirdo_direction;
+  check(dir(10, 65, 0) !== dir(-10, 65, 0) && dir(0, 65, 10) !== dir(0, 65, -10), "Maya-Pyramide: Treppen steigen zur Mitte an");
+  check(id(3, 71, 2) === "minecraft:chiseled_sandstone" && id(0, 71, 0) === "minecraft:air" && id(3, 71, 0) === "minecraft:air" && id(3, 73, 0) === "minecraft:chiseled_sandstone", "Maya-Pyramide: Tempel mit Türen");
+  check(id(0, 74, 0) === "minecraft:chiseled_sandstone" && id(0, 75, 0) === "minecraft:chiseled_sandstone" && id(0, 77, 0) === "minecraft:air", "Maya-Pyramide: Dach mit Dachkamm");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, step: 2 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
