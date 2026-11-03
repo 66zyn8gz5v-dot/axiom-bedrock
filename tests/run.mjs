@@ -1463,6 +1463,55 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Flussdelta");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 63, y: 70, z: 39 });
+  await roundTrip("Flussdelta", () => ops.opDelta(ses, { arms: 3, width: 4 }, { x: 1, z: 0 }, 5.5));
+  ops.opDelta(ses, { arms: 3, width: 4 }, { x: 1, z: 0 }, 5.5);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const seaY = 58 + 5;
+  // Wasserläufe entlang einer Querlinie zählen
+  const runs = (x) => {
+    let n = 0;
+    let inW = false;
+    for (let z = 0; z <= 39; z++) {
+      const w = id(x, seaY, z) === "minecraft:water";
+      if (w && !inW) n++;
+      inW = w;
+    }
+    return n;
+  };
+  const up = runs(4);
+  const mid = Math.max(runs(40), runs(42), runs(44));
+  let sea = 0;
+  for (let z = 0; z <= 39; z++) if (id(63, seaY, z) === "minecraft:water") sea++;
+  check(up === 1 && mid >= 3, "Flussdelta: oben ein Fluss, zur Küste mehrere Arme (" + up + " → " + mid + ")");
+  check(sea === 40 && id(63, seaY + 1, 5) === "minecraft:air", "Flussdelta: Meer an der vorderen Seite");
+  let grass = 0;
+  let sand = 0;
+  let waterHigh = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (p.type.id === "minecraft:grass_block") grass++;
+    if (p.type.id === "minecraft:sand" && y >= seaY) sand++;
+    if (p.type.id === "minecraft:water" && y > seaY) waterHigh++;
+  }
+  check(grass > 200 && sand > 50 && waterHigh === 0, "Flussdelta: Gras im Land, Sandbänke, Wasser nur bis Meereshöhe (" + grass + "/" + sand + ")");
+  check(id(64, 64, 5) === "minecraft:grass_block" && dim._get(64, 65, 5).type.id === "minecraft:air", "Flussdelta: nur in der Auswahl");
+  await undo();
+  // andere Richtung: Meer bei z = 0
+  ops.opDelta(ses, { arms: 2, width: 4 }, { x: 0, z: -1 }, 5.5);
+  await drain();
+  let sea2 = 0;
+  for (let x = 0; x <= 63; x++) if (id(x, seaY, 0) === "minecraft:water") sea2++;
+  check(sea2 === 64, "Flussdelta: Meer liegt in Blickrichtung");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Dünenfeld");
 {
   dim.blocks.clear();

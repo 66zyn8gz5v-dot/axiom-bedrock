@@ -50,6 +50,7 @@ export function defaultSettings() {
     caves: { tunnels: 4, width: 3, chambers: 4 },
     moon: { count: 14, size: 50 },
     dunes: { height: 60, spacing: 16 },
+    delta: { arms: 3, width: 4 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

@@ -752,6 +752,101 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Flussdelta in der Auswahl: Ein Fluss kommt von der hinteren Seite, teilt sich in mehrere geschwungene Arme und
+ * mündet ins Meer an der vorderen Seite (in Blickrichtung). Flaches Schwemmland mit Gras, zum Meer hin Sand und
+ * Sandbänke zwischen den Armen, Flussbett aus Sand und Kies. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{arms:number, width:number}} o
+ * @param {{x:number, z:number}} dir Blickrichtung (zum Meer hin, nur waagerecht)
+ * @param {number} [seed]
+ */
+export function opDelta(ses, o, dir, seed = Math.random() * 1000) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 5) return err(ses.player, "Die Auswahl ist zu flach – mindestens 5 Blöcke hoch.");
+  const seaY = min.y + Math.max(3, Math.round((sy - 1) * 0.4));
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const sgn = (alongX ? dir.x : dir.z) >= 0 ? 1 : -1;
+  const [u0, u1] = alongX ? [min.x, max.x] : [min.z, max.z];
+  const [w0, w1] = alongX ? [min.z, max.z] : [min.x, max.x];
+  const half = (w1 - w0) / 2;
+  const wMid = (w0 + w1) / 2;
+  const N = Math.max(2, Math.min(6, o.arms));
+  const W = Math.max(2, o.width);
+  const split = 0.3;
+  /** @type {Map<string, {h:number, water:boolean, sand:boolean}>} */
+  const H = new Map();
+  for (let a = u0; a <= u1; a++)
+    for (let b = w0; b <= w1; b++) {
+      const u = u1 > u0 ? (sgn > 0 ? a - u0 : u1 - a) / (u1 - u0) : 0;
+      const w = b - wMid;
+      const coast = 0.78 + fbm(b / 9 + seed, 0.4, seed, 2) * 0.06;
+      // Flussarme: Abstand zur nächsten Mittellinie
+      let dist = Infinity;
+      let width = W;
+      const wig = fbm(a / 11 + seed, 1.9, b / 40, 2) * W * 0.8;
+      if (u < split) dist = Math.abs(w - wig);
+      else {
+        const f = Math.min(1, (u - split) / (coast - split));
+        for (let i = 0; i < N; i++) {
+          const spread = -1 + (2 * i) / (N - 1);
+          const c = spread * half * 0.75 * Math.pow(f, 0.8) + fbm(a / 9 + seed + i * 7.3, 2.6, i, 2) * W * (0.4 + f);
+          dist = Math.min(dist, Math.abs(w - c));
+        }
+        width = W * (1 - 0.35 * f);
+      }
+      const r = width / 2;
+      let h;
+      let water = false;
+      let sand = false;
+      if (u >= coast) {
+        // Meer: flacher, nach außen tiefer werdender Grund
+        h = seaY - 1 - Math.round(3 * Math.min(1, (u - coast) / Math.max(0.05, 1 - coast)));
+        water = true;
+        sand = true;
+      } else if (dist <= r) {
+        h = seaY - 1 - (dist < r * 0.5 ? 1 : 0);
+        water = true;
+        sand = true;
+      } else {
+        // Schwemmland: zum Meer hin flacher, Sandbänke nahe der Küste
+        h = seaY + Math.round(2 * (1 - u / coast) + fbm(a / 6 + seed, 3.3, b / 6, 2) * 0.8);
+        if (u > coast - 0.12) h = Math.min(h, seaY);
+        sand = u > coast - 0.18 || dist <= r + 1.5;
+        if (h < seaY) water = true;
+      }
+      H.set(alongX ? a + "," + b : b + "," + a, { h: Math.max(min.y, Math.min(max.y - 1, h)), water, sand });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const WAT = P("minecraft:water");
+  const A = air();
+  runEdit(ses.player, { label: "Flussdelta", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const col = /** @type {{h:number, water:boolean, sand:boolean}} */ (H.get(x + "," + z));
+        const top = col.water ? (fbm(x / 3 + seed, 5.1, z / 3, 1) > 0.3 ? "minecraft:gravel" : "minecraft:sand") : col.sand ? "minecraft:sand" : "minecraft:grass_block";
+        const sub = col.sand || col.water ? "minecraft:sand" : "minecraft:dirt";
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y > col.h) es.set(x, y, z, col.water && y <= seaY ? WAT : A);
+          else if (y === col.h) es.set(x, y, z, P(top));
+          else es.set(x, y, z, P(col.h - y <= 3 ? sub : "minecraft:stone"));
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Dünenfeld in der Auswahl: viele Wanderdünen quer zum Wind – auf der Wind-Seite flach ansteigend, auf der
  * windabgewandten Seite steil abfallend. Die Kämme sind unterbrochen und leicht geschwungen, sodass einzelne Dünen
  * entstehen. Oben Sand, darunter Sandstein, in den Tälern ab und zu ein toter Busch. Die Auswahl wird neu gefüllt.

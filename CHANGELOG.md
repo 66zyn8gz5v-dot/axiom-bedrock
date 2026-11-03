@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.67.0 – 03.11.2026 (nächtlicher Ausbau: Terraform)
+- **Flussdelta:** neu im Auswahl-Menü („Flussdelta erzeugen“) – füllt eine Box-Auswahl mit einer flachen
+  Flussmündung. Ein Fluss kommt von der hinteren Seite, teilt sich in mehrere geschwungene Arme und fließt in
+  deiner Blickrichtung ins Meer. Dazwischen liegt Schwemmland mit Gras, zur Küste hin Sand und Sandbänke, das
+  Flussbett ist aus Sand und Kies. Anzahl der Arme (2–6) und Breite des Flusses sind einstellbar
+- Test der Oase mit festem Zufall, damit er nicht mehr selten fehlschlägt
+
 ## 0.66.0 – 03.11.2026 (nächtlicher Ausbau: Formen)
 - **Maya-Pyramide:** neue Form – auf den Boden zielen und benutzen. Es entsteht eine Stufenpyramide aus Muster 1
   mit breiten Treppen aus echten Treppenblöcken an allen vier Seiten, die bis zur obersten Plattform hinaufführen.

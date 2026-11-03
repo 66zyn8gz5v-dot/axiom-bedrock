@@ -197,6 +197,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Flussdelta erzeugen (Meer in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.delta;
+        const r = await new Modal("Flussdelta")
+          .slider("arms", "Anzahl Flussarme", 2, 6, 1, c.arms)
+          .slider("width", "Breite des Flusses", 2, 10, 1, c.width)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opDelta(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Dünenfeld erzeugen (Wind in Blickrichtung)",
       run: async () => {
         const c = ses.s.dunes;
