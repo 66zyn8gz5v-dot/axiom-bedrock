@@ -163,7 +163,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Kuppel mit Laterne** (v0.62): Kuppel mit Fensterkranz und kleinem Türmchen oben (wie bei Kirchen)
 - [x] **Obelisk** (v0.64): schlanke, nach oben schmaler werdende Säule mit Pyramiden-Spitze
 - [x] **Treppenpyramide mit Tempel** (Maya, v0.66): Stufenpyramide mit Treppen an allen vier Seiten und Häuschen oben
-- [ ] **Burgtor**: Torhaus mit Rundbogen-Durchgang, zwei Flankentürmen, Zinnen und Fallgitter (Eisengitter)
+- [x] **Burgtor** (v0.68): Torhaus mit Rundbogen-Durchgang, zwei Flankentürmen, Zinnen und Fallgitter (Eisengitter)
 - [ ] **Pagode**: mehrstöckiger Turm mit geschwungenen, überstehenden Dächern auf jeder Etage
 
 ### Sonstiges

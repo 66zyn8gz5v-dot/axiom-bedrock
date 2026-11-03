@@ -2397,6 +2397,32 @@ console.log("Maya-Pyramide");
   dim.blocks.clear();
 }
 
+console.log("Burgtor");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("stone_bricks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "gate", rx: 4, ry: 4, rz: 2, anchor: "center" });
+  await roundTrip("Burgtor", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const SB = "minecraft:stone_bricks";
+  const AIR = "minecraft:air";
+  check(id(0, 65, -2) === AIR && id(0, 66, 0) === AIR && id(0, 65, 2) === AIR && id(0, 68, 0) === AIR && id(3, 65, 0) === SB && id(0, 70, 0) === SB, "Burgtor: Torhaus mit Rundbogen-Durchgang");
+  check(id(0, 67, -1) === "minecraft:iron_bars" && id(0, 65, -1) === AIR && id(0, 66, -1) === AIR && id(0, 67, 0) === AIR, "Burgtor: Fallgitter halb unten, darunter frei");
+  let merlons = 0;
+  for (let x = -4; x <= 4; x++) for (let z = -2; z <= 2; z++) if (id(x, 74, z) === SB) merlons++;
+  check(id(0, 73, 0) === SB && merlons > 6 && merlons < 20, "Burgtor: Dach mit Zinnen (" + merlons + ")");
+  check(id(8, 66, 0) === SB && id(-8, 66, 0) === SB && id(6, 66, 0) === AIR && id(6, 76, 0) === SB, "Burgtor: zwei Flankentürme mit Plattform");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.68.0 – 04.11.2026 (nächtlicher Ausbau: Formen)
+- **Burgtor:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein Torhaus aus Muster 1 mit einem
+  Rundbogen-Durchgang in deiner Blickrichtung, einem halb heruntergelassenen Fallgitter aus Eisengittern (man kann
+  noch durchlaufen), Zinnen obendrauf und zwei runden Flankentürmen mit Plattform und Zinnenkranz. Radius X = halbe
+  Breite des Torhauses (der Bogen wird mitbreiter), Radius Y = Höhe, Radius Z = halbe Tiefe
+
 ## 0.67.0 – 03.11.2026 (nächtlicher Ausbau: Terraform)
 - **Flussdelta:** neu im Auswahl-Menü („Flussdelta erzeugen“) – füllt eine Box-Auswahl mit einer flachen
   Flussmündung. Ein Fluss kommt von der hinteren Seite, teilt sich in mehrere geschwungene Arme und fließt in

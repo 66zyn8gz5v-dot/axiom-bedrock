@@ -29,6 +29,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
   ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
@@ -644,7 +645,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -826,6 +827,79 @@ function buildTower(ses, c) {
         const r = rr * (1 - k / (rh + 1));
         for (let dx = -rr; dx <= rr; dx++)
           for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3 || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, roof());
+        yield;
+      }
+    }
+  });
+}
+
+/**
+ * Burgtor: massives Torhaus (Muster 1) mit rundem Torbogen in Blickrichtung, halb heruntergelassenem Fallgitter aus
+ * Eisengittern, Zinnen obendrauf und zwei runden Flankentürmen mit Plattform und Zinnenkranz.
+ * Radius X = halbe Breite des Torhauses, Höhe = 2 × Radius Y + 1, Radius Z = halbe Tiefe. Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildGate(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const H = Math.max(6, 2 * c.ry + 1);
+  const D = Math.max(1, c.rz);
+  const gw = Math.max(1, Math.floor(R / 3)); // halbe Breite des Durchgangs
+  const ph = gw + 2; // gerade Höhe des Durchgangs bis zum Bogenansatz
+  const tr = Math.max(2, Math.ceil(R / 2));
+  const TH = H + 3;
+  const wall = picker(ses.s.pattern);
+  const A = air();
+  const bars = BlockPermutation.resolve("minecraft:iron_bars");
+  const d = cardinal(ses.player.getViewDirection(), true);
+  // a = entlang der Durchfahrt (Blickrichtung), l = quer dazu
+  const sx = -d.z;
+  const sz = d.x;
+  const at = (/** @type {number} */ l, /** @type {number} */ a) => [base.x + sx * l + d.x * a, base.z + sz * l + d.z * a];
+  const inArch = (/** @type {number} */ l, /** @type {number} */ y) => Math.abs(l) <= gw && (y < ph || (y - ph) ** 2 + l * l <= (gw + 0.5) ** 2);
+  runEdit(ses.player, { label: "Burgtor", symmetry: true }, function* (es) {
+    // Torhaus mit Durchgang
+    for (let y = 0; y < H; y++) {
+      for (let l = -R; l <= R; l++)
+        for (let a = -D; a <= D; a++) {
+          const [x, z] = at(l, a);
+          es.set(x, base.y + y, z, inArch(l, y) ? A : wall());
+        }
+      yield;
+    }
+    // Fallgitter: knapp hinter der Vorderseite, unten 2 Blöcke frei
+    for (let y = 2; y < ph + gw + 1; y++)
+      for (let l = -gw; l <= gw; l++) {
+        if (!inArch(l, y)) continue;
+        const [x, z] = at(l, -D + 1);
+        es.set(x, base.y + y, z, bars);
+      }
+    // Zinnen auf dem Torhaus (Rand, jeder zweite Block)
+    for (let l = -R; l <= R; l++)
+      for (let a = -D; a <= D; a++) {
+        if (Math.abs(l) !== R && Math.abs(a) !== D) continue;
+        if ((l + a + R + D) % 2) continue;
+        const [x, z] = at(l, a);
+        es.set(x, base.y + H, z, wall());
+      }
+    yield;
+    // Flankentürme
+    for (const side of [-1, 1]) {
+      const cl = side * (R + tr);
+      for (let y = 0; y <= TH; y++) {
+        for (let dl = -tr; dl <= tr; dl++)
+          for (let da = -tr; da <= tr; da++) {
+            const dd = Math.hypot(dl, da);
+            if (dd > tr + 0.5) continue;
+            const ring = dd > tr - 0.5;
+            const [x, z] = at(cl + dl, da);
+            if (y === TH) {
+              if (ring && (dl + da + tr) % 2 === 0) es.set(x, base.y + y, z, wall());
+            } else if (y === 0 || y === TH - 1 || ring) es.set(x, base.y + y, z, wall());
+            else es.set(x, base.y + y, z, A);
+          }
         yield;
       }
     }
@@ -1410,6 +1484,7 @@ export const shapeTool = {
     if (c.type === "temple") return buildTemple(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
+    if (c.type === "gate") return buildGate(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1462,7 +1537,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel
