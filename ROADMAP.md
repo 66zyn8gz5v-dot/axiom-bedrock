@@ -164,7 +164,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Obelisk** (v0.64): schlanke, nach oben schmaler werdende Säule mit Pyramiden-Spitze
 - [x] **Treppenpyramide mit Tempel** (Maya, v0.66): Stufenpyramide mit Treppen an allen vier Seiten und Häuschen oben
 - [x] **Burgtor** (v0.68): Torhaus mit Rundbogen-Durchgang, zwei Flankentürmen, Zinnen und Fallgitter (Eisengitter)
-- [ ] **Pagode**: mehrstöckiger Turm mit geschwungenen, überstehenden Dächern auf jeder Etage
+- [x] **Pagode** (v0.70): mehrstöckiger Turm mit geschwungenen, überstehenden Dächern auf jeder Etage
+- [ ] **Säulen-Bogenbrücke (Aquädukt)**: zwei Reihen Bögen übereinander zwischen zwei Punkten, oben eine Wasserrinne
+- [ ] **Bogenfenster-Reihe**: Fensterreihe mit Rundbögen in eine Wand der Auswahl schneiden
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

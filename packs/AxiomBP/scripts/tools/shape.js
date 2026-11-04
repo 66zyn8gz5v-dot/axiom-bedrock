@@ -29,6 +29,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["pagoda", "Pagode (mehrere Etagen mit geschwungenen Dächern – Radius Y = Etagen)"],
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
@@ -645,7 +646,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -830,6 +831,59 @@ function buildTower(ses, c) {
         yield;
       }
     }
+  });
+}
+
+/**
+ * Pagode: mehrere Etagen (Muster 1), jede einen Block schmaler als die darunter, mit Eckpfosten, Tür unten zu dir
+ * und Fenstern in den oberen Etagen. Über jeder Etage ein weit überstehendes Dach (Muster 2) mit hochgezogenen
+ * Ecken, ganz oben ein Spitzdach mit Turmspitze und goldener Kugel.
+ * Radius X = halbe Breite unten, Radius Y = Anzahl Etagen (2–9). Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildPagoda(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const n = Math.max(2, Math.min(9, c.ry));
+  const fh = 4; // 3 Wand + 1 Dach/Boden
+  const wall = picker(ses.s.pattern);
+  const roof = picker(ses.s.pattern2);
+  const A = air();
+  const gold = BlockPermutation.resolve("minecraft:gold_block");
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const rAt = (/** @type {number} */ k) => Math.max(2, R - k);
+  runEdit(ses.player, { label: "Pagode", symmetry: true }, function* (es) {
+    for (let x = -R; x <= R; x++) for (let z = -R; z <= R; z++) es.set(base.x + x, base.y, base.z + z, wall());
+    for (let k = 0; k < n; k++) {
+      const r = rAt(k);
+      const y0 = base.y + k * fh;
+      // Wände mit Eckpfosten, innen frei
+      for (let y = y0 + 1; y <= y0 + 3; y++)
+        for (let x = -r; x <= r; x++)
+          for (let z = -r; z <= r; z++) {
+            const edge = Math.abs(x) === r || Math.abs(z) === r;
+            // Fenster: Mitte jeder Seite in den oberen Etagen
+            const win = k > 0 && y === y0 + 2 && edge && (x === 0 || z === 0);
+            es.set(base.x + x, y, base.z + z, edge && !win ? wall() : A);
+          }
+      if (k === 0) for (let y = y0 + 1; y <= y0 + 2; y++) es.set(base.x - d.x * r, y, base.z - d.z * r, A);
+      // Dach mit Überstand und hochgezogenen Ecken (zugleich Boden der nächsten Etage)
+      const er = r + 2;
+      const yr = y0 + fh;
+      for (let x = -er; x <= er; x++) for (let z = -er; z <= er; z++) es.set(base.x + x, yr, base.z + z, roof());
+      for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) es.set(base.x + sx * er, yr + 1, base.z + sz * er, roof());
+      yield;
+    }
+    // Spitzdach, Turmspitze, goldene Kugel
+    const yt = base.y + n * fh;
+    let r = rAt(n - 1);
+    let y = yt + 1;
+    for (; r >= 0; r--, y++) for (let x = -r; x <= r; x++) for (let z = -r; z <= r; z++) es.set(base.x + x, y, base.z + z, roof());
+    es.set(base.x, y, base.z, roof());
+    es.set(base.x, y + 1, base.z, roof());
+    es.set(base.x, y + 2, base.z, gold);
   });
 }
 
@@ -1485,6 +1539,7 @@ export const shapeTool = {
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
+    if (c.type === "pagoda") return buildPagoda(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1537,7 +1592,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

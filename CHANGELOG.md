@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.70.0 – 05.11.2026 (nächtlicher Ausbau: Formen)
+- **Pagode:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein mehrstöckiger Turm aus Muster 1, jede
+  Etage einen Block schmaler als die darunter, unten mit Tür zu dir und oben mit Fenstern in jeder Richtung. Über
+  jeder Etage liegt ein weit überstehendes Dach aus Muster 2 mit hochgezogenen Ecken, ganz oben ein Spitzdach mit
+  Turmspitze und goldener Kugel. Radius X = halbe Breite unten, Radius Y = Anzahl Etagen (2–9)
+
 ## 0.69.0 – 04.11.2026 (nächtlicher Ausbau: Terraform)
 - **Fjord:** neu im Pfad-Menü („Fjord entlang der Punkte“) – Punkte vom Land zum Meer setzen, dann gräbt das
   Werkzeug eine schmale, tiefe Meeresbucht. Der Grund ist U-förmig (wie von einem Gletscher ausgeschliffen) und wird

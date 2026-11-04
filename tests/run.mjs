@@ -2459,6 +2459,35 @@ console.log("Burgtor");
   dim.blocks.clear();
 }
 
+console.log("Pagode");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("spruce_planks");
+  ses.s.pattern2 = parsePattern("deepslate_tiles");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "pagoda", rx: 5, ry: 3, rz: 5, anchor: "center" });
+  await roundTrip("Pagode", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const W = "minecraft:spruce_planks";
+  const T = "minecraft:deepslate_tiles";
+  const AIR = "minecraft:air";
+  check(id(5, 66, 3) === W && id(0, 66, 0) === AIR && id(0, 66, -5) === AIR && id(0, 66, 5) === W, "Pagode: Erdgeschoss mit Tür zu dir");
+  check(id(7, 69, 0) === T && id(7, 70, 7) === T && id(7, 70, 0) === AIR, "Pagode: Dach mit Überstand und hochgezogenen Ecken");
+  check(id(4, 70, 2) === W && id(5, 70, 2) === AIR && id(4, 71, 0) === AIR && id(4, 72, 0) === W, "Pagode: obere Etage schmaler, mit Fenster");
+  check(id(6, 73, 6) === T && id(5, 77, 5) === T && id(5, 78, 5) === T, "Pagode: Dach über jeder Etage");
+  check(id(3, 78, 3) === T && id(0, 81, 0) === T && id(0, 84, 0) === "minecraft:gold_block" && id(0, 85, 0) === AIR, "Pagode: Spitzdach mit goldener Spitze");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
