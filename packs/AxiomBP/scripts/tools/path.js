@@ -632,6 +632,22 @@ export const pathTool = {
         },
       },
       {
+        text: "Fjord entlang der Punkte (vom Land zum Meer)",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.fjord;
+          const r = await new Modal("Fjord")
+            .slider("width", "Breite des Wassers (halbe Breite)", 2, 16, 1, c.width)
+            .slider("cliff", "Höhe der Felswände über dem Wasser", 4, 40, 1, c.cliff)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { fjord } = await import("./terrain.js");
+          fjord(ses, c);
+        },
+      },
+      {
         text: "Trampelpfad entlang der Punkte (folgt dem Boden)",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

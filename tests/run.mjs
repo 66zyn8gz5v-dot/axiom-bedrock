@@ -1435,6 +1435,42 @@ console.log("Küste");
   dim.blocks.clear();
 }
 
+console.log("Fjord");
+{
+  const { fjord } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  dim.blocks.clear();
+  ses.pathPoints = [];
+  fjord(ses, { width: 5, cliff: 12 });
+  check(player.messages.at(-1).includes("Pfad"), "Fjord: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -20, y: 65, z: 0 }, { x: 20, y: 65, z: 0 }];
+  const realRandom = Math.random;
+  Math.random = () => 0.31;
+  await roundTrip("Fjord", () => fjord(ses, { width: 5, cliff: 12 }));
+  fjord(ses, { width: 5, cliff: 12 });
+  await drain();
+  Math.random = realRandom;
+  check(id(0, 64, 0) === "minecraft:water" && id(0, 58, 0) === "minecraft:water" && id(0, 65, 0) === "minecraft:air", "Fjord: tiefes Wasser in der Mitte");
+  const wet = (x) => {
+    let k = 0;
+    for (let z = -12; z <= 12; z++) if (id(x, 64, z) === "minecraft:water") k++;
+    return k;
+  };
+  check(wet(18) > wet(-18) && wet(-18) >= 5, "Fjord: zum Meer hin breiter (" + wet(-18) + " → " + wet(18) + ")");
+  const rock = (b) => ["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone", "minecraft:grass_block"].includes(b);
+  let wall = 0;
+  for (let z = 5; z <= 12; z++) if (rock(id(0, 72, z)) && rock(id(0, 72, -z))) wall++;
+  check(wall >= 3 && id(0, 72, 0) === "minecraft:air", "Fjord: steile Felswände auf beiden Seiten (" + wall + ")");
+  let deepest = 99;
+  for (let y = 64; y > 40; y--) if (id(18, y, 0) !== "minecraft:water") ((deepest = y), (y = 0));
+  let shallow = 99;
+  for (let y = 64; y > 40; y--) if (id(-18, y, 0) !== "minecraft:water") ((shallow = y), (y = 0));
+  check(deepest < shallow, "Fjord: zum Meer hin tiefer (" + shallow + " → " + deepest + ")");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Zwiebelturm & Rippen");
 {
   const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");

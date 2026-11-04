@@ -127,7 +127,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Mondlandschaft** (v0.63): viele Krater unterschiedlicher Größe in einer Auswahl (grauer Stein, Staub)
 - [x] **Dünenfeld** (v0.65): viele Wanderdünen in einer Auswahl, alle in Windrichtung ausgerichtet
 - [x] **Flussdelta** (v0.67): Fluss, der sich zum Meer hin in mehrere Arme mit Sandbänken aufteilt
-- [ ] **Fjord**: schmale, tiefe Meeresbucht zwischen steilen Felswänden entlang der Pfad-Punkte
+- [x] **Fjord** (v0.69): schmale, tiefe Meeresbucht zwischen steilen Felswänden entlang der Pfad-Punkte
 - [ ] **Vulkaninsel mit Lavaströmen**: Lava fließt in Rinnen den Hang hinab und erstarrt am Meer zu Basalt
 
 ### Formen (Figuren) vertiefen

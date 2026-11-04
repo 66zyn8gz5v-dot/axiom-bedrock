@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.69.0 – 04.11.2026 (nächtlicher Ausbau: Terraform)
+- **Fjord:** neu im Pfad-Menü („Fjord entlang der Punkte“) – Punkte vom Land zum Meer setzen, dann gräbt das
+  Werkzeug eine schmale, tiefe Meeresbucht. Der Grund ist U-förmig (wie von einem Gletscher ausgeschliffen) und wird
+  zum Meer hin breiter und tiefer; links und rechts ragen steile Felswände auf, oben mit etwas Gras. Breite des
+  Wassers und Höhe der Felswände sind einstellbar, der Wasserspiegel liegt einen Block unter den Punkten
+
 ## 0.68.0 – 04.11.2026 (nächtlicher Ausbau: Formen)
 - **Burgtor:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein Torhaus aus Muster 1 mit einem
   Rundbogen-Durchgang in deiner Blickrichtung, einem halb heruntergelassenen Fallgitter aus Eisengittern (man kann

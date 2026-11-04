@@ -1029,6 +1029,79 @@ export function coast(ses, o) {
   });
 }
 
+/**
+ * Fjord entlang der Pfad-Punkte: schmale, tiefe Meeresbucht vom ersten (innen) zum letzten Punkt (zum Meer hin).
+ * U-förmiges Tal unter Wasser, das zum Meer hin breiter und tiefer wird, und links und rechts steile Felswände
+ * (oben mit etwas Gras). Wasserspiegel = mittlere Höhe der Punkte − 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, cliff:number}} o
+ */
+export function fjord(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte entlang des Fjords setzen (vom Land zum Meer).");
+  const samples = samplePath(ses.pathPoints, true);
+  const sea = Math.round(samples.reduce((a, p) => a + p.y, 0) / samples.length) - 1;
+  const W = Math.max(2, o.width);
+  const cliff = Math.max(4, o.cliff);
+  const wallW = Math.round(cliff * 0.5) + 3;
+  // Länge entlang des Pfads für den Fortschritt 0..1
+  const cum = [0];
+  for (let i = 1; i < samples.length; i++) cum.push(cum[i - 1] + Math.hypot(samples[i].x - samples[i - 1].x, samples[i].z - samples[i - 1].z));
+  const total = cum[cum.length - 1] || 1;
+  const maxW = W * 1.2 + wallW + 1;
+  const xs = samples.map((p) => p.x);
+  const zs = samples.map((p) => p.z);
+  const min = v(Math.floor(Math.min(...xs) - maxW), 0, Math.floor(Math.min(...zs) - maxW));
+  const max = v(Math.ceil(Math.max(...xs) + maxW), 0, Math.ceil(Math.max(...zs) + maxW));
+  const seed = Math.floor(Math.random() * 1000);
+  runEdit(ses.player, { label: "Fjord" }, function* (es) {
+    const Wt = permOf("minecraft:water");
+    const A = air();
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        let best = Infinity;
+        let along = 0;
+        for (let i = 0; i < samples.length - 1; i++) {
+          const a = samples[i];
+          const b = samples[i + 1];
+          const dx = b.x - a.x;
+          const dz = b.z - a.z;
+          const L2 = dx * dx + dz * dz || 1;
+          const tt = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / L2));
+          const d = Math.hypot(x - (a.x + dx * tt), z - (a.z + dz * tt));
+          if (d < best) {
+            best = d;
+            along = cum[i] + tt * Math.sqrt(L2);
+          }
+        }
+        const t = along / total;
+        const half = W * (0.6 + 0.6 * t) + fbm(x / 7 + seed, 0.2, z / 7, 2) * 0.8;
+        if (best > half + wallW + 0.5) continue;
+        const g = groundY(es, x, z, sea + cliff + 24, cliff + 48);
+        if (g === null) continue;
+        if (best <= half) {
+          // Wasser: U-förmiger Grund, zum Meer hin tiefer
+          const depth = Math.round((4 + 6 * t) * (1 - (best / half) ** 2));
+          const bed = Math.min(g, sea - 1 - depth);
+          for (let y = Math.max(g, sea + 1); y > sea; y--) es.set(x, y, z, A);
+          for (let y = Math.min(g, sea); y > bed; y--) es.set(x, y, z, Wt);
+          for (let y = g + 1; y <= sea; y++) es.set(x, y, z, Wt);
+          es.set(x, bed, z, permOf(depth > 3 ? "minecraft:gravel" : rockId(x, bed, z)));
+        } else {
+          // Felswand: steigt direkt am Wasser steil auf, oben flacher mit Gras
+          const k = Math.min(1, (best - half) / 1.5);
+          const h = Math.round(sea + cliff * k + fbm(x / 5 + seed, 1.1, z / 5, 2) * 2 * k);
+          if (h <= g) continue;
+          for (let y = g; y < h; y++) es.set(x, y, z, permOf(rockId(x, y, z)));
+          es.set(x, h, z, permOf(best - half > 2.5 && hash01(x, z, seed) < 0.7 ? "minecraft:grass_block" : rockId(x, h, z)));
+        }
+        if (++n % 64 === 0) yield;
+      }
+      yield;
+    }
+  });
+}
+
 const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
   dirt: [
     ["minecraft:grass_path", 0.7],
