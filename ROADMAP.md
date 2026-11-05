@@ -128,7 +128,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Dünenfeld** (v0.65): viele Wanderdünen in einer Auswahl, alle in Windrichtung ausgerichtet
 - [x] **Flussdelta** (v0.67): Fluss, der sich zum Meer hin in mehrere Arme mit Sandbänken aufteilt
 - [x] **Fjord** (v0.69): schmale, tiefe Meeresbucht zwischen steilen Felswänden entlang der Pfad-Punkte
-- [ ] **Vulkaninsel mit Lavaströmen**: Lava fließt in Rinnen den Hang hinab und erstarrt am Meer zu Basalt
+- [x] **Vulkaninsel mit Lavaströmen** (v0.71): Lava fließt in Rinnen den Hang hinab und erstarrt am Meer zu Basalt
+- [ ] **Reisterrassen**: Terrassenfelder am Hang, jede Stufe flach mit etwas Wasser und Gras-Rand
+- [ ] **Canyonlandschaft**: gewundene Schlucht mit Seitenarmen und geschichteten Wänden in einer Auswahl
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

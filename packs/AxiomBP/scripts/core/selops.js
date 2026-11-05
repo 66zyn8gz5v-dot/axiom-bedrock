@@ -752,6 +752,118 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Vulkaninsel in der Auswahl: Meer mit einem großen Vulkankegel in der Mitte, oben ein Krater mit Lavasee. Mehrere
+ * Lavaströme laufen in Rinnen den Hang hinab und erstarren an der Küste zu Basalt, der ein Stück ins Meer ragt.
+ * Unten Gras, weiter oben Tuff und Schwarzstein, oben Basalt. Die Auswahl wird komplett neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{size:number, flows:number}} o
+ * @param {() => number} [rand]
+ */
+export function opVolcanoIsland(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 10 || Math.min(sx, sz) < 16) return err(ses.player, "Die Auswahl ist zu klein – mindestens 16×10×16 Blöcke.");
+  const seaY = min.y + Math.max(3, Math.round((sy - 1) * 0.3));
+  const peak = max.y - 2;
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const R = (Math.min(sx, sz) / 2) * (o.size / 100);
+  const cr = 0.16; // Kraterradius (Anteil)
+  const seed = rand() * 1000;
+  const rimH = (/** @type {number} */ q) => seaY - 3 + (peak - seaY + 3) * Math.pow(1 - q, 1.3);
+  const craterFloor = Math.round(rimH(cr) - Math.max(2, R * 0.12));
+  /** @type {Map<string, {h:number, kind:string}>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const wob = 1 + fbm(x / 8 + seed, 0.4, z / 8, 2) * 0.15;
+      const q = Math.hypot(x - cx, z - cz) / (R * wob);
+      let h;
+      let kind = "slope";
+      if (q < cr) {
+        h = Math.max(craterFloor, Math.round(rimH(cr) - (rimH(cr) - craterFloor) * Math.min(1, (cr - q) / (cr * 0.5))));
+        kind = h <= craterFloor ? "pool" : "crater";
+      } else if (q < 1.15) h = Math.round(rimH(Math.min(1, q)) + fbm(x / 5 + seed, 1.7, z / 5, 2) * 1.5);
+      else h = seaY - 4;
+      if (h < seaY - 4) h = seaY - 4 + Math.round(fbm(x / 10 + seed, 2.2, z / 10, 2));
+      H.set(x + "," + z, { h: Math.max(min.y + 1, Math.min(max.y - 1, h)), kind });
+    }
+  // Lavaströme: vom Kraterrand in Schlangenlinien hangabwärts bis ins Meer
+  const N = Math.max(1, Math.min(8, o.flows));
+  for (let i = 0; i < N; i++) {
+    let a = ((i + rand() * 0.5) / N) * Math.PI * 2;
+    let r = cr * R + 1;
+    let px = cx + Math.cos(a) * r;
+    let pz = cz + Math.sin(a) * r;
+    let reef = 0;
+    for (let step = 0; step < R * 2 && reef < 4; step++) {
+      a += (rand() - 0.5) * 0.25;
+      px += Math.cos(a);
+      pz += Math.sin(a);
+      for (const [ox, oz] of [[0, 0], [1, 0], [0, 1]]) {
+        const k = Math.round(px + ox) + "," + Math.round(pz + oz);
+        const col = H.get(k);
+        if (!col || col.kind !== "slope") continue;
+        if (col.h > seaY + 1) {
+          // Rinne: Lava einen Block tiefer als der Hang, damit sie seitlich eingefasst ist
+          col.kind = "lava";
+          col.h -= 1;
+        }
+        else {
+          // erstarrte Lava: Basalt bis knapp über den Wasserspiegel
+          col.kind = "basalt";
+          col.h = Math.max(col.h, seaY);
+        }
+      }
+      const here = H.get(Math.round(px) + "," + Math.round(pz));
+      if (!here || here.h <= seaY) reef++;
+    }
+  }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const W = P("minecraft:water");
+  const LAVA = P("minecraft:lava");
+  const A = air();
+  const upper = seaY + (peak - seaY) * 0.6;
+  const mid = seaY + (peak - seaY) * 0.25;
+  runEdit(ses.player, { label: "Vulkaninsel", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, kind } = /** @type {{h:number, kind:string}} */ (H.get(x + "," + z));
+        const n = fbm(x / 3 + seed, 4.4, z / 3, 1);
+        let top;
+        if (kind === "lava") top = "minecraft:lava";
+        else if (kind === "basalt") top = "minecraft:basalt";
+        else if (kind === "pool") top = "minecraft:lava";
+        else if (kind === "crater") top = n > 0.2 ? "minecraft:magma" : "minecraft:blackstone";
+        else if (h < seaY) top = "minecraft:gravel";
+        else if (h <= seaY + 1) top = n > 0 ? "minecraft:gravel" : "minecraft:tuff";
+        else if (h > upper) top = n > 0 ? "minecraft:basalt" : "minecraft:blackstone";
+        else if (h > mid) top = n > 0.25 ? "minecraft:blackstone" : "minecraft:tuff";
+        else top = n > 0.45 ? "minecraft:coarse_dirt" : "minecraft:grass_block";
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y > h) es.set(x, y, z, y <= seaY ? W : A);
+          else if (y === h) es.set(x, y, z, top === "minecraft:lava" ? LAVA : P(top));
+          else if (y === h - 1 && top === "minecraft:lava") es.set(x, y, z, P("minecraft:basalt"));
+          else es.set(x, y, z, P(h - y <= 3 ? (top === "minecraft:grass_block" || top === "minecraft:coarse_dirt" ? "minecraft:dirt" : "minecraft:tuff") : "minecraft:stone"));
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Flussdelta in der Auswahl: Ein Fluss kommt von der hinteren Seite, teilt sich in mehrere geschwungene Arme und
  * mündet ins Meer an der vorderen Seite (in Blickrichtung). Flaches Schwemmland mit Gras, zum Meer hin Sand und
  * Sandbänke zwischen den Armen, Flussbett aus Sand und Kies. Die Auswahl wird neu gefüllt.

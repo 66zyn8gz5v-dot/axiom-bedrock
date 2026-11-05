@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.71.0 – 05.11.2026 (nächtlicher Ausbau: Terraform)
+- **Vulkaninsel mit Lavaströmen:** neu im Auswahl-Menü („Vulkaninsel mit Lavaströmen erzeugen“) – füllt eine
+  Box-Auswahl mit Meer und einem großen Vulkankegel in der Mitte. Oben liegt ein Krater mit Lavasee, mehrere
+  Lavaströme schlängeln sich in Rinnen den Hang hinab und erstarren an der Küste zu Basalt, der ein Stück ins Meer
+  ragt. Unten wächst Gras, weiter oben gibt es Tuff und Schwarzstein, ganz oben Basalt und Magma. Größe der Insel und
+  Anzahl der Lavaströme sind einstellbar
+
 ## 0.70.0 – 05.11.2026 (nächtlicher Ausbau: Formen)
 - **Pagode:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein mehrstöckiger Turm aus Muster 1, jede
   Etage einen Block schmaler als die darunter, unten mit Tür zu dir und oben mit Fenstern in jeder Richtung. Über

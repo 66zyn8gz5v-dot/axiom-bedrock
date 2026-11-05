@@ -197,6 +197,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Vulkaninsel mit Lavaströmen erzeugen",
+      run: async () => {
+        const c = ses.s.volcanoIsland;
+        const r = await new Modal("Vulkaninsel")
+          .slider("size", "Größe der Insel in %", 40, 100, 5, c.size)
+          .slider("flows", "Anzahl Lavaströme", 1, 8, 1, c.flows)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opVolcanoIsland(ses, c);
+      },
+    },
+    {
       text: "Flussdelta erzeugen (Meer in Blickrichtung)",
       run: async () => {
         const c = ses.s.delta;

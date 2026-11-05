@@ -1499,6 +1499,47 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Vulkaninsel");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 63, y: 92, z: 63 });
+  let seed = 23;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Vulkaninsel", () => ops.opVolcanoIsland(ses, { size: 85, flows: 4 }, rnd));
+  seed = 23;
+  ops.opVolcanoIsland(ses, { size: 85, flows: 4 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const seaY = 58 + 10;
+  let lavaHigh = 0;
+  let basaltCoast = 0;
+  let grass = 0;
+  let top = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (p.type.id === "minecraft:lava" && y > seaY + 3) lavaHigh++;
+    if (p.type.id === "minecraft:basalt" && y >= seaY && y <= seaY + 1) basaltCoast++;
+    if (p.type.id === "minecraft:grass_block") grass++;
+    if (p.type.id !== "minecraft:air" && p.type.id !== "minecraft:water") top = Math.max(top, y);
+  }
+  check(top >= 85 && id(0, seaY, 0) === "minecraft:water" && id(63, seaY, 63) === "minecraft:water", "Vulkaninsel: hoher Kegel mitten im Meer (" + top + ")");
+  let pool = false;
+  for (let y = 92; y > 60; y--) {
+    const b = id(32, y, 32);
+    if (b !== "minecraft:air") {
+      pool = b === "minecraft:lava";
+      break;
+    }
+  }
+  check(pool, "Vulkaninsel: Lavasee im Krater");
+  check(lavaHigh > 30 && basaltCoast > 4, "Vulkaninsel: Lavaströme am Hang, an der Küste Basalt (" + lavaHigh + "/" + basaltCoast + ")");
+  check(grass > 50 && id(64, 64, 5) === "minecraft:grass_block" && id(64, 65, 5) === "minecraft:air", "Vulkaninsel: unten grün, nur in der Auswahl (" + grass + ")");
+  await undo();
+  check(id(32, 64, 32) === "minecraft:grass_block", "Vulkaninsel: Rückgängig");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Flussdelta");
 {
   dim.blocks.clear();
