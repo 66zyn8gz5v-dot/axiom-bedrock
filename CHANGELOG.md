@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.72.0 – 06.11.2026 (nächtlicher Ausbau: Formen)
+- **Aquädukt:** neue Form – erst den Anfang (Punkt A) anklicken, dann das Ende (Punkt B). Entlang der Linie
+  entstehen zwei Reihen Rundbögen übereinander wie bei den alten Römern: unten große Bögen auf breiten Pfeilern,
+  darüber ein Gesims und kleinere Bögen, ganz oben eine Rinne mit Wasser. Alles aus Muster 1, Breite = 2 × Radius X
+  + 1, Höhe = 2 × Radius Y + 1 (mindestens 9). Schlagen verwirft Punkt A
+
 ## 0.71.0 – 05.11.2026 (nächtlicher Ausbau: Terraform)
 - **Vulkaninsel mit Lavaströmen:** neu im Auswahl-Menü („Vulkaninsel mit Lavaströmen erzeugen“) – füllt eine
   Box-Auswahl mit Meer und einem großen Vulkankegel in der Mitte. Oben liegt ein Krater mit Lavasee, mehrere

@@ -2183,6 +2183,37 @@ console.log("Gerade Treppe");
   dim.blocks.clear();
 }
 
+console.log("Aquädukt");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("smooth_sandstone");
+  Object.assign(ses.s.shape, { type: "aqueduct", rx: 1, ry: 5, rz: 1 });
+  ses.shapeA = undefined;
+  const snap = dim.snapshot();
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  check(eqSnap(snap, dim.snapshot()) && !!ses.shapeA, "Aquädukt: erster Klick merkt Punkt A");
+  await roundTrip("Aquädukt", () => use("axiom:shape", { x: 24, y: 64, z: 1 }));
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 24, y: 64, z: 1 });
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:smooth_sandstone";
+  const AIR = "minecraft:air";
+  // H = 11, h1 = round(9 * 0.6) = 5: unten Bögen y 65..69, Gesims 70, oben 71..73, Rinnenboden 74, Wasser 75
+  check(id(0, 65, 0) === S && id(1, 65, 0) === S && id(3, 65, 0) === AIR && id(3, 68, 0) === AIR && id(2, 68, 0) === S && id(3, 69, 0) === S && id(6, 66, 0) === S, "Aquädukt: untere Bogenreihe mit Pfeilern");
+  check(id(3, 70, 0) === S && id(4, 71, 0) === AIR && id(3, 71, 0) === S && id(4, 73, 0) === S, "Aquädukt: Gesims und obere kleine Bögen");
+  check(id(10, 75, 0) === "minecraft:water" && id(10, 75, 1) === S && id(10, 75, -1) === S && id(10, 74, 0) === S, "Aquädukt: Rinne mit Wasser oben");
+  check(id(24, 66, 0) === S && id(25, 66, 0) === AIR && id(3, 66, 1) === AIR && id(3, 66, 2) === AIR, "Aquädukt: von A bis B, 3 breit");
+  await undo();
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  const snap2 = dim.snapshot();
+  await use("axiom:shape", { x: 3, y: 64, z: 0 });
+  check(eqSnap(snap2, dim.snapshot()) && player.messages.at(-1).includes("zu nah"), "Aquädukt: zu kurz wird abgelehnt");
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Schlucht mit Fluss");
 {
   dim.blocks.clear();

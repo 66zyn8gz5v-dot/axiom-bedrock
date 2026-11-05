@@ -29,6 +29,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["rose", "Rosettenfenster (Maßwerk-Rad, steht vor dir)"],
   ["barrel", "Tonnengewölbe (Decke, gewölbt entlang Z)"],
   ["groin", "Kreuzgewölbe (Decke, zwei Tonnen über Kreuz)"],
+  ["aqueduct", "Aquädukt (zwei Bogenreihen übereinander, Wasserrinne oben – Punkt A → B)"],
   ["pagoda", "Pagode (mehrere Etagen mit geschwungenen Dächern – Radius Y = Etagen)"],
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
@@ -646,7 +647,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -830,6 +831,65 @@ function buildTower(ses, c) {
           for (let dz = -rr; dz <= rr; dz++) if (Math.hypot(dx, dz) <= r + 0.3 || (!dx && !dz)) es.set(base.x + dx, base.y + H + 1 + k, base.z + dz, roof());
         yield;
       }
+    }
+  });
+}
+
+/**
+ * Aquädukt: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B. Entlang der Hauptrichtung von A nach B zwei Reihen
+ * Rundbögen übereinander (unten große, oben je zwei kleine), dazwischen ein Gesims und oben eine Rinne mit Wasser.
+ * Alles aus Muster 1. Breite = 2 × Radius X + 1, Höhe = 2 × Radius Y + 1 (mindestens 9).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildAqueduct(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.adjacent : t.pos;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, "Aquädukt: Anfang (Punkt A) gesetzt – jetzt auf das Ende (Punkt B) zielen und benutzen.");
+  }
+  const A = ses.shapeA;
+  ses.shapeA = undefined;
+  const ddx = p.x - A.x;
+  const ddz = p.z - A.z;
+  const [sx, sz] = Math.abs(ddx) >= Math.abs(ddz) ? [Math.sign(ddx) || 1, 0] : [0, Math.sign(ddz) || 1];
+  const L = Math.abs(sx ? ddx : ddz);
+  if (L < 6) return err(ses.player, "Punkt B ist zu nah – das Aquädukt braucht mindestens 7 Blöcke Länge.");
+  const W = Math.max(1, c.rx);
+  const H = Math.max(9, 2 * c.ry + 1);
+  const y0 = Math.min(A.y, p.y);
+  const h1 = Math.round((H - 2) * 0.6); // untere Bogenreihe
+  const P1 = 6; // Pfeiler (2) + Öffnung (4)
+  const P2 = 3; // Pfeiler (1) + Öffnung (2)
+  const solid = picker(ses.s.pattern);
+  const Air = air();
+  const Wt = BlockPermutation.resolve("minecraft:water");
+  /** Ist (u, y) in einer Bogenöffnung? @param {number} u @param {number} y @param {number} per @param {number} pier @param {number} yb Unterkante @param {number} th Höhe der Reihe */
+  const opening = (u, y, per, pier, yb, th) => {
+    if (u >= L - pier + 1) return false; // Endpfeiler
+    const q = u % per;
+    if (q < pier) return false;
+    const r = (per - pier) / 2;
+    const x = q - pier + 0.5 - r;
+    const spring = yb + th - 1 - r;
+    return y <= spring || (y - spring) ** 2 + x * x <= (r - 0.3) ** 2;
+  };
+  runEdit(ses.player, { label: "Aquädukt", symmetry: true }, function* (es) {
+    for (let u = 0; u <= L; u++) {
+      for (let w = -W; w <= W; w++) {
+        const x = A.x + sx * u - sz * w;
+        const z = A.z + sz * u + sx * w;
+        for (let y = 0; y < H; y++) {
+          let b;
+          if (y < h1) b = opening(u, y, P1, 2, 0, h1) ? Air : solid();
+          else if (y === h1 || y === H - 2) b = solid(); // Gesims und Boden der Rinne
+          else if (y < H - 2) b = opening(u, y, P2, 1, h1 + 1, H - 3 - h1) ? Air : solid();
+          else b = Math.abs(w) === W ? solid() : Wt; // Rinne mit Wasser
+          es.set(x, y0 + y, z, b);
+        }
+      }
+      yield;
     }
   });
 }
@@ -1540,6 +1600,7 @@ export const shapeTool = {
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
     if (c.type === "pagoda") return buildPagoda(ses, c);
+    if (c.type === "aqueduct") return buildAqueduct(ses, c);
     if (c.anchor === "sel") return buildInSelection(ses, c);
     if (c.anchor === "ab") return buildBetween(ses, c);
     const f = orientedShape(ses, c);
@@ -1590,9 +1651,9 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (c.type === "straight" && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if ((c.type === "straight" || c.type === "aqueduct") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel
