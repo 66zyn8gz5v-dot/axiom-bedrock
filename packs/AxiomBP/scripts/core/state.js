@@ -36,7 +36,7 @@ export function defaultSettings() {
     text: { text: "AXIOM", scale: 1, orient: "wall", spacing: 1, mode: "text", pixel: "rr.rr/rrrrr/.rrr./..r..", legend: "r=red_wool" },
     river: { width: 3, depth: 3, bed: "sand", banks: true },
     roof: { type: "gable", stairs: "spruce_stairs", overhang: 1 },
-    windows: { w: 2, h: 2, gap: 2, sill: 1, block: "glass_pane" },
+    windows: { w: 2, h: 2, gap: 2, sill: 1, block: "glass_pane", arch: "rect" },
     bridge: { width: 1, arch: 3, railing: "oak_fence", deck: "", pillars: 0 },
     gradient: { axis: "y", blend: 3, reverse: false },
     thin: { percent: 30, replace: false },

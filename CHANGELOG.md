@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.74.0 – 07.11.2026 (nächtlicher Ausbau: Formen)
+- **Bogenfenster:** das Fenster-Raster im Auswahl-Menü (jetzt „Fenster-Raster / Bogenfenster“) kann Fenster mit
+  **Rundbogen** oder **Spitzbogen** (gotisch) obendrauf setzen – „Fensterhöhe“ ist dann der gerade Teil unter dem
+  Bogen. Mit dem Fensterblock „air“ werden die Fenster als Öffnungen in die Wand geschnitten. Einfach eine Wand mit
+  der Box-Auswahl markieren, Form, Breite, Abstand und Höhe der Fensterbank wählen
+
 ## 0.73.0 – 06.11.2026 (nächtlicher Ausbau: Terraform)
 - **Reisterrassen:** neu im Auswahl-Menü („Reisterrassen am Hang anlegen“) – einen Hang mit der Box-Auswahl
   umfassen, dann wird er zu flachen Stufen umgebaut. Jede Stufe ist ein Reisfeld mit flachem Wasser über Schlamm und

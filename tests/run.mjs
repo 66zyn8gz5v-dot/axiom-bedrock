@@ -2680,6 +2680,29 @@ console.log("Dach & Fenster");
   await undo();
 }
 
+console.log("Bogenfenster");
+{
+  dim.blocks.clear();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 15, y: 74, z: 0 });
+  ops.opFill(ses, parsePattern("stone_bricks"));
+  await drain();
+  const S = "minecraft:stone_bricks";
+  await roundTrip("Rundbogenfenster", () => ops.opWindows(ses, { w: 3, h: 2, gap: 2, sill: 1, block: "glass", arch: "round" }));
+  ops.opWindows(ses, { w: 3, h: 2, gap: 2, sill: 1, block: "glass", arch: "round" });
+  await drain();
+  // Fenster bei x 4–6 und 9–11, gerade y 66–67, Bogen y 68 (3 breit) und 69 (Mitte)
+  check(id(5, 66, 0) === "minecraft:glass" && id(4, 68, 0) === "minecraft:glass" && id(10, 67, 0) === "minecraft:glass" && id(7, 67, 0) === S, "Rundbogenfenster: Fenster mit Abstand");
+  check(id(5, 69, 0) === "minecraft:glass" && id(4, 69, 0) === S && id(5, 70, 0) === S && id(5, 72, 0) === S, "Rundbogenfenster: runder Bogen oben, nur eine Reihe passt");
+  await undo();
+  ops.opWindows(ses, { w: 3, h: 2, gap: 2, sill: 1, block: "air", arch: "gothic" });
+  await drain();
+  check(id(4, 69, 0) === "minecraft:air" && id(5, 70, 0) === "minecraft:air" && id(4, 70, 0) === S && id(5, 71, 0) === S, "Spitzbogenfenster: spitzer Bogen, als Öffnung geschnitten");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Handbuch");
 {
   dim.entities = [];

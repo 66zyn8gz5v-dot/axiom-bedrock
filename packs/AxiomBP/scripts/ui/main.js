@@ -165,18 +165,28 @@ export async function selectionMenu(ses) {
       },
     },
     {
-      text: "Fenster-Raster (Wand-Auswahl)",
+      text: "Fenster-Raster / Bogenfenster (Wand-Auswahl)",
       run: async () => {
         const c = ses.s.windows;
         const r = await new Modal("Fenster-Raster")
+          .dropdown(
+            "arch",
+            "Fensterform",
+            [
+              ["rect", "Eckig"],
+              ["round", "Rundbogen"],
+              ["gothic", "Spitzbogen (gotisch)"],
+            ],
+            c.arch ?? "rect"
+          )
           .slider("w", "Fensterbreite", 1, 8, 1, c.w)
-          .slider("h", "Fensterhöhe", 1, 8, 1, c.h)
+          .slider("h", "Fensterhöhe (gerader Teil unter dem Bogen)", 1, 8, 1, c.h)
           .slider("gap", "Abstand zwischen Fenstern", 1, 8, 1, c.gap)
           .slider("sill", "Höhe der Fensterbank über dem Boden", 0, 8, 1, c.sill)
-          .text("block", "Fensterblock", "glass_pane", c.block)
+          .text("block", "Fensterblock („air“ = Öffnung schneiden)", "glass_pane", c.block)
           .show(p);
         if (!r) return;
-        Object.assign(c, { w: r.w, h: r.h, gap: r.gap, sill: r.sill, block: String(r.block) || "glass_pane" });
+        Object.assign(c, { arch: String(r.arch), w: r.w, h: r.h, gap: r.gap, sill: r.sill, block: String(r.block) || "glass_pane" });
         markDirty(ses);
         ops.opWindows(ses, c);
       },

@@ -168,7 +168,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Burgtor** (v0.68): Torhaus mit Rundbogen-Durchgang, zwei Flankentürmen, Zinnen und Fallgitter (Eisengitter)
 - [x] **Pagode** (v0.70): mehrstöckiger Turm mit geschwungenen, überstehenden Dächern auf jeder Etage
 - [x] **Säulen-Bogenbrücke (Aquädukt)** (v0.72): zwei Reihen Bögen übereinander zwischen zwei Punkten, oben eine Wasserrinne
-- [ ] **Bogenfenster-Reihe**: Fensterreihe mit Rundbögen in eine Wand der Auswahl schneiden
+- [x] **Bogenfenster-Reihe** (v0.74): Fensterreihe mit Rundbögen in eine Wand der Auswahl schneiden
+- [ ] **Säulengang mit Dach (Kreuzgang)**: rechteckiger Innenhof-Umgang aus Säulen und Bögen in einer Box-Auswahl
+- [ ] **Kugel aus Ringen (Armillarsphäre)**: drei gekreuzte Ringe als Deko-Form
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

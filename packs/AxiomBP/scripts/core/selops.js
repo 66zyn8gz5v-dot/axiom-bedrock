@@ -1312,9 +1312,10 @@ export function opRoof(ses, o) {
 
 
 /**
- * Fenster-Raster in eine Wand-Auswahl setzen (Wand = Box, die in X oder Z nur dünn ist).
+ * Fenster-Raster in eine Wand-Auswahl setzen (Wand = Box, die in X oder Z nur dünn ist). Fensterform eckig, mit
+ * Rundbogen oder mit Spitzbogen (gotisch) obendrauf; als Block „air“ werden Öffnungen in die Wand geschnitten.
  * @param {import("./state.js").Session} ses
- * @param {{w:number, h:number, gap:number, sill:number, block:string}} o
+ * @param {{w:number, h:number, gap:number, sill:number, block:string, arch?:string}} o
  */
 export function opWindows(ses, o) {
   const sel = need(ses);
@@ -1332,14 +1333,25 @@ export function opWindows(ses, o) {
   const step = o.w + o.gap;
   const count = Math.floor((len - o.gap) / step);
   if (count < 1) return err(ses.player, "Wand ist zu schmal für diese Fenstergröße.");
+  // Bogen über dem geraden Teil: Zeilen und Test je Zeile (k = 1 …) und Spalte (0 … w-1)
+  const arch = o.arch ?? "rect";
+  const archH = arch === "round" ? Math.ceil(o.w / 2) : arch === "gothic" ? Math.ceil(o.w * 0.87) : 0;
+  const inArch = (/** @type {number} */ k, /** @type {number} */ a) => {
+    const yk = k - 0.5;
+    if (arch === "round") return yk * yk + (a - (o.w - 1) / 2) ** 2 <= (o.w / 2) ** 2;
+    // Spitzbogen: zwei Kreise mit Radius = Breite, Mittelpunkte an den Fensterkanten
+    return (a + 0.5) ** 2 + yk * yk <= o.w * o.w && (a - o.w + 0.5) ** 2 + yk * yk <= o.w * o.w;
+  };
+  const fullH = o.h + archH;
   // Fenster mittig verteilen
   const start = Math.floor((len - (count * step - o.gap)) / 2);
   runEdit(ses.player, { label: "Fenster-Raster", region: { min: sel.min, max: sel.max }, useMask: false }, function* (es) {
-    for (let y = sel.min.y + o.sill; y + o.h - 1 <= sel.max.y; y += o.h + Math.max(1, o.gap)) {
+    for (let y = sel.min.y + o.sill; y + fullH - 1 <= sel.max.y; y += fullH + Math.max(1, o.gap)) {
       for (let i = 0; i < count; i++) {
         const s0 = start + i * step;
         for (let a = s0; a < s0 + o.w; a++)
-          for (let dy = 0; dy < o.h; dy++) {
+          for (let dy = 0; dy < fullH; dy++) {
+            if (dy >= o.h && !inArch(dy - o.h + 1, a - s0)) continue;
             if (along === "x") for (let z = sel.min.z; z <= sel.max.z; z++) es.set(sel.min.x + a, y + dy, z, glass());
             else for (let x = sel.min.x; x <= sel.max.x; x++) es.set(x, y + dy, sel.min.z + a, glass());
           }
