@@ -8,7 +8,7 @@ import { copySelection, freeClip, getClip, pasteClip, rotatedSize } from "./clip
 import { err, fmtNum, msg } from "./util.js";
 import { v, vmax, vmin } from "./vec.js";
 import { fbm } from "./noise.js";
-import { surfaceFor } from "../tools/terrain.js";
+import { groundY, surfaceFor } from "../tools/terrain.js";
 
 /** @param {import("./state.js").Session} ses */
 function need(ses) {
@@ -749,6 +749,59 @@ export function opIslands(ses, o, rand = Math.random) {
       H.set(x + "," + z, Math.max(min.y, Math.min(max.y, Math.round(h))));
     }
   writeTerrain(ses, sel, H, seaY, snowY, "Inselgruppe");
+}
+
+/**
+ * Reisterrassen: der Hang in der Auswahl wird zu flachen Stufen (Stufenhöhe einstellbar). Jede Stufe ist ein
+ * Reisfeld – flaches Wasser über Schlamm, dazwischen Reispflanzen (Seegras) –, eingefasst von einem Gras-Damm an der
+ * Kante zur nächsttieferen Stufe und am Rand der Auswahl, damit das Wasser nicht ausläuft.
+ * @param {import("./state.js").Session} ses
+ * @param {{step:number, plants:number}} o step = Stufenhöhe, plants = Pflanzen in %
+ */
+export function opRiceTerraces(ses, o) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const step = Math.max(1, Math.min(4, o.step));
+  /** @type {Map<string, number>} */
+  const T = new Map();
+  runEdit(ses.player, { label: "Reisterrassen", region: { min, max } }, function* (es) {
+    // Bodenhöhe je Spalte → auf Stufen abrunden
+    for (let x = min.x; x <= max.x; x++)
+      for (let z = min.z; z <= max.z; z++) {
+        const g = groundY(es, x, z, max.y, max.y - min.y);
+        if (g === null) continue;
+        T.set(x + "," + z, min.y + Math.floor((g - min.y) / step) * step);
+      }
+    yield;
+    /** @type {Map<string, BlockPermutation>} */
+    const cache = new Map();
+    const P = (/** @type {string} */ id) => {
+      let p = cache.get(id);
+      if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+      return p;
+    };
+    const A = air();
+    let n = 0;
+    for (const [k, t] of T) {
+      const [x, z] = k.split(",").map(Number);
+      // Damm: an der Auswahlkante oder wo ein Nachbar tiefer liegt (bzw. fehlt)
+      const rim = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oz]) => {
+        const nt = T.get(x + ox + "," + (z + oz));
+        return nt === undefined || nt < t || !selContains(sel, x + ox, t, z + oz);
+      });
+      for (let y = max.y; y > t; y--) if (selContains(sel, x, y, z)) es.set(x, y, z, A);
+      if (rim) {
+        es.set(x, t, z, P("minecraft:grass_block"));
+        if (t - 1 >= min.y) es.set(x, t - 1, z, P("minecraft:dirt"));
+      } else {
+        const plant = ((x * 31 + z * 17) % 100 + 100) % 100 < o.plants && (x + z) % 2 === 0;
+        es.set(x, t, z, P(plant ? "minecraft:seagrass" : "minecraft:water"));
+        if (t - 1 >= min.y) es.set(x, t - 1, z, P("minecraft:mud"));
+      }
+      if (++n % 128 === 0) yield;
+    }
+  });
 }
 
 /**

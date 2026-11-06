@@ -197,6 +197,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Reisterrassen am Hang anlegen",
+      run: async () => {
+        const c = ses.s.rice;
+        const r = await new Modal("Reisterrassen")
+          .slider("step", "Stufenhöhe", 1, 4, 1, c.step)
+          .slider("plants", "Reispflanzen in %", 0, 100, 10, c.plants)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opRiceTerraces(ses, c);
+      },
+    },
+    {
       text: "Vulkaninsel mit Lavaströmen erzeugen",
       run: async () => {
         const c = ses.s.volcanoIsland;

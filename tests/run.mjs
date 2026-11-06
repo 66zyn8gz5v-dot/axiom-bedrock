@@ -1499,6 +1499,45 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Reisterrassen");
+{
+  dim.blocks.clear();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  // Hang: Boden steigt nach +x an (alle 3 Blöcke einen Block)
+  const GR = BlockPermutation.resolve("minecraft:grass_block");
+  const DI = BlockPermutation.resolve("minecraft:dirt");
+  for (let x = 0; x <= 23; x++)
+    for (let z = 0; z <= 9; z++) {
+      const h = 64 + Math.floor(x / 3);
+      for (let y = 65; y < h; y++) dim._set(x, y, z, DI);
+      if (h > 64) dim._set(x, h, z, GR);
+    }
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 23, y: 80, z: 9 });
+  await roundTrip("Reisterrassen", () => ops.opRiceTerraces(ses, { step: 2, plants: 0 }));
+  ops.opRiceTerraces(ses, { step: 2, plants: 0 });
+  await drain();
+  // Stufen bei x 0–5 (64), 6–11 (66), 12–17 (68), 18–23 (70)
+  check(id(3, 64, 5) === "minecraft:water" && id(3, 63, 5) === "minecraft:mud" && id(9, 66, 5) === "minecraft:water" && id(21, 70, 5) === "minecraft:water", "Reisterrassen: flache Stufen mit Wasser über Schlamm");
+  check(id(6, 66, 5) === "minecraft:grass_block" && id(12, 68, 5) === "minecraft:grass_block" && id(5, 64, 5) === "minecraft:water" && id(8, 67, 5) === "minecraft:air", "Reisterrassen: Damm an der Kante, Hang abgetragen");
+  check(id(3, 64, 0) === "minecraft:grass_block" && id(0, 64, 5) === "minecraft:grass_block" && id(23, 70, 5) === "minecraft:grass_block", "Reisterrassen: Damm am Rand der Auswahl");
+  let leak = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== "minecraft:water") continue;
+    const [x, y, z] = k.split(",").map(Number);
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+  }
+  check(leak === 0, "Reisterrassen: Wasser ist überall eingefasst (" + leak + ")");
+  await undo();
+  ops.opRiceTerraces(ses, { step: 2, plants: 100 });
+  await drain();
+  let sg = 0;
+  for (const [, p] of dim.blocks) if (p.type.id === "minecraft:seagrass") sg++;
+  check(sg > 10, "Reisterrassen: Reispflanzen im Wasser (" + sg + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Vulkaninsel");
 {
   dim.blocks.clear();

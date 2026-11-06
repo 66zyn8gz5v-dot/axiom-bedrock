@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.73.0 – 06.11.2026 (nächtlicher Ausbau: Terraform)
+- **Reisterrassen:** neu im Auswahl-Menü („Reisterrassen am Hang anlegen“) – einen Hang mit der Box-Auswahl
+  umfassen, dann wird er zu flachen Stufen umgebaut. Jede Stufe ist ein Reisfeld mit flachem Wasser über Schlamm und
+  Reispflanzen (Seegras), eingefasst von einem Gras-Damm an der Kante und am Rand der Auswahl, sodass kein Wasser
+  ausläuft. Stufenhöhe (1–4) und Anteil der Pflanzen sind einstellbar
+
 ## 0.72.0 – 06.11.2026 (nächtlicher Ausbau: Formen)
 - **Aquädukt:** neue Form – erst den Anfang (Punkt A) anklicken, dann das Ende (Punkt B). Entlang der Linie
   entstehen zwei Reihen Rundbögen übereinander wie bei den alten Römern: unten große Bögen auf breiten Pfeilern,
