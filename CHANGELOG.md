@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.75.0 – 07.11.2026 (nächtlicher Ausbau: Terraform)
+- **Canyonlandschaft:** neu im Auswahl-Menü („Canyonlandschaft erzeugen“) – füllt eine Box-Auswahl mit einem
+  Hochplateau, durch das sich eine gewundene Schlucht in deiner Blickrichtung zieht. Schmalere Seitenarme zweigen
+  ab und steigen zum Plateau hin an. Die Wände sind gestuft und in bunten Terrakotta-Schichten gefärbt (wie im
+  Badlands-Biom), oben liegt roter Sand mit toten Büschen, unten fließt auf Wunsch ein Fluss. Breite des
+  Schluchtbodens und Anzahl der Seitenarme sind einstellbar
+
 ## 0.74.0 – 07.11.2026 (nächtlicher Ausbau: Formen)
 - **Bogenfenster:** das Fenster-Raster im Auswahl-Menü (jetzt „Fenster-Raster / Bogenfenster“) kann Fenster mit
   **Rundbogen** oder **Spitzbogen** (gotisch) obendrauf setzen – „Fensterhöhe“ ist dann der gerade Teil unter dem

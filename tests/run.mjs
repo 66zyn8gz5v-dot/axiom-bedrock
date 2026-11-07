@@ -1499,6 +1499,53 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Canyonlandschaft");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 63, y: 82, z: 47 });
+  let seed = 41;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Canyonlandschaft", () => ops.opCanyonland(ses, { arms: 3, width: 6, river: true }, { x: 1, z: 0 }, rnd));
+  seed = 41;
+  ops.opCanyonland(ses, { arms: 3, width: 6, river: true }, { x: 1, z: 0 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const surf = (x, z) => {
+    let y = 82;
+    while (y > 58 && (id(x, y, z) === "minecraft:air" || id(x, y, z) === "minecraft:deadbush")) y--;
+    return y;
+  };
+  // jede Querlinie entlang X schneidet die Schlucht: tiefster Punkt mit Wasser, Rand oben auf dem Plateau
+  let crossings = 0;
+  let water = 0;
+  for (let x = 2; x <= 61; x += 6) {
+    let lo = 99;
+    let hi = 0;
+    let loZ = 0;
+    for (let z = 0; z <= 47; z++) {
+      const h = surf(x, z);
+      if (h < lo) ((lo = h), (loZ = z));
+      hi = Math.max(hi, h);
+    }
+    if (hi - lo >= 15) crossings++;
+    if (id(x, lo, loZ) === "minecraft:water") water++;
+  }
+  check(crossings === 10 && water >= 8, "Canyonlandschaft: durchgehende tiefe Schlucht mit Fluss (" + crossings + "/" + water + ")");
+  const bands = new Set();
+  let plateau = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id.endsWith("terracotta")) bands.add(p.type.id);
+    if (p.type.id === "minecraft:red_sand" && Number(k.split(",")[1]) >= 79) plateau++;
+  }
+  check(bands.size >= 4 && plateau > 300, "Canyonlandschaft: bunte Schichten in den Wänden, Plateau mit rotem Sand (" + bands.size + "/" + plateau + ")");
+  // Seitenarme: es gibt Stellen mit mittlerer Tiefe weit weg von der Hauptschlucht
+  check(id(64, 64, 5) === "minecraft:grass_block" && id(64, 65, 5) === "minecraft:air", "Canyonlandschaft: nur in der Auswahl");
+  await undo();
+  check(id(10, 64, 10) === "minecraft:grass_block", "Canyonlandschaft: Rückgängig");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Reisterrassen");
 {
   dim.blocks.clear();

@@ -8,7 +8,7 @@ import { copySelection, freeClip, getClip, pasteClip, rotatedSize } from "./clip
 import { err, fmtNum, msg } from "./util.js";
 import { v, vmax, vmin } from "./vec.js";
 import { fbm } from "./noise.js";
-import { groundY, surfaceFor } from "../tools/terrain.js";
+import { groundY, MESA_BANDS, surfaceFor } from "../tools/terrain.js";
 
 /** @param {import("./state.js").Session} ses */
 function need(ses) {
@@ -749,6 +749,103 @@ export function opIslands(ses, o, rand = Math.random) {
       H.set(x + "," + z, Math.max(min.y, Math.min(max.y, Math.round(h))));
     }
   writeTerrain(ses, sel, H, seaY, snowY, "Inselgruppe");
+}
+
+/**
+ * Canyonlandschaft in der Auswahl: Hochplateau, durch das sich eine gewundene Schlucht in Blickrichtung zieht, mit
+ * schmaleren Seitenarmen, die zum Plateau hin ansteigen. Die Wände sind gestuft und in bunten Terrakotta-Schichten
+ * gefärbt, oben roter Sand mit toten Büschen, unten auf Wunsch ein Fluss. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{arms:number, width:number, river:boolean}} o
+ * @param {{x:number, z:number}} dir Blickrichtung (Verlauf der Schlucht)
+ * @param {() => number} [rand]
+ */
+export function opCanyonland(ses, o, dir, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 8) return err(ses.player, "Die Auswahl ist zu flach – mindestens 8 Blöcke hoch.");
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const [u0, u1] = alongX ? [min.x, max.x] : [min.z, max.z];
+  const [w0, w1] = alongX ? [min.z, max.z] : [min.x, max.x];
+  const wMid = (w0 + w1) / 2;
+  const half = (w1 - w0) / 2;
+  const top = max.y - 2;
+  const floorY = min.y + 2;
+  const D = top - floorY;
+  const fw = Math.max(1, o.width / 2); // halbe Bodenbreite der Hauptschlucht
+  const sw = Math.max(3, D * 0.45); // Breite der gestuften Wand
+  const seed = rand() * 1000;
+  const center = (/** @type {number} */ u) => wMid + fbm(u / 18 + seed, 0.5, seed, 2) * half * 0.45;
+  /** @type {{u:number, w:number, ang:number, len:number}[]} */
+  const arms = [];
+  for (let i = 0; i < Math.max(0, Math.min(8, o.arms)); i++) {
+    const u = u0 + (u1 - u0) * ((i + 0.5 + (rand() - 0.5) * 0.6) / Math.max(1, o.arms));
+    const side = i % 2 ? 1 : -1;
+    arms.push({ u, w: center(u), ang: side * (0.9 + rand() * 0.5), len: half * (0.6 + rand() * 0.4) });
+  }
+  /** Gestufte Wand: Höhe je nach Abstand zur Mitte. @param {number} d @param {number} f Bodenbreite @param {number} fy Bodenhöhe */
+  const profile = (d, f, fy) => {
+    if (d <= f) return fy;
+    const t = (d - f) / sw;
+    if (t >= 1) return top;
+    const steps = Math.max(1, Math.round((top - fy) / 3));
+    return fy + Math.round((top - fy) * Math.min(1, Math.ceil(t * steps) / steps));
+  };
+  /** @type {Map<string, {h:number, main:boolean}>} */
+  const H = new Map();
+  for (let a = u0; a <= u1; a++)
+    for (let b = w0; b <= w1; b++) {
+      let h = Math.round(top + fbm(a / 9 + seed, 1.1, b / 9, 2) * 1.2);
+      const dMain = Math.abs(b - center(a)) + fbm(a / 4 + seed, 2.3, b / 4, 2) * 0.8;
+      const hm = profile(dMain, fw, floorY);
+      const main = dMain <= fw;
+      h = Math.min(h, hm);
+      for (const A of arms) {
+        // Abstand zum Seitenarm (Strecke vom Abzweig schräg nach außen)
+        const ex = Math.cos(A.ang) * 0.5;
+        const ew = Math.sin(A.ang);
+        const L = Math.hypot(ex, ew);
+        const px = a - A.u;
+        const pw = b - A.w;
+        const s = Math.max(0, Math.min(A.len, (px * ex + pw * ew) / L));
+        const d = Math.hypot(px - (ex / L) * s, pw - (ew / L) * s);
+        const k = s / A.len;
+        const fy = Math.round(floorY + D * 0.75 * k);
+        h = Math.min(h, profile(d, fw * 0.6 * (1 - k * 0.5), fy));
+      }
+      H.set(alongX ? a + "," + b : b + "," + a, { h: Math.max(min.y + 1, Math.min(max.y - 1, h)), main });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  const WAT = P("minecraft:water");
+  runEdit(ses.player, { label: "Canyonlandschaft", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, main } = /** @type {{h:number, main:boolean}} */ (H.get(x + "," + z));
+        const river = o.river && main && h <= floorY;
+        const plateau = h >= top - 1;
+        const bush = plateau && fbm(x / 1.5 + seed, 6.6, z / 1.5, 1) > 0.62;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y === h + 1 && bush) es.set(x, y, z, P("minecraft:deadbush"));
+          else if (y > h) es.set(x, y, z, A);
+          else if (y === h && river) es.set(x, y, z, WAT);
+          else if (y === h && (plateau || h <= floorY)) es.set(x, y, z, P("minecraft:red_sand"));
+          else if (y < floorY) es.set(x, y, z, P("minecraft:stone"));
+          else es.set(x, y, z, P(MESA_BANDS[(((y - floorY) % MESA_BANDS.length) + MESA_BANDS.length) % MESA_BANDS.length]));
+        }
+      }
+      yield;
+    }
+  });
 }
 
 /**

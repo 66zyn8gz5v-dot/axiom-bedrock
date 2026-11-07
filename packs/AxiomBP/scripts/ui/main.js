@@ -207,6 +207,22 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Canyonlandschaft erzeugen (Schlucht in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.canyonland;
+        const r = await new Modal("Canyonlandschaft")
+          .slider("width", "Breite des Schluchtbodens", 2, 16, 1, c.width)
+          .slider("arms", "Anzahl Seitenarme", 0, 8, 1, c.arms)
+          .toggle("river", "Fluss am Boden", c.river)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opCanyonland(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Reisterrassen am Hang anlegen",
       run: async () => {
         const c = ses.s.rice;

@@ -130,7 +130,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Fjord** (v0.69): schmale, tiefe Meeresbucht zwischen steilen Felswänden entlang der Pfad-Punkte
 - [x] **Vulkaninsel mit Lavaströmen** (v0.71): Lava fließt in Rinnen den Hang hinab und erstarrt am Meer zu Basalt
 - [x] **Reisterrassen** (v0.73): Terrassenfelder am Hang, jede Stufe flach mit etwas Wasser und Gras-Rand
-- [ ] **Canyonlandschaft**: gewundene Schlucht mit Seitenarmen und geschichteten Wänden in einer Auswahl
+- [x] **Canyonlandschaft** (v0.75): gewundene Schlucht mit Seitenarmen und geschichteten Wänden in einer Auswahl
+- [ ] **Tropfsteinhöhle**: Höhle in einer Auswahl mit Tropfsteinen (Pointed Dripstone) oben und unten und kleinem See
+- [ ] **Blumenhügel / Kirschblütenhain**: sanfte Hügel mit Kirschbäumen und rosa Blütenteppich
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
