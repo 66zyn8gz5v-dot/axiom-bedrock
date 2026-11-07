@@ -34,6 +34,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["cloister", "Kreuzgang (in die Box-Auswahl: Umgang mit Bögen um einen Innenhof)"],
   ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
   ["pavilion", "Pavillon (Säulen, Geländer, Zeltdach – Ecken über den Ecken-Regler)"],
   ["straight", "Gerade Treppe mit Podest (Punkt A unten, Punkt B oben)"],
@@ -647,7 +648,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1179,6 +1180,68 @@ function buildLanternDome(ses, c) {
 }
 
 /**
+ * Kreuzgang in der Box-Auswahl: Außenmauer (Muster 1) mit Türen in der Mitte jeder Seite, innen ein überdachter Umgang
+ * und zum Innenhof eine Bogenreihe aus Säulen. Pultdach aus Muster 2 (außen höher), im Hof Gras mit Wegkreuz aus Kies.
+ * @param {import("../core/state.js").Session} ses
+ */
+function buildCloister(ses) {
+  const sel = ses.sel;
+  if (!sel) return err(ses.player, "Für den Kreuzgang erst eine Box-Auswahl machen (Grundfläche und Höhe).");
+  const { min, max } = sel;
+  const W = max.x - min.x + 1;
+  const D = max.z - min.z + 1;
+  const H = max.y - min.y + 1;
+  const ww = Math.min(W, D) >= 13 ? 3 : 2; // Abstand Außenmauer → Bogenreihe
+  if (Math.min(W, D) < 2 * ww + 3) return err(ses.player, "Die Auswahl ist zu klein – mindestens 7×7 Blöcke.");
+  if (H < 6) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 6 Blöcke hoch.");
+  const colH = H - 3; // Höhe von Mauer und Bögen über dem Boden
+  const wall = picker(ses.s.pattern);
+  const roof = picker(ses.s.pattern2);
+  const A = air();
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const grass = P("minecraft:grass_block");
+  const gravel = P("minecraft:gravel");
+  const cx = Math.floor((min.x + max.x) / 2);
+  const cz = Math.floor((min.z + max.z) / 2);
+  /** Ring-Abstand vom Rand der Auswahl. @param {number} x @param {number} z */
+  const ring = (x, z) => Math.min(x - min.x, max.x - x, z - min.z, max.z - z);
+  runEdit(ses.player, { label: "Kreuzgang", symmetry: true, region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const r = ring(x, z);
+        // Position entlang der Bogenreihe (von der Ecke der jeweiligen Seite)
+        const onX = z - min.z === ww || max.z - z === ww;
+        const pos = onX ? x - (min.x + ww) : z - (min.z + ww);
+        const len = onX ? W - 2 * ww - 1 : D - 2 * ww - 1;
+        for (let dy = 0; dy < H; dy++) {
+          const y = min.y + dy;
+          let b = A;
+          if (r > ww) {
+            // Innenhof
+            if (dy === 0) b = x === cx || z === cz ? gravel : grass;
+          } else if (dy === 0) b = wall();
+          else if (dy <= colH) {
+            if (r === 0) {
+              const door = dy <= 2 && (((z === min.z || z === max.z) && x === cx) || ((x === min.x || x === max.x) && z === cz));
+              b = door ? A : wall();
+            } else if (r === ww) {
+              // Bogenreihe: Säule alle 4 Blöcke (und an den Ecken), oben Bogenansatz an den Säulen
+              const q = ((pos % 4) + 4) % 4;
+              const col = q === 0 || pos === len;
+              const top = dy === colH && (q === 1 || q === 3 || pos === len - 1);
+              b = col || top ? wall() : A;
+            }
+          } else if (dy === colH + 1) b = roof(); // Decke über dem Umgang
+          else if (dy === colH + 2 && r <= ww / 2) b = roof(); // Pultdach: außen eine Lage höher
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Säulenhalle (Tempel) in der Box-Auswahl: Stufen-Sockel, Säulenreihe rundherum, Gebälk und Giebeldach.
  * Sockel, Säulen und Gebälk aus Muster 1, Dach aus Muster 2 („Dach“ aus = Flachdach). Der First läuft entlang
  * der längeren Seite. Innen wird Platz frei gemacht.
@@ -1596,6 +1659,7 @@ export const shapeTool = {
     if (c.type === "straight") return buildStraightStairs(ses, c);
     if (c.type === "pavilion") return buildPavilion(ses, c);
     if (c.type === "temple") return buildTemple(ses, c);
+    if (c.type === "cloister") return buildCloister(ses);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -1652,7 +1716,7 @@ export const shapeTool = {
   preview(ses) {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
-    if (c.type === "temple") return; // die Auswahl ist schon sichtbar
+    if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
     if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {

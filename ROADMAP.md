@@ -171,7 +171,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Pagode** (v0.70): mehrstöckiger Turm mit geschwungenen, überstehenden Dächern auf jeder Etage
 - [x] **Säulen-Bogenbrücke (Aquädukt)** (v0.72): zwei Reihen Bögen übereinander zwischen zwei Punkten, oben eine Wasserrinne
 - [x] **Bogenfenster-Reihe** (v0.74): Fensterreihe mit Rundbögen in eine Wand der Auswahl schneiden
-- [ ] **Säulengang mit Dach (Kreuzgang)**: rechteckiger Innenhof-Umgang aus Säulen und Bögen in einer Box-Auswahl
+- [x] **Säulengang mit Dach (Kreuzgang)** (v0.76): rechteckiger Innenhof-Umgang aus Säulen und Bögen in einer Box-Auswahl
 - [ ] **Kugel aus Ringen (Armillarsphäre)**: drei gekreuzte Ringe als Deko-Form
 
 ### Sonstiges

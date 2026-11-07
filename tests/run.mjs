@@ -2646,6 +2646,37 @@ console.log("Pagode");
   dim.blocks.clear();
 }
 
+console.log("Kreuzgang");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("dark_oak_planks");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const R = "minecraft:dark_oak_planks";
+  const AIR = "minecraft:air";
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 14, y: 70, z: 12 });
+  Object.assign(ses.s.shape, { type: "cloister" });
+  await roundTrip("Kreuzgang", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(0, 66, 5) === S && id(7, 66, 0) === AIR && id(7, 67, 0) === AIR && id(7, 68, 0) === S && id(0, 66, 6) === AIR, "Kreuzgang: Außenmauer mit Türen");
+  check(id(1, 66, 5) === AIR && id(1, 65, 5) === S && id(2, 69, 5) === R && id(1, 70, 5) === R && id(3, 70, 5) === AIR, "Kreuzgang: Umgang mit Pultdach");
+  check(id(3, 67, 3) === S && id(7, 67, 3) === S && id(4, 67, 3) === AIR && id(5, 68, 3) === AIR && id(4, 68, 3) === S && id(11, 66, 3) === S, "Kreuzgang: Bogenreihe zum Innenhof");
+  check(id(7, 65, 6) === "minecraft:gravel" && id(5, 65, 8) === "minecraft:grass_block" && id(5, 66, 8) === AIR && id(5, 69, 8) === AIR, "Kreuzgang: offener Innenhof mit Wegkreuz");
+  await undo();
+  const snap = dim.snapshot();
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 5, y: 70, z: 5 });
+  await use("axiom:shape", G);
+  check(eqSnap(snap, dim.snapshot()) && player.messages.at(-1).includes("zu klein"), "Kreuzgang: zu kleine Auswahl wird abgelehnt");
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  ses.sel = undefined;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

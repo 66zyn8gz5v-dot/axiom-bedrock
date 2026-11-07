@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.76.0 – 08.11.2026 (nächtlicher Ausbau: Formen)
+- **Kreuzgang:** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen (mindestens 7×7 und 6 hoch),
+  dann mit dem Formen-Werkzeug benutzen. Es entsteht ein Umgang wie in einem Kloster: Außenmauer aus Muster 1 mit
+  Türen in der Mitte jeder Seite, ein überdachter Gang mit Pultdach aus Muster 2 und zum Innenhof eine Bogenreihe aus
+  Säulen. Im offenen Hof wächst Gras, ein Wegkreuz aus Kies führt zu den Türen
+
 ## 0.75.0 – 07.11.2026 (nächtlicher Ausbau: Terraform)
 - **Canyonlandschaft:** neu im Auswahl-Menü („Canyonlandschaft erzeugen“) – füllt eine Box-Auswahl mit einem
   Hochplateau, durch das sich eine gewundene Schlucht in deiner Blickrichtung zieht. Schmalere Seitenarme zweigen
