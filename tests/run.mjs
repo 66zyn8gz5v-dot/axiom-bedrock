@@ -2717,6 +2717,20 @@ console.log("Kreuzgang");
   dim.blocks.clear();
 }
 
+console.log("Armillarsphäre");
+{
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const f = shapeFn({ type: "armillary", rx: 6, ry: 6, rz: 6 });
+  check(f.inside(6, 0, 0) && f.inside(0, 6, 0) && f.inside(0, 0, -6) && f.inside(4, 4, 0) && f.inside(0, -4, 4), "Armillarsphäre: drei gekreuzte Ringe");
+  check(f.inside(4, 2, 4) && !f.inside(4, -2, 4), "Armillarsphäre: geneigter Ring");
+  check(f.inside(0, 0, 0) && f.inside(1, 0, 0) && !f.inside(0, 3, 0) && !f.inside(3, 3, 3) && !f.inside(8, 0, 0), "Armillarsphäre: Kugel in der Mitte, sonst innen frei");
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "armillary", rx: 6, ry: 6, rz: 6, anchor: "center", hollow: false, wire: false, material: "single", yaw: 0, tilt: 0, roll: 0, confirm: false });
+  await roundTrip("Armillarsphäre", () => use("axiom:shape", G));
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

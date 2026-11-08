@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.78.0 – 09.11.2026 (nächtlicher Ausbau: Formen)
+- **Armillarsphäre:** neue Deko-Form – drei senkrecht gekreuzte Ringe, ein schräger Ring (wie die Bahn der Sonne)
+  und eine kleine Kugel in der Mitte, wie ein altes Himmelsmodell. Radius X = Größe. Weil sie eine normale Form ist,
+  lässt sie sich drehen und kippen, in eine Auswahl einpassen und mit Materialien wie „Verlauf“ oder „Rand“ bemalen
+
 ## 0.77.0 – 08.11.2026 (nächtlicher Ausbau: Terraform)
 - **Tropfsteinhöhle:** neu im Auswahl-Menü („Tropfsteinhöhle graben“) – am besten tief unter der Erde eine Box-Auswahl
   aufziehen. Daraus wird eine große, unregelmäßige Höhle: Von der Decke hängen Tropfsteine (Stalaktiten), vom Boden

@@ -18,6 +18,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["cylinder", "Zylinder (senkrecht)"],
   ["cone", "Kegel"],
   ["pyramid", "Pyramide"],
+  ["armillary", "Armillarsphäre (drei Ringe + schräger Ring um eine Kugel, Radius X)"],
   ["obelisk", "Obelisk (schlanke Säule, oben schmaler, mit Spitze)"],
   ["torus", "Torus (Ring)"],
   ["arch", "Bogen"],
@@ -267,6 +268,21 @@ export function shapeFn(c) {
         },
         ext: v(c.rx, c.ry, c.rz),
         yMin: -c.ry,
+      };
+    }
+    case "armillary": {
+      // Drei senkrecht gekreuzte Ringe, ein um 23,5° geneigter Ring (Ekliptik) und eine kleine Kugel in der Mitte
+      const R = Math.max(2, c.rx);
+      const t = 0.7;
+      const ball = Math.max(1, R * 0.18);
+      const ca = Math.cos((23.5 * Math.PI) / 180);
+      const sa = Math.sin((23.5 * Math.PI) / 180);
+      const ring = (/** @type {number} */ a, /** @type {number} */ b, /** @type {number} */ n) => Math.hypot(Math.hypot(a, b) - R, n) <= t;
+      return {
+        inside: (x, y, z) =>
+          ring(x, z, y) || ring(x, y, z) || ring(y, z, x) || ring(x, y * sa + z * ca, y * ca - z * sa) || x * x + y * y + z * z <= ball * ball,
+        ext: v(R + 1, R + 1, R + 1),
+        yMin: -R - 1,
       };
     }
     case "obelisk": {
