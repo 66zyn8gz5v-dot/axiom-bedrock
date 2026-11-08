@@ -1499,6 +1499,46 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Tropfsteinhöhle");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 30, z: 0 }, { x: 23, y: 45, z: 23 });
+  let seed = 9;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Tropfsteinhöhle", () => ops.opDripCave(ses, { density: 80, lake: 2 }, rnd));
+  seed = 9;
+  ops.opDripCave(ses, { density: 80, lake: 2 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let airN = 0;
+  let water = 0;
+  let hang = 0;
+  let stand = 0;
+  let badTip = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 23 || y < 30 || y > 45 || z < 0 || z > 23) outside++;
+    if (p.type.id === "minecraft:air") airN++;
+    if (p.type.id === "minecraft:water") water++;
+    if (p.type.id === "minecraft:pointed_dripstone") {
+      const st = p.getAllStates();
+      if (st.hanging) hang++;
+      else stand++;
+      // Spitze zeigt ins Freie, Wurzel hängt am Gestein bzw. am nächsten Teil
+      const next = id(x, y + (st.hanging ? -1 : 1), z);
+      if (st.dripstone_thickness === "tip" && next !== "minecraft:air" && next !== "minecraft:water") badTip++;
+    }
+  }
+  check(airN > 1000 && outside === 0, "Tropfsteinhöhle: große Höhle, nur in der Auswahl (" + airN + ")");
+  check(water > 5, "Tropfsteinhöhle: kleiner See in der tiefsten Mulde (" + water + ")");
+  check(hang > 10 && stand > 5 && badTip === 0, "Tropfsteinhöhle: Tropfsteine oben und unten, Spitzen frei (" + hang + "/" + stand + ")");
+  await undo();
+  check(dim.blocks.size === 0 || [...dim.blocks.values()].every((p) => p.type.id !== "minecraft:pointed_dripstone"), "Tropfsteinhöhle: Rückgängig");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Canyonlandschaft");
 {
   dim.blocks.clear();

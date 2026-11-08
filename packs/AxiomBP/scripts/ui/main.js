@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Tropfsteinhöhle graben",
+      run: async () => {
+        const c = ses.s.dripCave;
+        const r = await new Modal("Tropfsteinhöhle")
+          .slider("density", "Tropfsteine in %", 0, 100, 10, c.density)
+          .slider("lake", "Tiefe des Sees (0 = kein See)", 0, 4, 1, c.lake)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opDripCave(ses, c);
+      },
+    },
+    {
       text: "Canyonlandschaft erzeugen (Schlucht in Blickrichtung)",
       run: async () => {
         const c = ses.s.canyonland;

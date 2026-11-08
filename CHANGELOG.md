@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.77.0 – 08.11.2026 (nächtlicher Ausbau: Terraform)
+- **Tropfsteinhöhle:** neu im Auswahl-Menü („Tropfsteinhöhle graben“) – am besten tief unter der Erde eine Box-Auswahl
+  aufziehen. Daraus wird eine große, unregelmäßige Höhle: Von der Decke hängen Tropfsteine (Stalaktiten), vom Boden
+  wachsen welche nach oben (Stalagmiten), Decke und Boden sind stellenweise aus Tropfsteinblock, und in der tiefsten
+  Mulde liegt ein kleiner See. Anzahl der Tropfsteine und Tiefe des Sees (0 = kein See) sind einstellbar
+
 ## 0.76.0 – 08.11.2026 (nächtlicher Ausbau: Formen)
 - **Kreuzgang:** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen (mindestens 7×7 und 6 hoch),
   dann mit dem Formen-Werkzeug benutzen. Es entsteht ein Umgang wie in einem Kloster: Außenmauer aus Muster 1 mit

@@ -752,6 +752,88 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Tropfsteinhöhle in der Auswahl: eine große, unregelmäßige Höhle wird aus dem Gestein gegraben. Von der Decke hängen
+ * Tropfsteine (Stalaktiten), vom Boden wachsen welche nach oben (Stalagmiten), Boden und Decke sind stellenweise aus
+ * Tropfsteinblock, in der tiefsten Mulde liegt ein kleiner See. Am besten tief unter der Erde benutzen.
+ * @param {import("./state.js").Session} ses
+ * @param {{density:number, lake:number}} o density = Tropfsteine in %, lake = Seetiefe (0 = kein See)
+ * @param {() => number} [rand]
+ */
+export function opDripCave(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const d = selDims(sel);
+  if (Math.min(d.x, d.y, d.z) < 6) return err(ses.player, "Die Auswahl ist zu klein – mindestens 6×6×6 Blöcke.");
+  const c = v((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2);
+  const r = v(d.x / 2 - 0.5, d.y / 2 - 0.5, d.z / 2 - 0.5);
+  const seed = rand() * 1000;
+  const inCave = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
+    if (!selContains(sel, x, y, z)) return false;
+    const q = ((x - c.x) / r.x) ** 2 + ((y - c.y) / r.y) ** 2 + ((z - c.z) / r.z) ** 2;
+    return q + fbm(x / 6 + seed, y / 5, z / 6, 2) * 0.45 < 0.85;
+  };
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const A = air();
+  const W = P("minecraft:water");
+  const DB = P("minecraft:dripstone_block");
+  /** Teile eines Tropfsteins von der Wurzel zur Spitze. @param {number} L */
+  const parts = (L) => (L === 1 ? ["tip"] : L === 2 ? ["frustum", "tip"] : ["base", ...Array(L - 3).fill("middle"), "frustum", "tip"]);
+  runEdit(ses.player, { label: "Tropfsteinhöhle", region: { min, max } }, function* (es) {
+    // tiefster Höhlenboden → Seehöhe
+    let lowest = Infinity;
+    for (let x = min.x; x <= max.x; x++) for (let z = min.z; z <= max.z; z++) for (let y = min.y; y <= max.y; y++) if (inCave(x, y, z)) ((lowest = Math.min(lowest, y)), (y = max.y + 1));
+    if (lowest === Infinity) return;
+    const lakeY = o.lake > 0 ? lowest + o.lake - 1 : -Infinity;
+    // Graben
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++)
+        for (let y = min.y; y <= max.y; y++) if (inCave(x, y, z)) es.set(x, y, z, y <= lakeY ? W : A);
+      yield;
+    }
+    // Decke und Boden verzieren
+    const dens = Math.max(0, o.density) / 100;
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++)
+        for (let y = min.y; y <= max.y; y++) {
+          if (!inCave(x, y, z)) continue;
+          const above = !inCave(x, y + 1, z) && isSolidId(es.id(x, y + 1, z) ?? "");
+          const below = !inCave(x, y - 1, z) && isSolidId(es.id(x, y - 1, z) ?? "") && y > lakeY;
+          if (above) {
+            if (rand() < 0.5 && selContains(sel, x, y + 1, z)) es.set(x, y + 1, z, DB);
+            if (rand() < dens * 0.35) {
+              // Stalaktit: nach unten, höchstens bis kurz über den Boden
+              let space = 0;
+              while (space < 6 && inCave(x, y - space - 1, z) && es.id(x, y - space - 1, z) === "minecraft:air") space++;
+              const L = Math.min(1 + Math.floor(rand() * 4), space);
+              if (L >= 1 && es.id(x, y, z) === "minecraft:air") parts(L).forEach((th, i) => es.set(x, y - i, z, P("minecraft:pointed_dripstone", { dripstone_thickness: th, hanging: true })));
+            }
+          }
+          if (below) {
+            if (rand() < 0.5 && selContains(sel, x, y - 1, z)) es.set(x, y - 1, z, DB);
+            if (rand() < dens * 0.25 && es.id(x, y, z) === "minecraft:air") {
+              let space = 0;
+              while (space < 6 && inCave(x, y + space + 1, z) && es.id(x, y + space + 1, z) === "minecraft:air") space++;
+              const L = Math.min(1 + Math.floor(rand() * 3), space);
+              if (L >= 1) parts(L).forEach((th, i) => es.set(x, y + i, z, P("minecraft:pointed_dripstone", { dripstone_thickness: th, hanging: false })));
+            }
+          }
+          if (++n % 256 === 0) yield;
+        }
+      yield;
+    }
+  });
+}
+
+/**
  * Canyonlandschaft in der Auswahl: Hochplateau, durch das sich eine gewundene Schlucht in Blickrichtung zieht, mit
  * schmaleren Seitenarmen, die zum Plateau hin ansteigen. Die Wände sind gestuft und in bunten Terrakotta-Schichten
  * gefärbt, oben roter Sand mit toten Büschen, unten auf Wunsch ein Fluss. Die Auswahl wird neu gefüllt.

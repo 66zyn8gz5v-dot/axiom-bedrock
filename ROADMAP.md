@@ -131,7 +131,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Vulkaninsel mit Lavaströmen** (v0.71): Lava fließt in Rinnen den Hang hinab und erstarrt am Meer zu Basalt
 - [x] **Reisterrassen** (v0.73): Terrassenfelder am Hang, jede Stufe flach mit etwas Wasser und Gras-Rand
 - [x] **Canyonlandschaft** (v0.75): gewundene Schlucht mit Seitenarmen und geschichteten Wänden in einer Auswahl
-- [ ] **Tropfsteinhöhle**: Höhle in einer Auswahl mit Tropfsteinen (Pointed Dripstone) oben und unten und kleinem See
+- [x] **Tropfsteinhöhle** (v0.77): Höhle in einer Auswahl mit Tropfsteinen (Pointed Dripstone) oben und unten und kleinem See
 - [ ] **Blumenhügel / Kirschblütenhain**: sanfte Hügel mit Kirschbäumen und rosa Blütenteppich
 
 ### Formen (Figuren) vertiefen
