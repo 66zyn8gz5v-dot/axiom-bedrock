@@ -18,6 +18,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["cylinder", "Zylinder (senkrecht)"],
   ["cone", "Kegel"],
   ["pyramid", "Pyramide"],
+  ["gear", "Zahnrad (flach, Zähne = Ecken-Regler, Loch in der Mitte)"],
   ["armillary", "Armillarsphäre (drei Ringe + schräger Ring um eine Kugel, Radius X)"],
   ["obelisk", "Obelisk (schlanke Säule, oben schmaler, mit Spitze)"],
   ["torus", "Torus (Ring)"],
@@ -35,6 +36,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["portal", "Portal-Rahmen (Torbogen mit Lichtern, innen Muster 2 – steht vor dir)"],
   ["cloister", "Kreuzgang (in die Box-Auswahl: Umgang mit Bögen um einen Innenhof)"],
   ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
   ["pavilion", "Pavillon (Säulen, Geländer, Zeltdach – Ecken über den Ecken-Regler)"],
@@ -267,6 +269,24 @@ export function shapeFn(c) {
           return true;
         },
         ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "gear": {
+      // Flaches Zahnrad in der X-Z-Ebene: Zähne abwechselnd mit Lücken, Loch in der Mitte
+      const R = Math.max(3, c.rx);
+      const n = Math.max(6, Math.min(24, c.sides ?? 8));
+      const rb = R - Math.max(1, Math.round(R * 0.2));
+      const rh = Math.max(1, R * 0.25);
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const d = Math.hypot(x, z);
+          if (d <= rh) return false;
+          const f = (((Math.atan2(z, x) / (2 * Math.PI)) * n) % 1 + 1) % 1;
+          return d <= (f < 0.5 ? R + 0.3 : rb + 0.3);
+        },
+        ext: v(R, c.ry, R),
         yMin: -c.ry,
       };
     }
@@ -664,7 +684,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1196,6 +1216,52 @@ function buildLanternDome(ses, c) {
 }
 
 /**
+ * Portal-Rahmen: ein Torbogen, der vor dir steht (quer zur Blickrichtung). Öffnung mit Rundbogen, innen mit Muster 2
+ * gefüllt (z.B. lila Glas), ringsum ein Rahmen aus Muster 1 mit leuchtendem Schlussstein, links und rechts Säulen mit
+ * Lampen obendrauf. Radius X = halbe Breite der Öffnung, Höhe des geraden Teils = 2 × Radius Y + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildPortal(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const a = Math.max(1, c.rx);
+  const h = Math.max(3, 2 * c.ry + 1);
+  const frame = picker(ses.s.pattern);
+  const fill = picker(ses.s.pattern2);
+  const lamp = BlockPermutation.resolve("minecraft:sea_lantern");
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const sx = -d.z;
+  const sz = d.x;
+  const R = a + 0.5;
+  const open = (/** @type {number} */ l, /** @type {number} */ y) => Math.abs(l) <= a && y >= 1 && (y <= h || (y - h) ** 2 + l * l <= R * R);
+  const top = h + Math.ceil(R) + 1;
+  runEdit(ses.player, { label: "Portal-Rahmen", symmetry: true }, function* (es) {
+    let key = -1;
+    for (let y = 0; y <= top; y++) {
+      for (let l = -a - 1; l <= a + 1; l++) {
+        const x = base.x + sx * l;
+        const z = base.z + sz * l;
+        if (open(l, y)) es.set(x, base.y + y, z, fill());
+        else if ([-1, 0, 1].some((dl) => [-1, 0, 1].some((dy) => open(l + dl, y + dy)))) {
+          es.set(x, base.y + y, z, frame());
+          if (l === 0) key = y;
+        }
+      }
+      yield;
+    }
+    // leuchtender Schlussstein ganz oben im Bogen
+    if (key >= 0) es.set(base.x, base.y + key, base.z, lamp);
+    // Säulen mit Lampen
+    for (const side of [-1, 1]) {
+      const l = side * (a + 2);
+      for (let y = 0; y <= h; y++) es.set(base.x + sx * l, base.y + y, base.z + sz * l, frame());
+      es.set(base.x + sx * l, base.y + h + 1, base.z + sz * l, lamp);
+    }
+  });
+}
+
+/**
  * Kreuzgang in der Box-Auswahl: Außenmauer (Muster 1) mit Türen in der Mitte jeder Seite, innen ein überdachter Umgang
  * und zum Innenhof eine Bogenreihe aus Säulen. Pultdach aus Muster 2 (außen höher), im Hof Gras mit Wegkreuz aus Kies.
  * @param {import("../core/state.js").Session} ses
@@ -1676,6 +1742,7 @@ export const shapeTool = {
     if (c.type === "pavilion") return buildPavilion(ses, c);
     if (c.type === "temple") return buildTemple(ses, c);
     if (c.type === "cloister") return buildCloister(ses);
+    if (c.type === "portal") return buildPortal(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -1733,7 +1800,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

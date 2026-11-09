@@ -175,8 +175,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Bogenfenster-Reihe** (v0.74): Fensterreihe mit Rundbögen in eine Wand der Auswahl schneiden
 - [x] **Säulengang mit Dach (Kreuzgang)** (v0.76): rechteckiger Innenhof-Umgang aus Säulen und Bögen in einer Box-Auswahl
 - [x] **Kugel aus Ringen (Armillarsphäre)** (v0.78): drei gekreuzte Ringe als Deko-Form
-- [ ] **Leuchtender Torbogen (Portal-Rahmen)**: Rahmen mit Säulen und Bogen, innen Glas oder Portal-Optik, steht vor dir
-- [ ] **Zahnrad**: flaches Rad mit Zähnen (Anzahl über den Ecken-Regler) und Loch in der Mitte
+- [x] **Leuchtender Torbogen (Portal-Rahmen)** (v0.80): Rahmen mit Säulen und Bogen, innen Glas oder Portal-Optik, steht vor dir
+- [x] **Zahnrad** (v0.80): flaches Rad mit Zähnen (Anzahl über den Ecken-Regler) und Loch in der Mitte
+- [ ] **Hängende Laterne / Kronleuchter**: Ring aus Laternen an Ketten, der von der Decke hängt
+- [ ] **Spiralturm (verdreht)**: Vieleck-Turm, der sich nach oben um die eigene Achse dreht
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen

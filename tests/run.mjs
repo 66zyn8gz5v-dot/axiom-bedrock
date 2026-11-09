@@ -2769,6 +2769,47 @@ console.log("Armillarsphäre");
   dim.blocks.clear();
 }
 
+console.log("Portal-Rahmen & Zahnrad");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("polished_blackstone");
+  ses.s.pattern2 = parsePattern("purple_stained_glass");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "portal", rx: 2, ry: 2, rz: 2, anchor: "center" });
+  await roundTrip("Portal-Rahmen", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const F = "minecraft:polished_blackstone";
+  const GL = "minecraft:purple_stained_glass";
+  const L = "minecraft:sea_lantern";
+  check(id(0, 66, 0) === GL && id(2, 66, 0) === GL && id(0, 72, 0) === GL && id(1, 72, 0) === GL && id(2, 72, 0) === F, "Portal-Rahmen: Öffnung mit Rundbogen, innen Muster 2");
+  check(id(0, 65, 0) === F && id(3, 66, 0) === F && id(-3, 68, 0) === F && id(0, 73, 0) === L && id(0, 74, 0) === "minecraft:air", "Portal-Rahmen: Rahmen mit leuchtendem Schlussstein");
+  check(id(4, 66, 0) === F && id(-4, 70, 0) === F && id(4, 71, 0) === L && id(-4, 71, 0) === L, "Portal-Rahmen: Säulen mit Lampen");
+  check(id(0, 66, 1) === "minecraft:air" && id(0, 66, -1) === "minecraft:air", "Portal-Rahmen: steht quer vor dir, eine Ebene dick");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const g = shapeFn({ type: "gear", rx: 8, ry: 0, rz: 8, sides: 8 });
+  check(!g.inside(0, 0, 0) && !g.inside(1, 0, 1) && g.inside(4, 0, 0) && g.inside(8, 0, 0) && !g.inside(6, 0, 4) && !g.inside(4, 1, 0), "Zahnrad: Zähne mit Lücken, Loch in der Mitte, flach");
+  let teeth = 0;
+  for (let k = 0; k < 64; k++) {
+    const an = (k / 64) * Math.PI * 2;
+    const on = g.inside(Math.round(Math.cos(an) * 7.6), 0, Math.round(Math.sin(an) * 7.6));
+    const nx = g.inside(Math.round(Math.cos(an + Math.PI / 32) * 7.6), 0, Math.round(Math.sin(an + Math.PI / 32) * 7.6));
+    if (on && !nx) teeth++;
+  }
+  check(teeth >= 7 && teeth <= 9, "Zahnrad: 8 Zähne (" + teeth + ")");
+  Object.assign(ses.s.shape, { type: "gear", rx: 8, ry: 0, rz: 8, sides: 8, anchor: "center", hollow: false, wire: false, material: "single", yaw: 0, tilt: 0, roll: 0, confirm: false });
+  await roundTrip("Zahnrad", () => use("axiom:shape", G));
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.80.0 – 10.11.2026 (nächtlicher Ausbau: Formen)
+- **Portal-Rahmen:** neue Form – auf den Boden zielen und benutzen. Quer vor dir entsteht ein Torbogen: die Öffnung
+  mit Rundbogen wird mit Muster 2 gefüllt (z.B. lila Glas für Portal-Optik), ringsum ein Rahmen aus Muster 1 mit
+  leuchtendem Schlussstein, links und rechts Säulen mit Lampen obendrauf. Radius X = halbe Breite der Öffnung,
+  Radius Y = Höhe
+- **Zahnrad:** neue Grundform – ein flaches Rad mit Zähnen und Loch in der Mitte. Radius X = Größe, „Anzahl Ecken“ =
+  Anzahl der Zähne (mindestens 6), Radius Y = Dicke. Lässt sich drehen (z.B. senkrecht an eine Wand) und bemalen
+
 ## 0.79.0 – 09.11.2026 (nächtlicher Ausbau: Terraform)
 - **Kirschblütenhain:** neu im Auswahl-Menü („Kirschblütenhain erzeugen“) – füllt eine Box-Auswahl (mindestens 14
   Blöcke hoch) mit sanften grünen Hügeln und Kirschbäumen: geschwungener Stamm, breite, flache rosa Krone mit
