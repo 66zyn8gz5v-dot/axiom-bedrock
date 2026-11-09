@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Kirschblütenhain erzeugen",
+      run: async () => {
+        const c = ses.s.cherry;
+        const r = await new Modal("Kirschblütenhain")
+          .slider("trees", "Bäume (Dichte in %)", 0, 100, 10, c.trees)
+          .slider("petals", "Blütenteppich in %", 0, 100, 10, c.petals)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opCherryGrove(ses, c);
+      },
+    },
+    {
       text: "Tropfsteinhöhle graben",
       run: async () => {
         const c = ses.s.dripCave;

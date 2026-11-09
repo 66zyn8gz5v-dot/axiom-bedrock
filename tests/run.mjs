@@ -1499,6 +1499,44 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Kirschblütenhain");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 39, y: 81, z: 39 });
+  let seed = 17;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Kirschblütenhain", () => ops.opCherryGrove(ses, { trees: 80, petals: 30 }, rnd));
+  seed = 17;
+  ops.opCherryGrove(ses, { trees: 80, petals: 30 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let logs = 0;
+  let leaves = 0;
+  let petals = 0;
+  let lo = 99;
+  let hi = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 39 || y < 60 || y > 81 || z < 0 || z > 39) outside++;
+    if (p.type.id === "minecraft:cherry_log") logs++;
+    if (p.type.id === "minecraft:cherry_leaves") (leaves++, p.getAllStates().persistent_bit || (outside += 1000));
+    if (p.type.id === "minecraft:pink_petals") petals++;
+    if (p.type.id === "minecraft:grass_block") ((lo = Math.min(lo, y)), (hi = Math.max(hi, y)));
+  }
+  check(hi - lo >= 2 && outside === 0, "Kirschblütenhain: sanfte Hügel, nur in der Auswahl (" + lo + "–" + hi + ")");
+  check(logs >= 12 && leaves > 100, "Kirschblütenhain: Kirschbäume mit dauerhaften Blättern (" + logs + "/" + leaves + ")");
+  check(petals > 150, "Kirschblütenhain: Blütenteppich (" + petals + ")");
+  await undo();
+  const snap = dim.snapshot();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 9, y: 70, z: 9 });
+  ops.opCherryGrove(ses, { trees: 80, petals: 30 }, rnd);
+  await drain();
+  check(eqSnap(snap, dim.snapshot()) && player.messages.at(-1).includes("zu niedrig"), "Kirschblütenhain: zu niedrige Auswahl wird abgelehnt");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Tropfsteinhöhle");
 {
   dim.blocks.clear();

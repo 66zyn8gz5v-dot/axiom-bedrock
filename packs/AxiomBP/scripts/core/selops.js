@@ -752,6 +752,100 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Kirschblütenhain in der Auswahl: sanfte grüne Hügel mit Kirschbäumen (geschwungener Stamm, breite, flache
+ * rosa Krone mit herabhängenden Blättern) und einem Teppich aus rosa Blütenblättern im Gras. Die Auswahl wird neu
+ * gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{trees:number, petals:number}} o trees = Baumdichte in %, petals = Blütenteppich in %
+ * @param {() => number} [rand]
+ */
+export function opCherryGrove(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 14) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 14 Blöcke hoch (für die Bäume).");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(2, Math.round((sy - 10) * 0.4));
+  const relief = Math.max(1, Math.min(6, max.y - 10 - base));
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) H.set(x + "," + z, Math.round(base + relief * (0.5 + fbm(x / 16 + seed, 0.3, z / 16, 3) * 0.7)));
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Kirschblütenhain", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = /** @type {number} */ (H.get(x + "," + z));
+        const petal = rand() * 100 < o.petals;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          if (y === h + 1 && petal) es.set(x, y, z, P("minecraft:pink_petals"));
+          else if (y > h) es.set(x, y, z, A);
+          else if (y === h) es.set(x, y, z, P("minecraft:grass_block"));
+          else es.set(x, y, z, P(h - y <= 3 ? "minecraft:dirt" : "minecraft:stone"));
+        }
+      }
+      yield;
+    }
+    // Bäume mit Abstand
+    const log = P("minecraft:cherry_log");
+    const leaves = P("minecraft:cherry_leaves", { persistent_bit: true });
+    const inSel = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => selContains(sel, x, y, z);
+    const leaf = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
+      if (!inSel(x, y, z)) return;
+      const id = es.id(x, y, z);
+      if (!id || id === "minecraft:air" || id === "minecraft:pink_petals") es.set(x, y, z, leaves);
+    };
+    /** @type {{x:number, z:number}[]} */
+    const trees = [];
+    const tries = Math.round(((max.x - min.x + 1) * (max.z - min.z + 1) * o.trees) / 2500);
+    for (let i = 0; i < tries; i++) {
+      const x = Math.round(min.x + 3 + rand() * (max.x - min.x - 6));
+      const z = Math.round(min.z + 3 + rand() * (max.z - min.z - 6));
+      if (!trees.every((t) => Math.hypot(t.x - x, t.z - z) >= 7)) continue;
+      const g = /** @type {number} */ (H.get(x + "," + z));
+      const tH = 4 + Math.floor(rand() * 3);
+      if (g + tH + 3 > max.y) continue;
+      trees.push({ x, z });
+      // Stamm, oben ein Stück zur Seite geneigt
+      const [lx, lz] = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(rand() * 4)];
+      let cx = x;
+      let cz = z;
+      for (let k = 1; k <= tH; k++) {
+        if (k === tH - 1) {
+          cx += lx;
+          cz += lz;
+        }
+        es.set(cx, g + k, cz, log);
+      }
+      const top = g + tH;
+      // breite, flache Krone und herabhängende Blätter am Rand
+      for (let dy = -1; dy <= 2; dy++) {
+        const r = dy === 2 ? 1.5 : dy === 1 ? 3 : dy === 0 ? 3.5 : 2.5;
+        for (let dx = -4; dx <= 4; dx++)
+          for (let dz = -4; dz <= 4; dz++) {
+            const d = Math.hypot(dx, dz);
+            if (d > r) continue;
+            if (dy === -1 && d < 1.5) continue;
+            leaf(cx + dx, top + dy, cz + dz);
+            if (dy === 0 && d > 2.6 && rand() < 0.35) leaf(cx + dx, top - 1, cz + dz);
+          }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Tropfsteinhöhle in der Auswahl: eine große, unregelmäßige Höhle wird aus dem Gestein gegraben. Von der Decke hängen
  * Tropfsteine (Stalaktiten), vom Boden wachsen welche nach oben (Stalagmiten), Boden und Decke sind stellenweise aus
  * Tropfsteinblock, in der tiefsten Mulde liegt ein kleiner See. Am besten tief unter der Erde benutzen.

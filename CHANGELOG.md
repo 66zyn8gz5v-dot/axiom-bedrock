@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.79.0 – 09.11.2026 (nächtlicher Ausbau: Terraform)
+- **Kirschblütenhain:** neu im Auswahl-Menü („Kirschblütenhain erzeugen“) – füllt eine Box-Auswahl (mindestens 14
+  Blöcke hoch) mit sanften grünen Hügeln und Kirschbäumen: geschwungener Stamm, breite, flache rosa Krone mit
+  herabhängenden Blättern (die Blätter zerfallen nicht). Im Gras liegt ein Teppich aus rosa Blütenblättern.
+  Baumdichte und Anteil der Blüten sind einstellbar
+
 ## 0.78.0 – 09.11.2026 (nächtlicher Ausbau: Formen)
 - **Armillarsphäre:** neue Deko-Form – drei senkrecht gekreuzte Ringe, ein schräger Ring (wie die Bahn der Sonne)
   und eine kleine Kugel in der Mitte, wie ein altes Himmelsmodell. Radius X = Größe. Weil sie eine normale Form ist,
