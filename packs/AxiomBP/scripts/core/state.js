@@ -57,6 +57,7 @@ export function defaultSettings() {
     canyonland: { arms: 3, width: 6, river: true },
     dripCave: { density: 50, lake: 2 },
     cherry: { trees: 50, petals: 30 },
+    bog: { wet: 45, trees: 40 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

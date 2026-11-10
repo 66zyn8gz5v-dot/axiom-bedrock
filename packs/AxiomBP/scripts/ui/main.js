@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Moorlandschaft erzeugen",
+      run: async () => {
+        const c = ses.s.bog;
+        const r = await new Modal("Moorlandschaft")
+          .slider("wet", "Wasserlöcher in %", 0, 100, 5, c.wet)
+          .slider("trees", "Tote Bäume (Dichte in %)", 0, 100, 10, c.trees)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opBog(ses, c);
+      },
+    },
+    {
       text: "Kirschblütenhain erzeugen",
       run: async () => {
         const c = ses.s.cherry;

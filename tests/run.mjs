@@ -1499,6 +1499,48 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Moorlandschaft");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 39, y: 75, z: 39 });
+  let seed = 29;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Moorlandschaft", () => ops.opBog(ses, { wet: 50, trees: 80 }, rnd));
+  seed = 29;
+  ops.opBog(ses, { wet: 50, trees: 80 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let water = 0;
+  let moss = 0;
+  let logs = 0;
+  let leaves = 0;
+  let leak = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (p.type.id === "minecraft:water") {
+      water++;
+      for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+      if (x === 0 || x === 39 || z === 0 || z === 39) leak++;
+    }
+    if (p.type.id === "minecraft:moss_block") moss++;
+    if (p.type.id.endsWith("_log")) logs++;
+    if (p.type.id.endsWith("_leaves")) leaves++;
+  }
+  check(water > 150 && moss > 200, "Moorlandschaft: Tümpel und Moos (" + water + "/" + moss + ")");
+  check(leak === 0, "Moorlandschaft: Wasser überall eingefasst, Rand bleibt Land (" + leak + ")");
+  check(logs >= 8 && leaves === 0, "Moorlandschaft: kahle tote Bäume (" + logs + ")");
+  await undo();
+  seed = 29;
+  ops.opBog(ses, { wet: 0, trees: 0 }, rnd);
+  await drain();
+  let w0 = 0;
+  for (const [, p] of dim.blocks) if (p.type.id === "minecraft:water") w0++;
+  check(w0 === 0, "Moorlandschaft: Wasseranteil 0 = trocken");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Kirschblütenhain");
 {
   dim.blocks.clear();

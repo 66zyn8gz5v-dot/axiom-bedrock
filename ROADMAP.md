@@ -133,7 +133,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Canyonlandschaft** (v0.75): gewundene Schlucht mit Seitenarmen und geschichteten Wänden in einer Auswahl
 - [x] **Tropfsteinhöhle** (v0.77): Höhle in einer Auswahl mit Tropfsteinen (Pointed Dripstone) oben und unten und kleinem See
 - [x] **Blumenhügel / Kirschblütenhain** (v0.79): sanfte Hügel mit Kirschbäumen und rosa Blütenteppich
-- [ ] **Moorlandschaft**: flache Senken mit Wasser, Moos, Torf (Erde) und abgestorbenen Bäumen in einer Auswahl
+- [x] **Moorlandschaft** (v0.81): flache Senken mit Wasser, Moos, Torf (Erde) und abgestorbenen Bäumen in einer Auswahl
 - [ ] **Steinbogen-Brücke aus Fels**: natürlicher Felsbogen über einen Fluss zwischen zwei Punkten
 
 ### Formen (Figuren) vertiefen

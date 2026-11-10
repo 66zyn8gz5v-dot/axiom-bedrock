@@ -752,6 +752,96 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Moorlandschaft in der Auswahl: flaches Land mit vielen Wasserlöchern und Tümpeln (Schlammgrund, Seerosen), dazwischen
+ * Moos, dunkle Torferde und kleine Bulten, Gras und abgestorbene Bäume ohne Blätter. Der Rand der Auswahl bleibt Land,
+ * damit kein Wasser ausläuft. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{wet:number, trees:number}} o wet = Wasseranteil in %, trees = tote Bäume (Dichte in %)
+ * @param {() => number} [rand]
+ */
+export function opBog(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 10) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 10 Blöcke hoch.");
+  const L = min.y + Math.max(3, Math.round((sy - 8) * 0.4));
+  const seed = rand() * 1000;
+  // Wasseranteil → Schwelle im Rauschen (ca. -0.5 … 0.3)
+  const thr = o.wet <= 0 ? -Infinity : -0.5 + (Math.min(100, o.wet) / 100) * 0.8;
+  /** @type {Map<string, {kind:"water"|"deep"|"land"|"bult", n:number}>} */
+  const M = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const edge = x === min.x || x === max.x || z === min.z || z === max.z;
+      const n = fbm(x / 7 + seed, 0.6, z / 7, 3);
+      const kind = !edge && n < thr ? (n < thr - 0.25 ? "deep" : "water") : n > thr + 0.55 ? "bult" : "land";
+      M.set(x + "," + z, { kind, n });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const A = air();
+  const W = P("minecraft:water");
+  runEdit(ses.player, { label: "Moorlandschaft", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { kind, n } = /** @type {{kind:string, n:number}} */ (M.get(x + "," + z));
+        const r = rand();
+        const wet = kind === "water" || kind === "deep";
+        const bed = kind === "deep" ? L - 2 : L - 1;
+        const top = kind === "bult" ? L + 1 : L;
+        const surface = r < 0.45 ? "minecraft:moss_block" : r < 0.75 ? "minecraft:podzol" : r < 0.9 ? "minecraft:coarse_dirt" : "minecraft:mud";
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (wet) {
+            if (y < bed) b = P(L - y <= 4 ? "minecraft:dirt" : "minecraft:stone");
+            else if (y === bed) b = P("minecraft:mud");
+            else if (y <= L) b = W;
+            else if (y === L + 1 && r < 0.12) b = P("minecraft:waterlily");
+          } else if (y < top) b = P(top - y <= 4 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === top) b = P(surface);
+          else if (y === top + 1 && surface === "minecraft:moss_block" && r < 0.15) b = P("minecraft:moss_carpet");
+          else if (y === top + 1 && r > 0.93 + n * 0.02) b = P("minecraft:short_grass");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    // tote Bäume: kahler Stamm mit ein, zwei abgebrochenen Ästen
+    const tries = Math.round(((max.x - min.x + 1) * (max.z - min.z + 1) * o.trees) / 4000);
+    /** @type {{x:number, z:number}[]} */
+    const trees = [];
+    for (let i = 0; i < tries; i++) {
+      const x = Math.round(min.x + 2 + rand() * (max.x - min.x - 4));
+      const z = Math.round(min.z + 2 + rand() * (max.z - min.z - 4));
+      const col = M.get(x + "," + z);
+      if (!col || col.kind === "water" || col.kind === "deep") continue;
+      if (!trees.every((t) => Math.abs(t.x - x) + Math.abs(t.z - z) >= 5)) continue;
+      const g = col.kind === "bult" ? L + 1 : L;
+      const H = 3 + Math.floor(rand() * 4);
+      if (g + H + 1 > max.y) continue;
+      trees.push({ x, z });
+      const log = rand() < 0.5 ? "minecraft:spruce_log" : "minecraft:dark_oak_log";
+      for (let k = 1; k <= H; k++) es.set(x, g + k, z, P(log, { pillar_axis: "y" }));
+      const branches = 1 + Math.floor(rand() * 2);
+      for (let b = 0; b < branches; b++) {
+        const [dx, dz] = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(rand() * 4)];
+        const by = g + 2 + Math.floor(rand() * (H - 1));
+        es.set(x + dx, by, z + dz, P(log, { pillar_axis: dx ? "x" : "z" }));
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Kirschblütenhain in der Auswahl: sanfte grüne Hügel mit Kirschbäumen (geschwungener Stamm, breite, flache
  * rosa Krone mit herabhängenden Blättern) und einem Teppich aus rosa Blütenblättern im Gras. Die Auswahl wird neu
  * gefüllt.

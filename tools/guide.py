@@ -132,7 +132,7 @@ PAGES = [
         [("h", "Auswahl bearbeiten"),
          ("p", "Axiom-Menü → Auswahl bearbeiten:"),
          ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Überziehen · Natürlich machen · Glätten · "
-               "Verlauf · Landschaft · Inseln · Vulkaninsel · Canyon · Kirschhain · Reisterrassen · Delta · Dünen · Mond · Höhlen · Tropfsteinhöhle · Ausdünnen · Dach · Bogenfenster · Stapeln · Array · Verschieben · Drehen · Spiegeln · "
+               "Verlauf · Landschaft · Inseln · Vulkaninsel · Canyon · Kirschhain · Moor · Reisterrassen · Delta · Dünen · Mond · Höhlen · Tropfsteinhöhle · Ausdünnen · Dach · Bogenfenster · Stapeln · Array · Verschieben · Drehen · Spiegeln · "
                "Gespiegelte Kopie · Wasser · Analysieren"),
          ("p", "Die Partikel zeigen dir immer, was gerade ausgewählt ist."),
          ("p", "Lasso: Mit dem Pfad Punkte setzen → „Lasso“.")],

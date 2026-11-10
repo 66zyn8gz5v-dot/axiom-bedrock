@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.81.0 – 10.11.2026 (nächtlicher Ausbau: Terraform)
+- **Moorlandschaft:** neu im Auswahl-Menü („Moorlandschaft erzeugen“) – füllt eine Box-Auswahl (mindestens 10 Blöcke
+  hoch) mit flachem Moorland: viele Tümpel und Wasserlöcher mit Schlammgrund und Seerosen, dazwischen Moos, dunkle
+  Torferde, kleine Bulten, Gras und kahle tote Bäume mit abgebrochenen Ästen. Der Rand bleibt Land, damit kein Wasser
+  ausläuft. Wasseranteil und Anzahl der Bäume sind einstellbar
+
 ## 0.80.0 – 10.11.2026 (nächtlicher Ausbau: Formen)
 - **Portal-Rahmen:** neue Form – auf den Boden zielen und benutzen. Quer vor dir entsteht ein Torbogen: die Öffnung
   mit Rundbogen wird mit Muster 2 gefüllt (z.B. lila Glas für Portal-Optik), ringsum ein Rahmen aus Muster 1 mit
