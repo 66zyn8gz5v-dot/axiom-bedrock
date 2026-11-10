@@ -18,6 +18,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["cylinder", "Zylinder (senkrecht)"],
   ["cone", "Kegel"],
   ["pyramid", "Pyramide"],
+  ["twist", "Verdrehter Turm (Vieleck, dreht sich nach oben um 90°)"],
   ["gear", "Zahnrad (flach, Zähne = Ecken-Regler, Loch in der Mitte)"],
   ["armillary", "Armillarsphäre (drei Ringe + schräger Ring um eine Kugel, Radius X)"],
   ["obelisk", "Obelisk (schlanke Säule, oben schmaler, mit Spitze)"],
@@ -36,6 +37,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["chandelier", "Kronleuchter (an die Decke zielen: Kette, Ring, Laternen)"],
   ["portal", "Portal-Rahmen (Torbogen mit Lichtern, innen Muster 2 – steht vor dir)"],
   ["cloister", "Kreuzgang (in die Box-Auswahl: Umgang mit Bögen um einen Innenhof)"],
   ["temple", "Säulenhalle / Tempel (in die Box-Auswahl: Stufen, Säulen, Giebeldach)"],
@@ -269,6 +271,27 @@ export function shapeFn(c) {
           return true;
         },
         ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "twist": {
+      // Vieleck-Turm, dessen Querschnitt sich von unten nach oben um 90° dreht
+      const n = Math.max(3, Math.min(12, c.sides ?? 6));
+      const ap = Math.cos(Math.PI / n);
+      const R = Math.max(c.rx, c.rz);
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const th = c.ry ? ((y + c.ry) / (2 * c.ry)) * (Math.PI / 2) : 0;
+          const X = (x * Math.cos(th) + z * Math.sin(th)) / rx;
+          const Z = (-x * Math.sin(th) + z * Math.cos(th)) / rz;
+          for (let k = 0; k < n; k++) {
+            const a = (k * 2 * Math.PI) / n + Math.PI / 2;
+            if (X * Math.cos(a) + Z * Math.sin(a) > ap) return false;
+          }
+          return true;
+        },
+        ext: v(R, c.ry, R),
         yMin: -c.ry,
       };
     }
@@ -684,7 +707,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1216,6 +1239,49 @@ function buildLanternDome(ses, c) {
 }
 
 /**
+ * Kronleuchter: an die Decke zielen. Eine Kette hängt herab (Länge = Radius Y), unten ein Ring mit Kreuzstreben aus
+ * Muster 1 (Radius X) und darunter hängende Laternen – eine in der Mitte und eine je Ecke (Anzahl = Ecken-Regler).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildChandelier(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const top = t.hit ? v(t.pos.x, t.pos.y - 1, t.pos.z) : t.pos;
+  const R = Math.max(2, c.rx);
+  const L = Math.max(1, c.ry);
+  const n = Math.max(3, Math.min(12, c.sides ?? 6));
+  const ring = picker(ses.s.pattern);
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    try {
+      return BlockPermutation.resolve(id, st);
+    } catch {
+      return BlockPermutation.resolve(id);
+    }
+  };
+  const chain = P("minecraft:chain");
+  const lantern = P("minecraft:lantern", { hanging: true });
+  const yr = top.y - L; // Höhe des Rings
+  runEdit(ses.player, { label: "Kronleuchter", symmetry: true }, function* (es) {
+    for (let y = top.y; y > yr; y--) es.set(top.x, y, top.z, chain);
+    // Ring und Kreuzstreben
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++) {
+        const d = Math.hypot(dx, dz);
+        if ((d > R - 0.5 && d <= R + 0.5) || (dx === 0 && Math.abs(dz) <= R) || (dz === 0 && Math.abs(dx) <= R)) es.set(top.x + dx, yr, top.z + dz, ring());
+      }
+    // Laternen darunter
+    es.set(top.x, yr - 1, top.z, lantern);
+    for (let k = 0; k < n; k++) {
+      const a = (k * 2 * Math.PI) / n;
+      const x = top.x + Math.round(Math.cos(a) * R);
+      const z = top.z + Math.round(Math.sin(a) * R);
+      es.set(x, yr, z, ring());
+      es.set(x, yr - 1, z, lantern);
+    }
+  });
+}
+
+/**
  * Portal-Rahmen: ein Torbogen, der vor dir steht (quer zur Blickrichtung). Öffnung mit Rundbogen, innen mit Muster 2
  * gefüllt (z.B. lila Glas), ringsum ein Rahmen aus Muster 1 mit leuchtendem Schlussstein, links und rechts Säulen mit
  * Lampen obendrauf. Radius X = halbe Breite der Öffnung, Höhe des geraden Teils = 2 × Radius Y + 1.
@@ -1743,6 +1809,7 @@ export const shapeTool = {
     if (c.type === "temple") return buildTemple(ses, c);
     if (c.type === "cloister") return buildCloister(ses);
     if (c.type === "portal") return buildPortal(ses, c);
+    if (c.type === "chandelier") return buildChandelier(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -1800,7 +1867,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

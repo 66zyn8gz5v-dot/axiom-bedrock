@@ -2852,6 +2852,35 @@ console.log("Portal-Rahmen & Zahnrad");
   dim.blocks.clear();
 }
 
+console.log("Kronleuchter & verdrehter Turm");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("dark_oak_planks");
+  dim._set(0, 80, 0, BlockPermutation.resolve("minecraft:stone"));
+  Object.assign(ses.s.shape, { type: "chandelier", rx: 3, ry: 4, rz: 3, sides: 6, anchor: "center" });
+  const C = { x: 0, y: 80, z: 0 };
+  await roundTrip("Kronleuchter", () => use("axiom:shape", C));
+  await use("axiom:shape", C);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const D = "minecraft:dark_oak_planks";
+  check(id(0, 80, 0) === "minecraft:stone" && id(0, 79, 0) === "minecraft:chain" && id(0, 76, 0) === "minecraft:chain", "Kronleuchter: Kette hängt von der Decke");
+  check(id(0, 75, 0) === D && id(3, 75, 0) === D && id(2, 75, 0) === D && id(0, 75, -3) === D && id(2, 75, 2) === D, "Kronleuchter: Ring mit Kreuzstreben");
+  let lanterns = 0;
+  for (const [k, p] of dim.blocks) if (p.type.id === "minecraft:lantern" && Number(k.split(",")[1]) === 74) (lanterns++, p.getAllStates().hanging || (lanterns -= 100));
+  check(lanterns === 7 && id(0, 73, 0) === "minecraft:air", "Kronleuchter: 7 hängende Laternen (" + lanterns + ")");
+  await undo();
+  ses.s.pattern = oldP;
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const f = shapeFn({ type: "twist", rx: 5, ry: 6, rz: 5, sides: 4 });
+  // Viereck: unten Ecken diagonal, in der Mitte um 45° gedreht (Ecken auf den Achsen), oben wieder diagonal
+  check(f.inside(3, -6, 3) && !f.inside(5, -6, 0) && f.inside(5, 0, 0) && !f.inside(3, 0, 3) && f.inside(3, 6, 3), "Verdrehter Turm: Querschnitt dreht sich nach oben");
+  Object.assign(ses.s.shape, { type: "twist", rx: 5, ry: 6, rz: 5, sides: 4, anchor: "center", hollow: false, wire: false, material: "single", yaw: 0, tilt: 0, roll: 0, confirm: false });
+  await roundTrip("Verdrehter Turm", () => use("axiom:shape", G));
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

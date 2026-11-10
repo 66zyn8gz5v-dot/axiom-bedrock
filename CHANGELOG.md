@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.82.0 – 11.11.2026 (nächtlicher Ausbau: Formen)
+- **Kronleuchter:** neue Form – an die Decke zielen und benutzen. Eine Kette hängt herab, unten sitzt ein Ring mit
+  Kreuzstreben aus Muster 1 und darunter hängen Laternen: eine in der Mitte und eine an jeder Ecke des Rings.
+  Radius X = Größe des Rings, Radius Y = Länge der Kette, „Anzahl Ecken“ = Anzahl der Laternen außen
+- **Verdrehter Turm:** neue Grundform – ein Vieleck-Turm (Ecken über „Anzahl Ecken“), dessen Querschnitt sich von
+  unten nach oben um 90° dreht, wie ein moderner Wolkenkratzer. Geht auch hohl, gedreht und mit Materialien
+
 ## 0.81.0 – 10.11.2026 (nächtlicher Ausbau: Terraform)
 - **Moorlandschaft:** neu im Auswahl-Menü („Moorlandschaft erzeugen“) – füllt eine Box-Auswahl (mindestens 10 Blöcke
   hoch) mit flachem Moorland: viele Tümpel und Wasserlöcher mit Schlammgrund und Seerosen, dazwischen Moos, dunkle
