@@ -18,6 +18,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["cylinder", "Zylinder (senkrecht)"],
   ["cone", "Kegel"],
   ["pyramid", "Pyramide"],
+  ["fluted", "Säule mit Rillen (Kannelierung, Sockel & Kapitell – Rillen = 2 × Ecken)"],
   ["twist", "Verdrehter Turm (Vieleck, dreht sich nach oben um 90°)"],
   ["gear", "Zahnrad (flach, Zähne = Ecken-Regler, Loch in der Mitte)"],
   ["armillary", "Armillarsphäre (drei Ringe + schräger Ring um eine Kugel, Radius X)"],
@@ -37,6 +38,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["fountain", "Zierbrunnen (Becken, Schalen übereinander, Wasser)"],
   ["chandelier", "Kronleuchter (an die Decke zielen: Kette, Ring, Laternen)"],
   ["portal", "Portal-Rahmen (Torbogen mit Lichtern, innen Muster 2 – steht vor dir)"],
   ["cloister", "Kreuzgang (in die Box-Auswahl: Umgang mit Bögen um einen Innenhof)"],
@@ -271,6 +273,26 @@ export function shapeFn(c) {
           return true;
         },
         ext: v(c.rx, c.ry, c.rz),
+        yMin: -c.ry,
+      };
+    }
+    case "fluted": {
+      // Runde Säule mit senkrechten Rillen, breiterem Sockel und Kapitell
+      const R = Math.max(2, Math.max(c.rx, c.rz));
+      const n = Math.max(6, Math.min(24, (c.sides ?? 6) * 2));
+      return {
+        inside: (x, y, z) => {
+          if (Math.abs(y) > c.ry) return false;
+          const d = Math.hypot(x, z);
+          const fromEnd = c.ry - Math.abs(y);
+          if (fromEnd === 0) return Math.max(Math.abs(x), Math.abs(z)) <= R + 1; // eckige Platte
+          if (fromEnd === 1) return d <= R + 1; // Wulst
+          if (d > R + 0.5) return false;
+          if (d <= R - 0.5) return true;
+          const f = (((Math.atan2(z, x) / (2 * Math.PI)) * n) % 1 + 1) % 1;
+          return f >= 0.4; // Rille
+        },
+        ext: v(R + 1, c.ry, R + 1),
         yMin: -c.ry,
       };
     }
@@ -707,7 +729,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1235,6 +1257,47 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Zierbrunnen: rundes Becken mit Wasser (Muster 1), in der Mitte eine Säule mit einer oder zwei kleineren Schalen
+ * übereinander, jede mit Wasser gefüllt, ganz oben sprudelt eine Quelle. Radius X = Größe des Beckens (ab 6 zwei Schalen).
+ * Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildFountain(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const stone = picker(ses.s.pattern);
+  const W = BlockPermutation.resolve("minecraft:water");
+  const rimH = R >= 5 ? 2 : 1;
+  const tiers = R >= 6 ? [Math.round(R * 0.5), Math.max(2, Math.round(R * 0.28))] : [Math.max(2, Math.round(R * 0.55))];
+  /** Schale: Boden, Rand und Wasser. @param {any} es @param {number} y @param {number} r @param {number} h Randhöhe */
+  const bowl = (es, y, r, h) => {
+    for (let dx = -r; dx <= r; dx++)
+      for (let dz = -r; dz <= r; dz++) {
+        const d = Math.hypot(dx, dz);
+        if (d > r + 0.3) continue;
+        es.set(base.x + dx, y, base.z + dz, stone());
+        for (let k = 1; k <= h; k++) es.set(base.x + dx, y + k, base.z + dz, d > r - 0.7 ? stone() : dx || dz ? W : stone());
+      }
+  };
+  runEdit(ses.player, { label: "Zierbrunnen", symmetry: true }, function* (es) {
+    bowl(es, base.y, R, rimH);
+    yield;
+    let y = base.y + rimH;
+    for (const r of tiers) {
+      const yb = y + 3;
+      for (let k = y + 1; k < yb; k++) es.set(base.x, k, base.z, stone()); // Säule
+      bowl(es, yb, r, 1);
+      y = yb + 1;
+      yield;
+    }
+    es.set(base.x, y + 1, base.z, stone());
+    es.set(base.x, y + 2, base.z, W); // Quelle obendrauf
   });
 }
 
@@ -1810,6 +1873,7 @@ export const shapeTool = {
     if (c.type === "cloister") return buildCloister(ses);
     if (c.type === "portal") return buildPortal(ses, c);
     if (c.type === "chandelier") return buildChandelier(ses, c);
+    if (c.type === "fountain") return buildFountain(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -1867,7 +1931,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

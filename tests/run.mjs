@@ -2906,6 +2906,50 @@ console.log("Kronleuchter & verdrehter Turm");
   dim.blocks.clear();
 }
 
+console.log("Zierbrunnen & Rillensäule");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("smooth_quartz");
+  Object.assign(ses.s.shape, { type: "fountain", rx: 6, ry: 2, rz: 6, anchor: "center" });
+  await roundTrip("Zierbrunnen", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const Q = "minecraft:smooth_quartz";
+  const W = "minecraft:water";
+  check(id(0, 65, 0) === Q && id(4, 65, 2) === Q && id(5, 66, 0) === W && id(3, 67, 3) === W && id(6, 66, 0) === Q && id(6, 67, 0) === Q, "Zierbrunnen: Becken mit Wasser und Rand");
+  check(id(0, 68, 0) === Q && id(3, 70, 0) === Q && id(2, 71, 0) === W && id(3, 71, 0) === Q && id(0, 71, 0) === Q, "Zierbrunnen: erste Schale mit Wasser");
+  check(id(2, 74, 0) === Q && id(1, 75, 0) === W && id(2, 75, 0) === Q && id(0, 76, 0) === Q && id(0, 77, 0) === W && id(0, 78, 0) === "minecraft:air", "Zierbrunnen: zweite Schale und Quelle oben");
+  let leak = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== W) continue;
+    const [x, y, z] = k.split(",").map(Number);
+    if (x === 0 && z === 0) continue; // Quelle oben darf überlaufen
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+  }
+  check(leak === 0, "Zierbrunnen: Wasser in den Schalen eingefasst (" + leak + ")");
+  await undo();
+  ses.s.pattern = oldP;
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const f = shapeFn({ type: "fluted", rx: 3, ry: 6, rz: 3, sides: 6 });
+  let ring = 0;
+  let grooves = 0;
+  for (let k = 0; k < 72; k++) {
+    const a = (k / 72) * Math.PI * 2;
+    const x = Math.round(Math.cos(a) * 3);
+    const z = Math.round(Math.sin(a) * 3);
+    if (Math.abs(Math.hypot(x, z) - 3) > 0.5) continue;
+    ring++;
+    if (!f.inside(x, 0, z)) grooves++;
+  }
+  check(f.inside(4, -6, 4) && f.inside(4, 6, 0) && f.inside(4, -5, 0) && !f.inside(4, 0, 0) && f.inside(0, 0, 0) && f.inside(2, 0, 0), "Rillensäule: Sockel, Kapitell und voller Kern");
+  check(grooves > 0 && grooves < ring, "Rillensäule: Rillen im Schaft (" + grooves + "/" + ring + ")");
+  Object.assign(ses.s.shape, { type: "fluted", rx: 3, ry: 6, rz: 3, sides: 6, anchor: "center", hollow: false, wire: false, material: "single", yaw: 0, tilt: 0, roll: 0, confirm: false });
+  await roundTrip("Rillensäule", () => use("axiom:shape", G));
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

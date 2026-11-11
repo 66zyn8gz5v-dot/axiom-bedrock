@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.84.0 – 12.11.2026 (nächtlicher Ausbau: Formen)
+- **Zierbrunnen:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein rundes Becken mit Wasser und Rand
+  aus Muster 1, in der Mitte eine Säule mit einer (ab Radius 6 zwei) kleineren Schalen übereinander, jede mit Wasser
+  gefüllt, ganz oben sprudelt eine Quelle. Radius X = Größe des Beckens
+- **Säule mit Rillen:** neue Grundform – runde Säule mit senkrechten Rillen (Kannelierung), Wulst und eckiger Platte
+  oben und unten. Anzahl der Rillen = 2 × „Anzahl Ecken“; mit dem Material „Rippen“ werden Rillen und Stege zweifarbig
+
 ## 0.83.0 – 11.11.2026 (nächtlicher Ausbau: Terraform)
 - **Natürliche Felsbrücke:** neu im Pfad-Menü („Natürliche Felsbrücke“) – zwei Punkte links und rechts setzen, dann
   spannt sich ein unregelmäßiger Felsbogen von Punkt zu Punkt. Die Füße wachsen aus dem Boden, oben in der Mitte
