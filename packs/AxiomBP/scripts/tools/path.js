@@ -632,6 +632,23 @@ export const pathTool = {
         },
       },
       {
+        text: "Natürliche Felsbrücke (erster → letzter Punkt)",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.rockBridge;
+          const r = await new Modal("Felsbrücke")
+            .slider("height", "Höhe des Bogens", 3, 30, 1, c.height)
+            .slider("width", "Breite (halbe Breite)", 1, 6, 1, c.width)
+            .toggle("river", "Flussbett darunter graben", c.river)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { rockBridge } = await import("./terrain.js");
+          rockBridge(ses, c);
+        },
+      },
+      {
         text: "Fjord entlang der Punkte (vom Land zum Meer)",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

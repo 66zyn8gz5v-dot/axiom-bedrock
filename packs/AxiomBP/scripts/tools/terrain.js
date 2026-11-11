@@ -1102,6 +1102,68 @@ export function fjord(ses, o) {
   });
 }
 
+/**
+ * Natürliche Felsbrücke vom ersten zum letzten Pfad-Punkt: ein unregelmäßiger Felsbogen spannt sich zwischen den
+ * beiden Punkten, die Füße wachsen aus dem Boden, oben in der Mitte etwas Gras. Auf Wunsch wird darunter quer ein
+ * Flussbett mit Wasser gegraben.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{height:number, width:number, river:boolean}} o
+ */
+export function rockBridge(ses, o) {
+  const pts = ses.pathPoints;
+  if (pts.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug zwei Punkte setzen – links und rechts vom Fluss, wo die Felsbrücke stehen soll.");
+  const A = pts[0];
+  const B = pts[pts.length - 1];
+  const L = Math.hypot(B.x - A.x, B.z - A.z);
+  if (L < 6) return err(ses.player, "Die Punkte liegen zu nah beieinander – mindestens 6 Blöcke Abstand.");
+  const ux = (B.x - A.x) / L;
+  const uz = (B.z - A.z) / L;
+  const W = Math.max(1, o.width);
+  const Hh = Math.max(3, o.height);
+  const th = Math.max(2, Math.round(L / 8));
+  const rw = Math.max(2, Math.round(L / 6));
+  const seed = Math.floor(Math.random() * 1000);
+  const ext = W + 10;
+  const xs = [A.x, B.x];
+  const zs = [A.z, B.z];
+  const min = v(Math.floor(Math.min(...xs)) - ext - 2, 0, Math.floor(Math.min(...zs)) - ext - 2);
+  const max = v(Math.ceil(Math.max(...xs)) + ext + 2, 0, Math.ceil(Math.max(...zs)) + ext + 2);
+  runEdit(ses.player, { label: "Felsbrücke" }, function* (es) {
+    const gA = groundY(es, Math.round(A.x), Math.round(A.z), A.y + 16, 48) ?? A.y - 1;
+    const gB = groundY(es, Math.round(B.x), Math.round(B.z), B.y + 16, 48) ?? B.y - 1;
+    const base = Math.min(gA, gB);
+    const Wt = permOf("minecraft:water");
+    const Ar = air();
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const px = x - A.x;
+        const pz = z - A.z;
+        const sAl = px * ux + pz * uz; // entlang der Brücke
+        const q = -px * uz + pz * ux; // quer dazu
+        const g = groundY(es, x, z, base + Hh + 16, Hh + 48);
+        if (g === null) continue;
+        // Flussbett quer unter der Mitte
+        if (o.river && Math.abs(sAl - L / 2) <= rw + fbm(x / 4 + seed, 0.5, z / 4, 1) * 0.8 && Math.abs(q) <= ext) {
+          for (let y = g; y > base - 1; y--) es.set(x, y, z, Ar);
+          es.set(x, base - 2, z, permOf("minecraft:gravel"));
+          es.set(x, base - 1, z, Wt);
+        }
+        // Felsbogen
+        const wob = 1 + fbm(x / 3 + seed, 2.2, z / 3, 2) * 0.3;
+        if (Math.abs(q) > W * wob || sAl < -2 || sAl > L + 2) continue;
+        const k = Math.max(-1, Math.min(1, (sAl - L / 2) / (L / 2)));
+        const yc = base + Hh * Math.sqrt(Math.max(0, 1 - k * k));
+        const bottom = Math.abs(k) > 0.7 ? Math.min(g, base) : Math.round(yc - th + fbm(x / 2 + seed, 3.3, z / 2, 1));
+        const top = Math.round(yc + th * 0.5 + fbm(x / 3 + seed, 4.4, z / 3, 1) * 0.8);
+        for (let y = bottom; y <= top; y++) es.set(x, y, z, permOf(y === top && Math.abs(k) < 0.5 && Math.abs(q) < W ? "minecraft:grass_block" : rockId(x, y, z)));
+        if (++n % 64 === 0) yield;
+      }
+      yield;
+    }
+  });
+}
+
 const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
   dirt: [
     ["minecraft:grass_path", 0.7],

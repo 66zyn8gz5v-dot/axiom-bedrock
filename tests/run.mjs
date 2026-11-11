@@ -1471,6 +1471,31 @@ console.log("Fjord");
   dim.blocks.clear();
 }
 
+console.log("Felsbrücke");
+{
+  const { rockBridge } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  dim.blocks.clear();
+  ses.pathPoints = [];
+  rockBridge(ses, { height: 8, width: 2, river: true });
+  check(player.messages.at(-1).includes("Pfad"), "Felsbrücke: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -12, y: 65, z: 0 }, { x: 12, y: 65, z: 0 }];
+  const realRandom = Math.random;
+  Math.random = () => 0.37;
+  await roundTrip("Felsbrücke", () => rockBridge(ses, { height: 8, width: 2, river: true }));
+  rockBridge(ses, { height: 8, width: 2, river: true });
+  await drain();
+  Math.random = realRandom;
+  const rock = (b) => ["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone", "minecraft:grass_block"].includes(b);
+  check(rock(id(0, 70, 0)) && rock(id(0, 71, 0)) && id(0, 66, 0) === "minecraft:air" && id(0, 75, 0) === "minecraft:air", "Felsbrücke: Bogen oben, darunter frei");
+  check(rock(id(-11, 66, 0)) && rock(id(11, 66, 0)) && rock(id(-11, 65, 0)), "Felsbrücke: Füße wachsen aus dem Boden");
+  check(id(0, 63, 0) === "minecraft:water" && id(0, 63, 8) === "minecraft:water" && id(0, 62, 0) === "minecraft:gravel" && id(0, 64, 0) === "minecraft:air", "Felsbrücke: Flussbett quer darunter");
+  check(!rock(id(0, 70, 4)) && !rock(id(0, 70, -4)), "Felsbrücke: schmaler Bogen");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Zwiebelturm & Rippen");
 {
   const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");

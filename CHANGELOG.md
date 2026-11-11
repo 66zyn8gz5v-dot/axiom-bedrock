@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.83.0 – 11.11.2026 (nächtlicher Ausbau: Terraform)
+- **Natürliche Felsbrücke:** neu im Pfad-Menü („Natürliche Felsbrücke“) – zwei Punkte links und rechts setzen, dann
+  spannt sich ein unregelmäßiger Felsbogen von Punkt zu Punkt. Die Füße wachsen aus dem Boden, oben in der Mitte
+  wächst etwas Gras, und auf Wunsch wird darunter quer ein Flussbett mit Wasser gegraben. Höhe und Breite des
+  Bogens sind einstellbar
+
 ## 0.82.0 – 11.11.2026 (nächtlicher Ausbau: Formen)
 - **Kronleuchter:** neue Form – an die Decke zielen und benutzen. Eine Kette hängt herab, unten sitzt ein Ring mit
   Kreuzstreben aus Muster 1 und darunter hängen Laternen: eine in der Mitte und eine an jeder Ecke des Rings.

@@ -134,7 +134,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Tropfsteinhöhle** (v0.77): Höhle in einer Auswahl mit Tropfsteinen (Pointed Dripstone) oben und unten und kleinem See
 - [x] **Blumenhügel / Kirschblütenhain** (v0.79): sanfte Hügel mit Kirschbäumen und rosa Blütenteppich
 - [x] **Moorlandschaft** (v0.81): flache Senken mit Wasser, Moos, Torf (Erde) und abgestorbenen Bäumen in einer Auswahl
-- [ ] **Steinbogen-Brücke aus Fels**: natürlicher Felsbogen über einen Fluss zwischen zwei Punkten
+- [x] **Steinbogen-Brücke aus Fels** (v0.83): natürlicher Felsbogen über einen Fluss zwischen zwei Punkten
+- [ ] **Gletscherspalten**: Eisfläche in einer Auswahl mit tiefen, schmalen Spalten und Schneewehen
+- [ ] **Savanne mit Tafelbergen**: flaches, trockenes Grasland mit einzelnen Akazien und flachen Felsplateaus
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
