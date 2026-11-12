@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.85.0 – 12.11.2026 (nächtlicher Ausbau: Terraform)
+- **Gletscher mit Spalten:** neu im Auswahl-Menü („Gletscher mit Spalten erzeugen“) – füllt eine Box-Auswahl mit
+  einem dicken Eispanzer aus Packeis und einer Schneedecke. Quer zu deiner Blickrichtung (der Fließrichtung des
+  Gletschers) laufen tiefe, schmale, leicht geschwungene Spalten mit Wänden aus Blaueis, oben liegen Schneewehen.
+  Abstand und Tiefe der Spalten sind einstellbar
+
 ## 0.84.0 – 12.11.2026 (nächtlicher Ausbau: Formen)
 - **Zierbrunnen:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein rundes Becken mit Wasser und Rand
   aus Muster 1, in der Mitte eine Säule mit einer (ab Radius 6 zwei) kleineren Schalen übereinander, jede mit Wasser

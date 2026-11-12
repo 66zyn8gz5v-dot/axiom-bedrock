@@ -752,6 +752,69 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Gletscherspalten in der Auswahl: ein dicker Eispanzer mit Schneedecke, durch den quer zur Blickrichtung (der
+ * Fließrichtung des Gletschers) tiefe, schmale, leicht geschwungene Spalten laufen. Die Spaltenwände sind aus Blaueis,
+ * oben liegen Schneewehen. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{spacing:number, depth:number}} o spacing = Abstand der Spalten, depth = Tiefe in % der Eisdicke
+ * @param {{x:number, z:number}} dir Blickrichtung (Fließrichtung)
+ * @param {() => number} [rand]
+ */
+export function opCrevasses(ses, o, dir, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 6) return err(ses.player, "Die Auswahl ist zu flach – mindestens 6 Blöcke hoch.");
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const top0 = min.y + Math.max(3, Math.round((sy - 1) * 0.6));
+  const lam = Math.max(5, o.spacing);
+  const seed = rand() * 1000;
+  /** Abstand zur nächsten Spalte (0 = mitten drin) und ob dort eine Spalte ist. @param {number} x @param {number} z */
+  const crev = (x, z) => {
+    const u = alongX ? x : z;
+    const w = alongX ? z : x;
+    const ph = u / lam + fbm(w / 12 + seed, 0.4, seed, 2) * 0.5;
+    const f = ph - Math.floor(ph);
+    const dist = Math.min(f, 1 - f) * lam;
+    const width = 0.6 + (fbm(w / 6 + seed, 1.9, Math.floor(ph), 1) > 0.2 ? 0.6 : 0);
+    const open = fbm(w / 9 + seed, 3.7, Math.floor(ph) * 2.3, 2) > -0.25;
+    return { open: open && dist <= width, near: open && dist <= width + 1.2, deep: Math.floor(ph) };
+  };
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Gletscherspalten", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const top = Math.min(max.y - 1, top0 + Math.round(fbm(x / 14 + seed, 2.8, z / 14, 2) * 1.5));
+        const c = crev(x, z);
+        const D = Math.round((top - min.y) * (o.depth / 100) * (0.75 + 0.25 * Math.abs(Math.sin(c.deep * 1.7 + seed))));
+        const bottom = top - Math.max(2, D);
+        const drift = !c.near && fbm(x / 4 + seed, 5.2, z / 4, 1) > 0.35;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y === min.y) b = P("minecraft:stone");
+          else if (c.open && y > bottom) b = A;
+          else if (c.open && y === bottom) b = P("minecraft:blue_ice");
+          else if (y < top) b = P(c.near ? "minecraft:blue_ice" : "minecraft:packed_ice");
+          else if (y === top) b = P(c.near ? "minecraft:packed_ice" : "minecraft:snow");
+          else if (y === top + 1 && drift) b = P("minecraft:snow_layer");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Moorlandschaft in der Auswahl: flaches Land mit vielen Wasserlöchern und Tümpeln (Schlammgrund, Seerosen), dazwischen
  * Moos, dunkle Torferde und kleine Bulten, Gras und abgestorbene Bäume ohne Blätter. Der Rand der Auswahl bleibt Land,
  * damit kein Wasser ausläuft. Die Auswahl wird neu gefüllt.

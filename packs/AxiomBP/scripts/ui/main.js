@@ -207,6 +207,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Gletscher mit Spalten erzeugen (fließt in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.crevasses;
+        const r = await new Modal("Gletscherspalten")
+          .slider("spacing", "Abstand der Spalten", 5, 24, 1, c.spacing)
+          .slider("depth", "Tiefe der Spalten in % der Eisdicke", 20, 100, 5, c.depth)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opCrevasses(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Moorlandschaft erzeugen",
       run: async () => {
         const c = ses.s.bog;

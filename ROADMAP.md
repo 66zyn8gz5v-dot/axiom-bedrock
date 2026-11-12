@@ -135,7 +135,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Blumenhügel / Kirschblütenhain** (v0.79): sanfte Hügel mit Kirschbäumen und rosa Blütenteppich
 - [x] **Moorlandschaft** (v0.81): flache Senken mit Wasser, Moos, Torf (Erde) und abgestorbenen Bäumen in einer Auswahl
 - [x] **Steinbogen-Brücke aus Fels** (v0.83): natürlicher Felsbogen über einen Fluss zwischen zwei Punkten
-- [ ] **Gletscherspalten**: Eisfläche in einer Auswahl mit tiefen, schmalen Spalten und Schneewehen
+- [x] **Gletscherspalten** (v0.85): Eisfläche in einer Auswahl mit tiefen, schmalen Spalten und Schneewehen
 - [ ] **Savanne mit Tafelbergen**: flaches, trockenes Grasland mit einzelnen Akazien und flachen Felsplateaus
 
 ### Formen (Figuren) vertiefen

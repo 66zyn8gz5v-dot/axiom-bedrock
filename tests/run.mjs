@@ -1524,6 +1524,48 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Gletscherspalten");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 50, z: 0 }, { x: 47, y: 70, z: 31 });
+  let seed = 31;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Gletscherspalten", () => ops.opCrevasses(ses, { spacing: 9, depth: 70 }, { x: 1, z: 0 }, rnd));
+  seed = 31;
+  ops.opCrevasses(ses, { spacing: 9, depth: 70 }, { x: 1, z: 0 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const top = 50 + 12;
+  let gaps = 0;
+  let deep = 0;
+  for (let z = 4; z <= 28; z += 6) {
+    let inGap = false;
+    for (let x = 0; x <= 47; x++) {
+      const g = id(x, top - 2, z) === "minecraft:air";
+      if (g && !inGap) gaps++;
+      inGap = g;
+      if (id(x, top - 7, z) === "minecraft:air") deep++;
+    }
+  }
+  check(gaps >= 10 && deep > 5, "Gletscherspalten: viele tiefe Spalten quer zur Fließrichtung (" + gaps + "/" + deep + ")");
+  let snow = 0;
+  let blue = 0;
+  let drift = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 47 || y < 50 || y > 70 || z < 0 || z > 31) outside++;
+    if (p.type.id === "minecraft:snow") snow++;
+    if (p.type.id === "minecraft:blue_ice") blue++;
+    if (p.type.id === "minecraft:snow_layer") drift++;
+  }
+  check(snow > 500 && blue > 200 && drift > 20 && outside === 0, "Gletscherspalten: Schneedecke, Blaueis-Wände, Schneewehen (" + snow + "/" + blue + "/" + drift + ")");
+  await undo();
+  check(id(10, 64, 10) === "minecraft:grass_block", "Gletscherspalten: Rückgängig");
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Moorlandschaft");
 {
   dim.blocks.clear();
