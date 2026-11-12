@@ -2992,6 +2992,39 @@ console.log("Zierbrunnen & Rillensäule");
   dim.blocks.clear();
 }
 
+console.log("Turm mit Außentreppe");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("stone_bricks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "outstair", rx: 3, ry: 5, rz: 3, anchor: "center" });
+  await roundTrip("Turm mit Außentreppe", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  check(id(0, 65, 0) === S && id(3, 70, 0) === S && id(0, 70, 0) === "minecraft:air" && id(0, 66, -3) === "minecraft:air", "Turm mit Außentreppe: hohler Turm mit Tür");
+  const levels = new Set();
+  let bad = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== "minecraft:stone_brick_stairs") continue;
+    const [x, y, z] = k.split(",").map(Number);
+    levels.add(y);
+    if (Math.abs(Math.hypot(x, z) - 4) >= 0.5) bad++;
+    if (id(x, y + 1, z) !== "minecraft:air" && y < 75) bad++;
+  }
+  check(levels.size === 11 && Math.min(...levels) === 65 && Math.max(...levels) === 75 && bad === 0, "Turm mit Außentreppe: eine Stufe je Höhe außen herum, darüber frei (" + levels.size + ")");
+  let merlons = 0;
+  for (const [k, p] of dim.blocks) if (p.type.id === S && Number(k.split(",")[1]) === 77) merlons++;
+  check(id(0, 76, 0) === S && id(4, 76, 0) === S && merlons > 4, "Turm mit Außentreppe: Plattform mit Zinnen (" + merlons + ")");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.86.0 – 13.11.2026 (nächtlicher Ausbau: Formen)
+- **Turm mit Außentreppe:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein runder, hohler Turm aus
+  Muster 1 mit Tür auf deiner Seite. Außen läuft eine Treppe aus echten Treppenblöcken (passend zum Muster, z.B.
+  Steinziegeltreppe) im Kreis nach oben, jede Stufe einen Block höher, bis auf die Plattform mit Zinnen. Radius X =
+  Turmradius, Radius Y = Höhe (2 × Radius Y + 1)
+
 ## 0.85.0 – 12.11.2026 (nächtlicher Ausbau: Terraform)
 - **Gletscher mit Spalten:** neu im Auswahl-Menü („Gletscher mit Spalten erzeugen“) – füllt eine Box-Auswahl mit
   einem dicken Eispanzer aus Packeis und einer Schneedecke. Quer zu deiner Blickrichtung (der Fließrichtung des

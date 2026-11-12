@@ -184,7 +184,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Brunnen mit Fontäne** (v0.84): runder Zierbrunnen mit mehreren Schalen übereinander und Wasser
 - [x] **Säule mit Kannelierung** (v0.84): Säule mit senkrechten Rillen (abwechselnd Muster 1 und 2) und Kapitell
 - [ ] **Leuchtturm-Insel / Hafenmole**: gebogene Mole aus Steinen mit kleinem Leuchtfeuer am Ende
-- [ ] **Treppenturm mit Außentreppe**: runder Turm, um den außen eine Treppe nach oben läuft
+- [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges
 - [ ] **Kreaturen beim Kopieren/Einfügen mitnehmen** testen
