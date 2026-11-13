@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Savanne mit Tafelbergen erzeugen",
+      run: async () => {
+        const c = ses.s.savanna;
+        const r = await new Modal("Savanne")
+          .slider("mesas", "Anzahl Tafelberge", 0, 8, 1, c.mesas)
+          .slider("trees", "Akazien (Dichte in %)", 0, 100, 10, c.trees)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opSavanna(ses, c);
+      },
+    },
+    {
       text: "Gletscher mit Spalten erzeugen (fließt in Blickrichtung)",
       run: async () => {
         const c = ses.s.crevasses;

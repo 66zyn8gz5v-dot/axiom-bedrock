@@ -1524,6 +1524,37 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Savanne");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 63, y: 85, z: 63 });
+  let seed = 37;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Savanne", () => ops.opSavanna(ses, { mesas: 3, trees: 80 }, rnd));
+  seed = 37;
+  ops.opSavanna(ses, { mesas: 3, trees: 80 }, rnd);
+  await drain();
+  let hi = 0;
+  let grass = 0;
+  let logs = 0;
+  let leaves = 0;
+  let layers = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 63 || y < 60 || y > 85 || z < 0 || z > 63) outside++;
+    if (p.type.id === "minecraft:grass_block") ((grass++), (hi = Math.max(hi, y)));
+    if (p.type.id === "minecraft:acacia_log") logs++;
+    if (p.type.id === "minecraft:acacia_leaves") (leaves++, p.getAllStates().persistent_bit || (outside += 1000));
+    if (p.type.id.endsWith("terracotta")) layers++;
+  }
+  check(grass > 2000 && hi >= 78 && layers > 100 && outside === 0, "Savanne: Grasland mit hohen Tafelbergen, geschichtete Wände (" + hi + "/" + layers + ")");
+  check(logs >= 8 && leaves > 60, "Savanne: Akazien mit Schirmkrone (" + logs + "/" + leaves + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Gletscherspalten");
 {
   dim.blocks.clear();

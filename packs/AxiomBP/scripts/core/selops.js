@@ -752,6 +752,109 @@ export function opIslands(ses, o, rand = Math.random) {
 }
 
 /**
+ * Savanne mit Tafelbergen in der Auswahl: flaches, trockenes Grasland mit Flecken aus grober Erde, einzelnen Akazien
+ * (schräger Stamm, flache Schirmkrone) und ein paar Tafelbergen – Felsplateaus mit steilen, geschichteten Wänden und
+ * Gras obendrauf. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{mesas:number, trees:number}} o mesas = Anzahl Tafelberge, trees = Akazien (Dichte in %)
+ * @param {() => number} [rand]
+ */
+export function opSavanna(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 14) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 14 Blöcke hoch.");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(2, Math.round((sy - 1) * 0.3));
+  const plateau = Math.min(max.y - 1, base + Math.max(6, Math.round((max.y - base) * 0.6)));
+  /** @type {{x:number, z:number, r:number}[]} */
+  const mesas = [];
+  for (let i = 0; i < Math.max(0, Math.min(8, o.mesas)); i++) {
+    const r = Math.max(4, Math.min(sx, sz) * (0.08 + rand() * 0.08));
+    mesas.push({ x: min.x + r + rand() * Math.max(1, sx - 2 * r), z: min.z + r + rand() * Math.max(1, sz - 2 * r), r });
+  }
+  /** @type {Map<string, {h:number, mesa:boolean}>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      let h = base + Math.round(fbm(x / 20 + seed, 0.3, z / 20, 2) * 1.5);
+      let mesa = false;
+      for (const M of mesas) {
+        const wob = 1 + fbm(x / 5 + seed + M.x, 1.4, z / 5, 2) * 0.25;
+        const q = Math.hypot(x - M.x, z - M.z) / (M.r * wob);
+        if (q < 1) ((h = Math.max(h, plateau)), (mesa = true));
+        else if (q < 1.3) h = Math.max(h, Math.round(base + (plateau - base) * 0.35 * (1 - (q - 1) / 0.3))); // Geröllhang
+      }
+      H.set(x + "," + z, { h: Math.max(min.y + 1, Math.min(max.y - 1, h)), mesa });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const LAYERS = ["minecraft:orange_terracotta", "minecraft:stone", "minecraft:terracotta", "minecraft:andesite", "minecraft:red_terracotta", "minecraft:stone"];
+  const A = air();
+  runEdit(ses.player, { label: "Savanne", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, mesa } = /** @type {{h:number, mesa:boolean}} */ (H.get(x + "," + z));
+        const n = fbm(x / 5 + seed, 3.1, z / 5, 1);
+        const top = n > 0.35 ? "minecraft:coarse_dirt" : "minecraft:grass_block";
+        const tuft = !mesa && top === "minecraft:grass_block" && rand() < 0.12;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y === h + 1 && tuft) b = P("minecraft:short_grass");
+          else if (y > h) b = A;
+          else if (y === h) b = P(top);
+          else if (y > base) b = P(LAYERS[((y - base) % LAYERS.length + LAYERS.length) % LAYERS.length]); // Wände der Tafelberge
+          else b = P(h - y <= 3 ? "minecraft:dirt" : "minecraft:stone");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    // Akazien: schräger Stamm, flache Schirmkrone
+    const log = P("minecraft:acacia_log");
+    const leaves = P("minecraft:acacia_leaves", { persistent_bit: true });
+    const tries = Math.round((sx * sz * o.trees) / 3000);
+    /** @type {{x:number, z:number}[]} */
+    const trees = [];
+    for (let i = 0; i < tries; i++) {
+      const x = Math.round(min.x + 3 + rand() * (sx - 7));
+      const z = Math.round(min.z + 3 + rand() * (sz - 7));
+      const col = H.get(x + "," + z);
+      if (!col || col.mesa || col.h > base + 1) continue;
+      if (!trees.every((t) => Math.hypot(t.x - x, t.z - z) >= 9)) continue;
+      if (col.h + 9 > max.y) continue;
+      trees.push({ x, z });
+      const [dx, dz] = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(rand() * 4)];
+      let cx = x;
+      let cz = z;
+      const tH = 4 + Math.floor(rand() * 2);
+      for (let k = 1; k <= tH; k++) {
+        if (k >= 3) ((cx += dx), (cz += dz));
+        es.set(cx, col.h + k, cz, log);
+      }
+      const ty = col.h + tH + 1;
+      for (let ox = -3; ox <= 3; ox++)
+        for (let oz = -3; oz <= 3; oz++) {
+          const d = Math.hypot(ox, oz);
+          if (d <= 3.2 && selContains(sel, cx + ox, ty, cz + oz)) es.set(cx + ox, ty, cz + oz, leaves);
+          if (d <= 1.5 && selContains(sel, cx + ox, ty + 1, cz + oz)) es.set(cx + ox, ty + 1, cz + oz, leaves);
+        }
+      yield;
+    }
+  });
+}
+
+/**
  * Gletscherspalten in der Auswahl: ein dicker Eispanzer mit Schneedecke, durch den quer zur Blickrichtung (der
  * Fließrichtung des Gletschers) tiefe, schmale, leicht geschwungene Spalten laufen. Die Spaltenwände sind aus Blaueis,
  * oben liegen Schneewehen. Die Auswahl wird neu gefüllt.

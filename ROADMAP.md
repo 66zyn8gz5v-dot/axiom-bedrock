@@ -136,7 +136,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Moorlandschaft** (v0.81): flache Senken mit Wasser, Moos, Torf (Erde) und abgestorbenen Bäumen in einer Auswahl
 - [x] **Steinbogen-Brücke aus Fels** (v0.83): natürlicher Felsbogen über einen Fluss zwischen zwei Punkten
 - [x] **Gletscherspalten** (v0.85): Eisfläche in einer Auswahl mit tiefen, schmalen Spalten und Schneewehen
-- [ ] **Savanne mit Tafelbergen**: flaches, trockenes Grasland mit einzelnen Akazien und flachen Felsplateaus
+- [x] **Savanne mit Tafelbergen** (v0.87): flaches, trockenes Grasland mit einzelnen Akazien und flachen Felsplateaus
+- [ ] **Bergsee mit Wasserfall-Zulauf**: Mulde zwischen Bergen, gefüllt mit Wasser, ein Bach fällt von oben hinein
+- [ ] **Pilzwald**: Riesenpilze (rot und braun) auf Myzel in einer Auswahl
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
