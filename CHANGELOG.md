@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.88.0 – 14.11.2026 (nächtlicher Ausbau: Formen)
+- **Hafenmole mit Leuchtfeuer:** neu im Pfad-Menü – Punkte vom Ufer hinaus aufs Wasser setzen (gern in einem Bogen),
+  dann entsteht entlang der weichen Kurve ein Damm aus Muster 1 vom Meeresgrund bis einen Block über das Wasser. An
+  den Seiten läuft auf Wunsch eine niedrige Brüstung, am letzten Punkt steht ein kleines Leuchtfeuer (Säule mit
+  Seelaterne). Die Breite ist einstellbar
+
 ## 0.87.0 – 13.11.2026 (nächtlicher Ausbau: Terraform)
 - **Savanne mit Tafelbergen:** neu im Auswahl-Menü („Savanne mit Tafelbergen erzeugen“) – füllt eine Box-Auswahl
   (mindestens 14 Blöcke hoch) mit flachem, trockenem Grasland mit Flecken grober Erde und Grasbüscheln. Dazwischen

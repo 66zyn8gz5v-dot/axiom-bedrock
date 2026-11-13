@@ -1496,6 +1496,42 @@ console.log("Felsbrücke");
   dim.blocks.clear();
 }
 
+console.log("Hafenmole");
+{
+  const { buildPier } = await import("../packs/AxiomBP/scripts/tools/path.js");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  dim.blocks.clear();
+  // Hafenbecken: Wasser y 58..64
+  ses.sel = boxSel(dim.id, { x: -5, y: 58, z: -8 }, { x: 25, y: 64, z: 14 });
+  ops.opFill(ses, parsePattern("water"));
+  await drain();
+  ses.sel = undefined;
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.pathPoints = [];
+  buildPier(ses, { width: 1, rail: true });
+  check(player.messages.at(-1).includes("Punkte"), "Hafenmole: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: 0, y: 65, z: 0 }, { x: 10, y: 65, z: 2 }, { x: 20, y: 65, z: 8 }];
+  await roundTrip("Hafenmole", () => buildPier(ses, { width: 1, rail: true }));
+  buildPier(ses, { width: 1, rail: true });
+  await drain();
+  const S = "minecraft:stone_bricks";
+  check(id(10, 65, 2) === S && id(10, 60, 2) === S && id(10, 58, 2) === S && id(10, 64, 8) === "minecraft:water", "Hafenmole: Damm vom Meeresgrund bis über das Wasser");
+  let rail = 0;
+  let mid = 0;
+  for (const [k, p] of dim.blocks) {
+    const [, y] = k.split(",").map(Number);
+    if (p.type.id === S && y === 66) rail++;
+  }
+  for (let x = 2; x <= 18; x += 4) if (id(x, 66, Math.round(x < 10 ? x / 5 : 2 + (x - 10) * 0.6)) === "minecraft:air") mid++;
+  check(rail > 25 && mid >= 3, "Hafenmole: Brüstung an den Seiten, Weg in der Mitte frei (" + rail + "/" + mid + ")");
+  check(id(20, 66, 8) === S && id(20, 68, 8) === S && id(20, 69, 8) === "minecraft:sea_lantern" && id(20, 70, 8) === S, "Hafenmole: Leuchtfeuer am Ende");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Zwiebelturm & Rippen");
 {
   const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");

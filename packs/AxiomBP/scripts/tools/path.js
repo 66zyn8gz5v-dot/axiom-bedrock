@@ -288,6 +288,66 @@ export function buildCityWall(ses, o) {
 }
 
 /**
+ * Hafenmole entlang der Punkte (weiche Kurve): ein Damm aus Muster 1 vom Grund (auch unter Wasser) bis einen Block
+ * über die Höhe der Punkte, auf Wunsch mit niedriger Brüstung an beiden Seiten, am letzten Punkt ein kleines
+ * Leuchtfeuer (Säule mit Seelaterne).
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, rail:boolean}} o width = halbe Breite
+ */
+export function buildPier(ses, o) {
+  const pts = ses.pathPoints;
+  if (pts.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen – vom Ufer hinaus aufs Wasser.");
+  const stone = picker(ses.s.pattern);
+  const W = Math.max(1, o.width);
+  const samples = samplePath(pts, true);
+  /** @param {any} es @param {number} x @param {number} z @param {number} from */
+  const down = (es, x, z, from) => {
+    for (let y = from; y > from - 48; y--) {
+      const id = es.id(x, y, z);
+      if (id && isSolidId(id)) return y;
+    }
+    return from - 48;
+  };
+  runEdit(ses.player, { label: "Hafenmole", symmetry: true }, function* (es) {
+    /** @type {Map<string, {top:number, d:number}>} */
+    const cols = new Map();
+    for (let i = 0; i < samples.length; i++) {
+      const p = samples[i];
+      const q = samples[Math.min(samples.length - 1, i + 1)];
+      const o0 = samples[Math.max(0, i - 1)];
+      let ux = q.x - o0.x;
+      let uz = q.z - o0.z;
+      const L = Math.hypot(ux, uz) || 1;
+      ux /= L;
+      uz /= L;
+      for (let k = -W - 0.01; k <= W + 0.01; k += 0.5) {
+        const x = Math.round(p.x - uz * k);
+        const z = Math.round(p.z + ux * k);
+        const key = x + "," + z;
+        const d = Math.hypot(x - p.x, z - p.z);
+        const prev = cols.get(key);
+        // Abstand zur Mittellinie merken: Brüstung nur ganz außen
+        if (!prev || d < prev.d) cols.set(key, { top: Math.round(p.y), d });
+      }
+    }
+    let n = 0;
+    for (const [key, c] of cols) {
+      const [x, z] = key.split(",").map(Number);
+      const g = down(es, x, z, c.top);
+      for (let y = g + 1; y <= c.top; y++) es.set(x, y, z, stone());
+      if (o.rail && c.d > W - 0.5) es.set(x, c.top + 1, z, stone());
+      if (++n % 64 === 0) yield;
+    }
+    // Leuchtfeuer am Ende
+    const e = pts[pts.length - 1];
+    const top = Math.round(e.y);
+    for (let y = top + 1; y <= top + 3; y++) es.set(e.x, y, e.z, stone());
+    es.set(e.x, top + 4, e.z, BlockPermutation.resolve("minecraft:sea_lantern"));
+    es.set(e.x, top + 5, e.z, stone());
+  });
+}
+
+/**
  * Hängebrücke vom ersten zum letzten Punkt: gerader Belag (Muster 1), an beiden Enden Pfeilertürme (Muster 2) bis
  * zum Boden, Tragketten im Bogen von Turm zu Turm und senkrechte Hängeketten zum Belag.
  * @param {import("../core/state.js").Session} ses
@@ -554,6 +614,23 @@ export const pathTool = {
           markDirty(ses);
           if (r.pat) await patternMenu(ses);
           buildCityWall(ses, c);
+        },
+      },
+      {
+        text: "Hafenmole mit Leuchtfeuer entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.pier;
+          const r = await new Modal("Hafenmole")
+            .slider("width", "Breite (halbe Breite)", 1, 5, 1, c.width)
+            .toggle("rail", "Niedrige Brüstung an den Seiten", c.rail)
+            .toggle("pat", "Danach Block wählen (Muster 1)", false)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { width: r.width, rail: r.rail });
+          markDirty(ses);
+          if (r.pat) await patternMenu(ses);
+          buildPier(ses, c);
         },
       },
       {
