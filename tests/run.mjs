@@ -1560,6 +1560,38 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Bergsee");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 47, y: 90, z: 47 });
+  let seed = 43;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Bergsee", () => ops.opMountainLake(ses, { lake: 50, peaks: 80 }, { x: 1, z: 0 }, rnd));
+  seed = 43;
+  ops.opMountainLake(ses, { lake: 50, peaks: 80 }, { x: 1, z: 0 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const lakeY = 58 + 11;
+  check(id(24, lakeY, 24) === "minecraft:water" && id(24, lakeY + 1, 24) === "minecraft:air" && id(24, lakeY - 3, 24) === "minecraft:water", "Bergsee: tiefer See in der Mitte");
+  let hi = 0;
+  let snow = 0;
+  let leak = 0;
+  let fall = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (p.type.id !== "minecraft:air" && p.type.id !== "minecraft:water") hi = Math.max(hi, y);
+    if (p.type.id === "minecraft:snow" || p.type.id === "minecraft:snow_layer") snow++;
+    if (p.type.id === "minecraft:water" && y <= lakeY) for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+    if (p.type.id === "minecraft:water" && y > lakeY + 2 && x > 24) fall++;
+  }
+  check(hi >= 82 && snow > 20, "Bergsee: Berge ringsum mit Schnee (" + hi + "/" + snow + ")");
+  check(leak === 0, "Bergsee: See ist eingefasst (" + leak + ")");
+  check(fall >= 8, "Bergsee: Bach stürzt von der Seite in Blickrichtung herab (" + fall + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Savanne");
 {
   dim.blocks.clear();

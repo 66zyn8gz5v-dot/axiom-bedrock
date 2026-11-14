@@ -62,6 +62,7 @@ export function defaultSettings() {
     bog: { wet: 45, trees: 40 },
     crevasses: { spacing: 9, depth: 70 },
     savanna: { mesas: 3, trees: 50 },
+    mountainLake: { lake: 50, peaks: 80 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

@@ -207,6 +207,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Bergsee mit Wasserfall erzeugen (Bach kommt von vorn)",
+      run: async () => {
+        const c = ses.s.mountainLake;
+        const r = await new Modal("Bergsee")
+          .slider("lake", "Größe des Sees in %", 10, 100, 5, c.lake)
+          .slider("peaks", "Höhe der Berge in %", 30, 100, 5, c.peaks)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opMountainLake(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Savanne mit Tafelbergen erzeugen",
       run: async () => {
         const c = ses.s.savanna;

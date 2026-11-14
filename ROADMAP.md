@@ -137,7 +137,7 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Steinbogen-Brücke aus Fels** (v0.83): natürlicher Felsbogen über einen Fluss zwischen zwei Punkten
 - [x] **Gletscherspalten** (v0.85): Eisfläche in einer Auswahl mit tiefen, schmalen Spalten und Schneewehen
 - [x] **Savanne mit Tafelbergen** (v0.87): flaches, trockenes Grasland mit einzelnen Akazien und flachen Felsplateaus
-- [ ] **Bergsee mit Wasserfall-Zulauf**: Mulde zwischen Bergen, gefüllt mit Wasser, ein Bach fällt von oben hinein
+- [x] **Bergsee mit Wasserfall-Zulauf** (v0.89): Mulde zwischen Bergen, gefüllt mit Wasser, ein Bach fällt von oben hinein
 - [ ] **Pilzwald**: Riesenpilze (rot und braun) auf Myzel in einer Auswahl
 
 ### Formen (Figuren) vertiefen

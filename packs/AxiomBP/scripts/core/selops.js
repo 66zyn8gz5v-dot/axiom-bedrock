@@ -667,8 +667,9 @@ export function opLandscape(ses, o, seed = Math.random() * 1000) {
  * @param {import("./selection.js").Selection} sel
  * @param {Map<string, number>} H Bodenhöhe je Spalte
  * @param {number} seaY @param {number} snowY @param {string} label
+ * @param {(es: import("./edit.js").EditSession) => Generator<any, void, any>} [after] zusätzliche Arbeit im selben Schritt
  */
-function writeTerrain(ses, sel, H, seaY, snowY, label) {
+function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
   const { min, max } = sel;
   /** @type {Map<string, BlockPermutation>} */
   const cache = new Map();
@@ -702,7 +703,76 @@ function writeTerrain(ses, sel, H, seaY, snowY, label) {
       }
       yield;
     }
+    if (after) yield* after(es);
   });
+}
+
+/**
+ * Bergsee in der Auswahl: ringsum Berge (oben Fels und Schnee), in der Mitte eine Mulde mit See. Von der Seite in
+ * Blickrichtung stürzt ein Bach in einer Rinne die Bergflanke hinab in den See (Wasserfall).
+ * @param {import("./state.js").Session} ses
+ * @param {{lake:number, peaks:number}} o lake = Seegröße in %, peaks = Berghöhe in %
+ * @param {{x:number, z:number}} dir Blickrichtung (der Bach kommt von der gegenüberliegenden Seite)
+ * @param {() => number} [rand]
+ */
+export function opMountainLake(ses, o, dir, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 16 || Math.min(sx, sz) < 20) return err(ses.player, "Die Auswahl ist zu klein – mindestens 20×16×20 Blöcke.");
+  const lakeY = min.y + Math.max(4, Math.round((sy - 1) * 0.35));
+  const peak = lakeY + 2 + Math.round((max.y - 2 - lakeY - 2) * (o.peaks / 100));
+  const snowY = lakeY + Math.round((peak - lakeY) * 0.75);
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const hx = sx / 2;
+  const hz = sz / 2;
+  const lakeR = Math.max(0.15, Math.min(0.75, (o.lake / 100) * 0.7));
+  const seed = rand() * 1000;
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const wob = 1 + fbm(x / 9 + seed, 0.5, z / 9, 2) * 0.12;
+      const q = Math.hypot((x - cx) / hx, (z - cz) / hz) * wob;
+      let h;
+      if (q < lakeR) h = lakeY - 1 - Math.round(4 * (1 - q / lakeR));
+      else {
+        const t = Math.min(1, (q - lakeR) / (1 - lakeR));
+        const ridge = 0.7 + 0.3 * Math.abs(fbm(x / 11 + seed, 2.4, z / 11, 3)) * 2;
+        h = Math.round(lakeY + 1 + (peak - lakeY - 1) * Math.pow(t, 1.3) * Math.min(1, ridge));
+      }
+      H.set(x + "," + z, Math.max(min.y + 1, Math.min(max.y - 1, h)));
+    }
+  // Bach: von der Seite gegenüber dem Spieler (in Blickrichtung) zur Seemitte
+  const L = Math.hypot(dir.x, dir.z) || 1;
+  const ux = dir.x / L;
+  const uz = dir.z / L;
+  const reach = Math.min(Math.abs(ux) > 1e-6 ? hx / Math.abs(ux) : Infinity, Math.abs(uz) > 1e-6 ? hz / Math.abs(uz) : Infinity) - 2;
+  function* after(/** @type {import("./edit.js").EditSession} */ es) {
+    const W = BlockPermutation.resolve("minecraft:water");
+    /** @type {Set<string>} */
+    const done = new Set();
+    for (let s = reach; s >= 0; s -= 0.5) {
+      const bx = cx + ux * s;
+      const bz = cz + uz * s;
+      for (const off of [0, 1]) {
+        const x = Math.round(bx - uz * off);
+        const z = Math.round(bz + ux * off);
+        const k = x + "," + z;
+        const h = H.get(k);
+        if (h === undefined || done.has(k)) continue;
+        done.add(k);
+        if (h <= lakeY) continue; // im See angekommen
+        es.set(x, h, z, W); // Rinne mit Wasser, rinnt hangabwärts
+      }
+    }
+    yield;
+  }
+  writeTerrain(ses, sel, H, lakeY, snowY, "Bergsee", after);
 }
 
 /**

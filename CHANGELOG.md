@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.89.0 – 14.11.2026 (nächtlicher Ausbau: Terraform)
+- **Bergsee mit Wasserfall:** neu im Auswahl-Menü („Bergsee mit Wasserfall erzeugen“) – füllt eine Box-Auswahl
+  (mindestens 20×16×20) mit einem Bergkessel: ringsum Berge mit Wiesen, Fels und Schnee oben, in der Mitte ein tiefer
+  See mit Sand- und Kiesgrund. Von der Seite in deiner Blickrichtung stürzt ein Bach in einer Rinne die Bergflanke
+  hinab in den See. Seegröße und Berghöhe sind einstellbar
+
 ## 0.88.0 – 14.11.2026 (nächtlicher Ausbau: Formen)
 - **Hafenmole mit Leuchtfeuer:** neu im Pfad-Menü – Punkte vom Ufer hinaus aufs Wasser setzen (gern in einem Bogen),
   dann entsteht entlang der weichen Kurve ein Damm aus Muster 1 vom Meeresgrund bis einen Block über das Wasser. An
