@@ -186,8 +186,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Brunnen mit Fontäne** (v0.84): runder Zierbrunnen mit mehreren Schalen übereinander und Wasser
 - [x] **Säule mit Kannelierung** (v0.84): Säule mit senkrechten Rillen (abwechselnd Muster 1 und 2) und Kapitell
 - [x] **Leuchtturm-Insel / Hafenmole** (v0.88): gebogene Mole aus Steinen mit kleinem Leuchtfeuer am Ende
-- [ ] **Kuppelhalle mit Säulenkranz (Pantheon)**: runder Bau mit Säulenvorhalle und großer Kuppel mit Oberlicht
-- [ ] **Bogen-Tunnel (Gewölbegang)**: gemauerter Tunnel mit Rundbogen-Querschnitt zwischen zwei Punkten
+- [x] **Kuppelhalle mit Säulenkranz (Pantheon)** (v0.90): runder Bau mit Säulenvorhalle und großer Kuppel mit Oberlicht
+- [x] **Bogen-Tunnel (Gewölbegang)** (v0.90): gemauerter Tunnel mit Rundbogen-Querschnitt zwischen zwei Punkten
+- [ ] **Burgfried mit Wendeltreppe innen**: viereckiger Turm, innen eine Treppe bis zum Dach mit Zinnen
+- [ ] **Wasserrad**: großes Rad mit Schaufeln an einer Achse, steht vor dir (z.B. an einem Bach)
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

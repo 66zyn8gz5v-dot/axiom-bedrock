@@ -3124,6 +3124,52 @@ console.log("Turm mit Außentreppe");
   dim.blocks.clear();
 }
 
+console.log("Gewölbe-Tunnel & Kuppelhalle");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("smooth_stone");
+  Object.assign(ses.s.shape, { type: "tunnel", rx: 1, ry: 2, rz: 1 });
+  ses.shapeA = undefined;
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  check(!!ses.shapeA, "Gewölbe-Tunnel: erster Klick merkt Punkt A");
+  await roundTrip("Gewölbe-Tunnel", () => use("axiom:shape", { x: 20, y: 64, z: 1 }));
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 20, y: 64, z: 1 });
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const AIR = "minecraft:air";
+  check(id(5, 65, 0) === AIR && id(5, 67, 0) === AIR && id(5, 65, 1) === AIR && id(5, 68, 0) === S && id(5, 65, 2) === S && id(5, 65, -2) === S && id(5, 64, 0) === S, "Gewölbe-Tunnel: Rundbogen-Querschnitt, innen frei");
+  check(id(3, 67, 0) === "minecraft:lantern" && id(9, 67, 0) === "minecraft:lantern" && id(5, 67, 0) === AIR, "Gewölbe-Tunnel: Laternen im Scheitel");
+  check(id(20, 65, 0) === AIR && id(21, 65, 0) === AIR && id(20, 68, 0) === S, "Gewölbe-Tunnel: bis Punkt B");
+  await undo();
+  dim.blocks.clear();
+  // Rampe: B höher
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 10, y: 69, z: 0 });
+  check(id(0, 64, 0) === S && id(0, 65, 0) === AIR && id(5, 67, 0) === S && id(5, 68, 0) === AIR && id(10, 69, 0) === S && id(10, 70, 0) === AIR, "Gewölbe-Tunnel: steigt gleichmäßig an");
+  await undo();
+  dim.blocks.clear();
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "pantheon", rx: 6, ry: 6, rz: 6, anchor: "center" });
+  await roundTrip("Kuppelhalle", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const SM = "minecraft:smooth_stone";
+  check(id(6, 68, 0) === S && id(0, 68, 0) === AIR && id(0, 65, 0) === S && id(6, 71, 0) === S, "Kuppelhalle: Rundbau mit Boden");
+  check(id(0, 76, 4) === SM && id(0, 77, 0) === AIR && id(0, 74, 0) === AIR && id(4, 75, 0) === SM, "Kuppelhalle: Kuppel mit Oberlicht");
+  check(id(0, 66, -6) === AIR && id(0, 66, -5) === AIR, "Kuppelhalle: Tür zur Vorhalle");
+  check(id(-4, 66, -10) === S && id(-3, 66, -10) === AIR && id(0, 71, -8) === S && id(0, 65, -9) === S && id(0, 72, -8) === SM, "Kuppelhalle: Säulenvorhalle mit Gebälk und Giebel");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

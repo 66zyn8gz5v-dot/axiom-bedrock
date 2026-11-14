@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.90.0 – 15.11.2026 (nächtlicher Ausbau: Formen)
+- **Kuppelhalle:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein Rundbau wie das Pantheon in Rom:
+  runde Mauer aus Muster 1 mit großer Tür zu dir, darauf eine hohle Kuppel aus Muster 2 mit rundem Oberlicht, davor
+  eine Säulenvorhalle mit Gebälk und flachem Giebeldach. Radius X = Größe der Halle (die Wand ist so hoch wie der Radius)
+- **Gewölbe-Tunnel:** neue Form – erst den Anfang (Punkt A), dann das Ende (Punkt B) anklicken. Dazwischen entsteht
+  ein gemauerter Tunnel mit Rundbogen-Querschnitt aus Muster 1, der gleichmäßig von der Höhe von A zur Höhe von B
+  steigt oder fällt; alle 6 Blöcke hängt eine Laterne im Scheitel. Radius X = halbe Innenbreite, Radius Y = Wandhöhe
+
 ## 0.89.0 – 14.11.2026 (nächtlicher Ausbau: Terraform)
 - **Bergsee mit Wasserfall:** neu im Auswahl-Menü („Bergsee mit Wasserfall erzeugen“) – füllt eine Box-Auswahl
   (mindestens 20×16×20) mit einem Bergkessel: ringsum Berge mit Wiesen, Fels und Schnee oben, in der Mitte ein tiefer

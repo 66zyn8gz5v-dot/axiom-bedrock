@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["pantheon", "Kuppelhalle (Rundbau mit Kuppel, Oberlicht und Säulenvorhalle zu dir)"],
+  ["tunnel", "Gewölbe-Tunnel (Rundbogen, Punkt A → B, mit Laternen)"],
   ["outstair", "Turm mit Außentreppe (Treppe läuft außen herum nach oben)"],
   ["fountain", "Zierbrunnen (Becken, Schalen übereinander, Wasser)"],
   ["chandelier", "Kronleuchter (an die Decke zielen: Kette, Ring, Laternen)"],
@@ -730,7 +732,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1258,6 +1260,132 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Gewölbe-Tunnel: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B. Entlang der Hauptrichtung entsteht ein gemauerter
+ * Tunnel (Muster 1) mit Rundbogen-Querschnitt, der gleichmäßig von der Höhe von A auf die Höhe von B steigt oder fällt.
+ * Innen frei, alle 6 Blöcke hängt eine Laterne im Scheitel. Breite innen = 2 × Radius X + 1, Wandhöhe = Radius Y.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildTunnel(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.adjacent : t.pos;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, "Tunnel: Anfang (Punkt A) gesetzt – jetzt auf das Ende (Punkt B) zielen und benutzen.");
+  }
+  const A = ses.shapeA;
+  ses.shapeA = undefined;
+  const ddx = p.x - A.x;
+  const ddz = p.z - A.z;
+  const [sx, sz] = Math.abs(ddx) >= Math.abs(ddz) ? [Math.sign(ddx) || 1, 0] : [0, Math.sign(ddz) || 1];
+  const L = Math.abs(sx ? ddx : ddz);
+  if (L < 2) return err(ses.player, "Punkt B ist zu nah – mindestens 3 Blöcke Länge.");
+  const a = Math.max(1, c.rx);
+  const h = Math.max(2, c.ry);
+  const R = a + 0.5;
+  const wall = picker(ses.s.pattern);
+  const Air = air();
+  let lantern;
+  try {
+    lantern = BlockPermutation.resolve("minecraft:lantern", { hanging: true });
+  } catch {
+    lantern = BlockPermutation.resolve("minecraft:lantern");
+  }
+  const open = (/** @type {number} */ l, /** @type {number} */ y) => y >= 0 && Math.abs(l) <= a && (y <= h - 1 || (y - (h - 1)) ** 2 + l * l <= R * R);
+  let crown = h - 1;
+  while (open(0, crown + 1)) crown++;
+  const top = crown + 1;
+  runEdit(ses.player, { label: "Gewölbe-Tunnel", symmetry: true }, function* (es) {
+    for (let u = 0; u <= L; u++) {
+      const y0 = Math.round(A.y + ((p.y - A.y) * u) / L);
+      for (let l = -a - 1; l <= a + 1; l++) {
+        const x = A.x + sx * u - sz * l;
+        const z = A.z + sz * u + sx * l;
+        for (let y = -1; y <= top; y++) {
+          if (open(l, y)) es.set(x, y0 + y, z, u % 6 === 3 && l === 0 && y === crown ? lantern : Air);
+          else if ([-1, 0, 1].some((dl) => [-1, 0, 1].some((dy) => open(l + dl, y + dy)))) es.set(x, y0 + y, z, wall());
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Kuppelhalle (wie das Pantheon in Rom): runde Mauer (Muster 1) mit Boden und großer Tür zu dir, darauf eine hohle
+ * Halbkugel-Kuppel (Muster 2) mit rundem Oberlicht, davor eine Säulenvorhalle mit Gebälk und flachem Giebeldach.
+ * Radius X = Radius der Halle (Wandhöhe = Radius). Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildPantheon(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(5, c.rx);
+  const hw = R; // Wandhöhe
+  const wall = picker(ses.s.pattern);
+  const dome = picker(ses.s.pattern2);
+  const A = air();
+  const d = cardinal(ses.player.getViewDirection(), true);
+  // f = Richtung zum Spieler, s = seitlich
+  const fx = -d.x;
+  const fz = -d.z;
+  const sx = -fz;
+  const sz = fx;
+  const at = (/** @type {number} */ l, /** @type {number} */ f) => [base.x + sx * l + fx * f, base.z + sz * l + fz * f];
+  const oc = Math.max(1, Math.round(R * 0.2)); // Oberlicht
+  const pw = Math.max(2, Math.round(R * 0.6)); // halbe Breite der Vorhalle
+  const pd = 4; // Tiefe der Vorhalle
+  const doorW = Math.max(1, Math.round(R * 0.2));
+  const doorH = Math.max(3, Math.round(hw * 0.6));
+  runEdit(ses.player, { label: "Kuppelhalle", symmetry: true }, function* (es) {
+    // Rundbau
+    for (let y = 0; y <= hw; y++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const dd = Math.hypot(dx, dz);
+          if (dd > R + 0.5) continue;
+          es.set(base.x + dx, base.y + y, base.z + dz, y === 0 || dd > R - 0.5 ? wall() : A);
+        }
+      yield;
+    }
+    // Kuppel mit Oberlicht
+    for (let dy = 1; dy <= R; dy++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const hd = Math.hypot(dx, dz);
+          const dd = Math.hypot(hd, dy);
+          if (dd > R + 0.5) continue;
+          es.set(base.x + dx, base.y + hw + dy, base.z + dz, dd > R - 0.5 && hd > oc + 0.3 ? dome() : A);
+        }
+      yield;
+    }
+    // Tür zur Vorhalle
+    for (let l = -doorW; l <= doorW; l++)
+      for (let y = 1; y <= doorH; y++) {
+        const [x, z] = at(l, R);
+        es.set(x, base.y + y, z, A);
+        const [x2, z2] = at(l, R - 1);
+        es.set(x2, base.y + y, z2, A);
+      }
+    // Vorhalle: Boden, Säulen vorn (jede zweite Stelle), Gebälk, flacher Giebel
+    for (let l = -pw; l <= pw; l++)
+      for (let f = R; f <= R + pd; f++) {
+        const [x, z] = at(l, f);
+        es.set(x, base.y, z, wall());
+        if (f > R) for (let y = 1; y < hw; y++) es.set(x, base.y + y, z, f === R + pd && (l + pw) % 2 === 0 ? wall() : A);
+        es.set(x, base.y + hw, z, wall());
+      }
+    for (let k = 1; k <= Math.ceil(pw / 2); k++)
+      for (let l = -pw + 2 * k; l <= pw - 2 * k; l++)
+        for (let f = R; f <= R + pd; f++) {
+          const [x, z] = at(l, f);
+          es.set(x, base.y + hw + k, z, f === R + pd ? wall() : dome());
+        }
   });
 }
 
@@ -1936,6 +2064,8 @@ export const shapeTool = {
     if (c.type === "chandelier") return buildChandelier(ses, c);
     if (c.type === "fountain") return buildFountain(ses, c);
     if (c.type === "outstair") return buildOutstairTower(ses, c);
+    if (c.type === "pantheon") return buildPantheon(ses, c);
+    if (c.type === "tunnel") return buildTunnel(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -1991,9 +2121,9 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if ((c.type === "straight" || c.type === "aqueduct") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel
