@@ -3196,6 +3196,53 @@ console.log("Gewölbe-Tunnel & Kuppelhalle");
   dim.blocks.clear();
 }
 
+console.log("Burgfried & Wasserrad");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("spruce_log");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "keep", rx: 3, ry: 5, rz: 3, anchor: "center" });
+  await roundTrip("Burgfried", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const ST = "minecraft:stone_brick_stairs";
+  check(id(3, 66, 2) === S && id(0, 68, 0) === "minecraft:air" && id(0, 66, -3) === "minecraft:air" && id(3, 71, 0) === "minecraft:air" && id(3, 72, 0) === S, "Burgfried: eckiger Turm mit Tür und Schießscharten");
+  const levels = new Set();
+  let wrong = 0;
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== ST) continue;
+    const [x, y, z] = k.split(",").map(Number);
+    levels.add(y);
+    if (Math.max(Math.abs(x), Math.abs(z)) !== 2) wrong++;
+  }
+  check(levels.size === 11 && Math.max(...levels) === 75 && wrong === 0, "Burgfried: Treppe innen an den Wänden bis oben (" + levels.size + ")");
+  let hole = 0;
+  for (let x = -3; x <= 3; x++) for (let z = -3; z <= 3; z++) if (id(x, 76, z) === "minecraft:air") hole++;
+  check(hole === 1 && id(3, 77, 3) === S, "Burgfried: Dach mit Luke und Zinnen");
+  check(id(0, 66, -2) === "minecraft:air" && id(0, 67, -2) === "minecraft:air" && id(0, 65, -2) === ST, "Burgfried: Treppe beginnt hinter der Tür, Eingang frei");
+  await undo();
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "waterwheel", rx: 4, ry: 4, rz: 4, sides: 4 });
+  ses.s.pattern = parsePattern("oak_planks");
+  await roundTrip("Wasserrad", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const O = "minecraft:oak_planks";
+  check(id(4, 69, 1) === O && id(4, 69, -1) === O && id(0, 65, 1) === O && id(0, 73, -1) === O, "Wasserrad: zwei Radkränze");
+  check(id(-5, 69, 0) === O && id(5, 69, 0) === O && id(0, 74, 0) === O, "Wasserrad: Schaufeln ragen über den Rand");
+  check(id(0, 69, -2) === "minecraft:spruce_log" && id(0, 69, 2) === "minecraft:spruce_log" && id(2, 69, 1) === O && id(2, 70, 1) === "minecraft:air", "Wasserrad: Achse und Speichen");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

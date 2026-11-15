@@ -190,8 +190,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Leuchtturm-Insel / Hafenmole** (v0.88): gebogene Mole aus Steinen mit kleinem Leuchtfeuer am Ende
 - [x] **Kuppelhalle mit Säulenkranz (Pantheon)** (v0.90): runder Bau mit Säulenvorhalle und großer Kuppel mit Oberlicht
 - [x] **Bogen-Tunnel (Gewölbegang)** (v0.90): gemauerter Tunnel mit Rundbogen-Querschnitt zwischen zwei Punkten
-- [ ] **Burgfried mit Wendeltreppe innen**: viereckiger Turm, innen eine Treppe bis zum Dach mit Zinnen
-- [ ] **Wasserrad**: großes Rad mit Schaufeln an einer Achse, steht vor dir (z.B. an einem Bach)
+- [x] **Burgfried mit Wendeltreppe innen** (v0.92): viereckiger Turm, innen eine Treppe bis zum Dach mit Zinnen
+- [x] **Wasserrad** (v0.92): großes Rad mit Schaufeln an einer Achse, steht vor dir (z.B. an einem Bach)
+- [ ] **Glockenturm (Campanile)**: schlanker, eckiger Turm mit offener Glockenstube und Glocke oben, Pyramidendach
+- [ ] **Triumphbogen**: breiter Bogen mit zwei kleinen Seitenbögen und Attika, steht vor dir
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

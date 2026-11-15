@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["keep", "Burgfried (eckiger Turm, innen Treppe bis aufs Dach mit Zinnen)"],
+  ["waterwheel", "Wasserrad (Rad mit Schaufeln und Achse, steht vor dir)"],
   ["pantheon", "Kuppelhalle (Rundbau mit Kuppel, Oberlicht und Säulenvorhalle zu dir)"],
   ["tunnel", "Gewölbe-Tunnel (Rundbogen, Punkt A → B, mit Laternen)"],
   ["outstair", "Turm mit Außentreppe (Treppe läuft außen herum nach oben)"],
@@ -732,7 +734,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1260,6 +1262,124 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Burgfried: eckiger, hohler Turm (Muster 1) mit Tür zu dir und Schießscharten. Innen läuft eine Treppe aus echten
+ * Treppenblöcken an den Wänden entlang im Viereck nach oben bis unter das Dach; dort führt eine Luke auf die
+ * Dachfläche mit Zinnen. Radius X = halbe Breite, Höhe = 2 × Radius Y + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildKeep(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const H = Math.max(8, 2 * c.ry + 1);
+  const ri = R - 1;
+  const wall = picker(ses.s.pattern);
+  const A = air();
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:stone";
+  let stairId = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:stone_stairs";
+  }
+  // Innenring im Uhrzeigersinn
+  /** @type {{x:number, z:number}[]} */
+  const ring = [];
+  for (let x = -ri; x < ri; x++) ring.push({ x, z: -ri });
+  for (let z = -ri; z < ri; z++) ring.push({ x: ri, z });
+  for (let x = ri; x > -ri; x--) ring.push({ x, z: ri });
+  for (let z = ri; z > -ri; z--) ring.push({ x: -ri, z });
+  const N = ring.length;
+  const d = cardinal(ses.player.getViewDirection(), true);
+  // Treppe beginnt direkt hinter der Tür und steigt von ihr weg (sonst stößt man sich beim Hereinkommen den Kopf)
+  const start = Math.max(0, ring.findIndex((p) => p.x === -d.x * ri && p.z === -d.z * ri));
+  ring.push(...ring.splice(0, start));
+  const stairTo = (/** @type {number} */ dx, /** @type {number} */ dz) =>
+    BlockPermutation.resolve(stairId, { weirdo_direction: STAIR_DIRS.find(([a, b]) => a === Math.sign(dx) && b === Math.sign(dz))?.[2] ?? 0, upside_down_bit: false });
+  runEdit(ses.player, { label: "Burgfried", symmetry: true }, function* (es) {
+    for (let y = 0; y < H; y++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const edge = Math.abs(dx) === R || Math.abs(dz) === R;
+          const corner = Math.abs(dx) === R && Math.abs(dz) === R;
+          const slit = !corner && y % 4 === 2 && y > 2 && (dx === 0 || dz === 0);
+          es.set(base.x + dx, base.y + y, base.z + dz, y === 0 || (edge && !slit) ? wall() : A);
+        }
+      yield;
+    }
+    for (let y = 1; y <= 2; y++) es.set(base.x - d.x * R, base.y + y, base.z - d.z * R, A);
+    // Dach und Zinnen
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++) {
+        es.set(base.x + dx, base.y + H, base.z + dz, wall());
+        if ((Math.abs(dx) === R || Math.abs(dz) === R) && (dx + dz) % 2 === 0) es.set(base.x + dx, base.y + H + 1, base.z + dz, wall());
+      }
+    // Treppe innen, eine Stufe je Höhe
+    for (let k = 0; k < H; k++) {
+      const p = ring[k % N];
+      const q = ring[(k + 1) % N];
+      es.set(base.x + p.x, base.y + k, base.z + p.z, stairTo(q.x - p.x, q.z - p.z));
+    }
+    // Luke über der obersten Stufe
+    const last = ring[(H - 1) % N];
+    es.set(base.x + last.x, base.y + H, base.z + last.z, A);
+  });
+}
+
+/**
+ * Wasserrad: großes Rad, das vor dir steht (Achse zeigt zu dir): zwei Radkränze mit Speichen aus Muster 1, Schaufeln
+ * rundherum (Anzahl = Ecken-Regler × 2) und eine Achse aus Muster 2. Radius X = Radius des Rads.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildWaterwheel(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const n = Math.max(6, Math.min(24, (c.sides ?? 6) * 2));
+  const wood = picker(ses.s.pattern);
+  const axle = picker(ses.s.pattern2);
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const sx = -d.z;
+  const sz = d.x;
+  const cy = base.y + R;
+  const at = (/** @type {number} */ l, /** @type {number} */ a) => [base.x + sx * l + d.x * a, base.z + sz * l + d.z * a];
+  runEdit(ses.player, { label: "Wasserrad", symmetry: true }, function* (es) {
+    for (const a of [-1, 1]) {
+      for (let l = -R; l <= R; l++)
+        for (let y = -R; y <= R; y++) {
+          const dd = Math.hypot(l, y);
+          const rim = Math.abs(dd - R) < 0.5;
+          // Speichen: waagerecht, senkrecht und diagonal
+          const spoke = dd <= R && (l === 0 || y === 0 || Math.abs(l) === Math.abs(y));
+          if (rim || spoke) {
+            const [x, z] = at(l, a);
+            es.set(x, cy + y, z, wood());
+          }
+        }
+      yield;
+    }
+    // Schaufeln quer über beide Kränze, ragen einen Block über den Rand
+    for (let k = 0; k < n; k++) {
+      const ang = (k * 2 * Math.PI) / n;
+      for (const r of [R, R + 1]) {
+        const l = Math.round(Math.cos(ang) * r);
+        const y = Math.round(Math.sin(ang) * r);
+        for (let a = -1; a <= 1; a++) {
+          const [x, z] = at(l, a);
+          es.set(x, cy + y, z, wood());
+        }
+      }
+    }
+    for (let a = -2; a <= 2; a++) {
+      const [x, z] = at(0, a);
+      es.set(x, cy, z, axle());
+    }
   });
 }
 
@@ -2066,6 +2186,8 @@ export const shapeTool = {
     if (c.type === "outstair") return buildOutstairTower(ses, c);
     if (c.type === "pantheon") return buildPantheon(ses, c);
     if (c.type === "tunnel") return buildTunnel(ses, c);
+    if (c.type === "keep") return buildKeep(ses, c);
+    if (c.type === "waterwheel") return buildWaterwheel(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2123,7 +2245,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

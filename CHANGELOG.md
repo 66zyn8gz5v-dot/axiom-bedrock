@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.92.0 – 16.11.2026 (nächtlicher Ausbau: Formen)
+- **Burgfried:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein eckiger, hohler Turm aus Muster 1 mit
+  Tür zu dir und Schießscharten. Innen läuft eine Treppe aus echten Treppenblöcken an den Wänden entlang im Viereck
+  nach oben – sie beginnt direkt hinter der Tür – bis zu einer Luke im Dach mit Zinnen. Radius X = halbe Breite,
+  Radius Y = Höhe
+- **Wasserrad:** neue Form – ein großes Rad, das vor dir steht: zwei Radkränze mit Speichen und Schaufeln aus
+  Muster 1 (z.B. Holz), eine Achse aus Muster 2 (z.B. Stamm). Radius X = Größe, „Anzahl Ecken“ × 2 = Anzahl Schaufeln.
+  Passt gut an einen Bach oder eine Mühle
+
 ## 0.91.0 – 15.11.2026 (nächtlicher Ausbau: Terraform)
 - **Pilzwald:** neu im Auswahl-Menü („Pilzwald erzeugen“) – füllt eine Box-Auswahl (mindestens 14 Blöcke hoch) mit
   sanften Hügeln aus Myzel. Darauf wachsen Riesenpilze: rote mit gewölbtem, herabhängendem Hut und braune mit
