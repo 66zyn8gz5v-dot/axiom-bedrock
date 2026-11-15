@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Pilzwald erzeugen",
+      run: async () => {
+        const c = ses.s.mushrooms;
+        const r = await new Modal("Pilzwald")
+          .slider("density", "Riesenpilze (Dichte in %)", 10, 100, 10, c.density)
+          .slider("red", "Anteil roter Pilze in %", 0, 100, 10, c.red)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opMushroomForest(ses, c);
+      },
+    },
+    {
       text: "Bergsee mit Wasserfall erzeugen (Bach kommt von vorn)",
       run: async () => {
         const c = ses.s.mountainLake;

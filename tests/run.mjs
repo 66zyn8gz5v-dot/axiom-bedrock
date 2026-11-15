@@ -1560,6 +1560,32 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Pilzwald");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 47, y: 85, z: 47 });
+  let seed = 47;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Pilzwald", () => ops.opMushroomForest(ses, { density: 90, red: 50 }, rnd));
+  seed = 47;
+  ops.opMushroomForest(ses, { density: 90, red: 50 }, rnd);
+  await drain();
+  const n = {};
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 47 || y < 60 || y > 85 || z < 0 || z > 47) outside++;
+    n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+  }
+  const c = (id) => n["minecraft:" + id] ?? 0;
+  check(c("mycelium") > 2000 && outside === 0, "Pilzwald: Myzelboden, nur in der Auswahl");
+  check(c("mushroom_stem") >= 15 && c("red_mushroom_block") > 30 && c("brown_mushroom_block") > 30, "Pilzwald: rote und braune Riesenpilze (" + c("mushroom_stem") + "/" + c("red_mushroom_block") + "/" + c("brown_mushroom_block") + ")");
+  check(c("red_mushroom") + c("brown_mushroom") > 10, "Pilzwald: kleine Pilze am Boden");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Bergsee");
 {
   dim.blocks.clear();

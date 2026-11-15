@@ -138,7 +138,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Gletscherspalten** (v0.85): Eisfläche in einer Auswahl mit tiefen, schmalen Spalten und Schneewehen
 - [x] **Savanne mit Tafelbergen** (v0.87): flaches, trockenes Grasland mit einzelnen Akazien und flachen Felsplateaus
 - [x] **Bergsee mit Wasserfall-Zulauf** (v0.89): Mulde zwischen Bergen, gefüllt mit Wasser, ein Bach fällt von oben hinein
-- [ ] **Pilzwald**: Riesenpilze (rot und braun) auf Myzel in einer Auswahl
+- [x] **Pilzwald** (v0.91): Riesenpilze (rot und braun) auf Myzel in einer Auswahl
+- [ ] **Bambuswald**: dichte Bambushaine mit Podsol und kleinen Lichtungen in einer Auswahl
+- [ ] **Steilküste mit Höhlen**: Felsküste mit Brandungshöhlen und Felsnadeln im Wasser entlang der Pfad-Punkte
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

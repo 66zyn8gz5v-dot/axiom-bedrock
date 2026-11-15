@@ -708,6 +708,98 @@ function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
 }
 
 /**
+ * Pilzwald in der Auswahl: sanfte Hügel mit Myzel, darauf Riesenpilze – rote mit gewölbtem, herabhängendem Hut und
+ * braune mit breitem, flachem Hut – und kleine Pilze am Boden. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{density:number, red:number}} o density = Riesenpilze (Dichte in %), red = Anteil roter Pilze in %
+ * @param {() => number} [rand]
+ */
+export function opMushroomForest(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 14) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 14 Blöcke hoch (für die Riesenpilze).");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(2, Math.round((sy - 1) * 0.25));
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++) for (let z = min.z; z <= max.z; z++) H.set(x + "," + z, Math.round(base + fbm(x / 14 + seed, 0.7, z / 14, 2) * 2));
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) {
+      try {
+        p = BlockPermutation.resolve(id, st);
+      } catch {
+        p = BlockPermutation.resolve(id);
+      }
+      cache.set(k, p);
+    }
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Pilzwald", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = /** @type {number} */ (H.get(x + "," + z));
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y === h + 1 && r < 0.03) b = P(r < 0.015 ? "minecraft:red_mushroom" : "minecraft:brown_mushroom");
+          else if (y > h) b = A;
+          else if (y === h) b = P("minecraft:mycelium");
+          else b = P(h - y <= 3 ? "minecraft:dirt" : "minecraft:stone");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    const stem = P("minecraft:mushroom_stem", { huge_mushroom_bits: 15 });
+    const red = P("minecraft:red_mushroom_block", { huge_mushroom_bits: 14 });
+    const brown = P("minecraft:brown_mushroom_block", { huge_mushroom_bits: 14 });
+    const put = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {BlockPermutation} */ b) => {
+      if (selContains(sel, x, y, z)) es.set(x, y, z, b);
+    };
+    /** @type {{x:number, z:number}[]} */
+    const placed = [];
+    const tries = Math.round((sx * sz * o.density) / 2500);
+    for (let i = 0; i < tries; i++) {
+      const x = Math.round(min.x + 3 + rand() * (sx - 7));
+      const z = Math.round(min.z + 3 + rand() * (sz - 7));
+      if (!placed.every((p) => Math.hypot(p.x - x, p.z - z) >= 7)) continue;
+      const g = /** @type {number} */ (H.get(x + "," + z));
+      const isRed = rand() * 100 < o.red;
+      const sh = (isRed ? 5 : 4) + Math.floor(rand() * 3);
+      if (g + sh + 2 > max.y) continue;
+      placed.push({ x, z });
+      for (let k = 1; k <= sh; k++) put(x, g + k, z, stem);
+      const top = g + sh + 1;
+      if (isRed) {
+        // gewölbter Hut: oben 3×3, darunter ein Ring mit Radius 2, der drei Lagen herabhängt
+        for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) put(x + dx, top, z + dz, red);
+        for (let dy = 1; dy <= 3; dy++)
+          for (let dx = -2; dx <= 2; dx++)
+            for (let dz = -2; dz <= 2; dz++) {
+              if (Math.max(Math.abs(dx), Math.abs(dz)) !== 2 || (Math.abs(dx) === 2 && Math.abs(dz) === 2)) continue;
+              put(x + dx, top - dy, z + dz, red);
+            }
+      } else {
+        // breiter, flacher Hut
+        for (let dx = -3; dx <= 3; dx++)
+          for (let dz = -3; dz <= 3; dz++) if (!(Math.abs(dx) === 3 && Math.abs(dz) === 3)) put(x + dx, top, z + dz, brown);
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Bergsee in der Auswahl: ringsum Berge (oben Fels und Schnee), in der Mitte eine Mulde mit See. Von der Seite in
  * Blickrichtung stürzt ein Bach in einer Rinne die Bergflanke hinab in den See (Wasserfall).
  * @param {import("./state.js").Session} ses

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.91.0 – 15.11.2026 (nächtlicher Ausbau: Terraform)
+- **Pilzwald:** neu im Auswahl-Menü („Pilzwald erzeugen“) – füllt eine Box-Auswahl (mindestens 14 Blöcke hoch) mit
+  sanften Hügeln aus Myzel. Darauf wachsen Riesenpilze: rote mit gewölbtem, herabhängendem Hut und braune mit
+  breitem, flachem Hut, dazu kleine Pilze am Boden. Dichte und Anteil der roten Pilze sind einstellbar
+
 ## 0.90.0 – 15.11.2026 (nächtlicher Ausbau: Formen)
 - **Kuppelhalle:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein Rundbau wie das Pantheon in Rom:
   runde Mauer aus Muster 1 mit großer Tür zu dir, darauf eine hohle Kuppel aus Muster 2 mit rundem Oberlicht, davor
