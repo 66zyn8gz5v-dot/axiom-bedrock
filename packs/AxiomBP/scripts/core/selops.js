@@ -708,6 +708,71 @@ function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
 }
 
 /**
+ * Bambuswald in der Auswahl: sanfte Hügel, dichte Bambushaine auf Podsol (verschieden hohe Halme mit großen Blättern
+ * oben) und dazwischen kleine Lichtungen mit Gras, Farn und Blumen. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{density:number, height:number}} o density = Anteil Bambus in %, height = höchste Halme
+ * @param {() => number} [rand]
+ */
+export function opBambooForest(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  const hMax = Math.max(4, o.height);
+  if (sy < hMax + 6) return err(ses.player, `Die Auswahl ist zu niedrig – mindestens ${hMax + 6} Blöcke hoch für so hohen Bambus.`);
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(2, Math.round((sy - hMax - 2) * 0.5));
+  // Rauschschwelle aus der Dichte: 0 % = kein Bambus, 100 % = fast alles
+  const thr = o.density <= 0 ? Infinity : 0.6 - (Math.min(100, o.density) / 100) * 1.2;
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) {
+      try {
+        p = BlockPermutation.resolve(id, st);
+      } catch {
+        p = BlockPermutation.resolve(id);
+      }
+      cache.set(k, p);
+    }
+    return p;
+  };
+  const A = air();
+  const FLOWERS = ["minecraft:poppy", "minecraft:dandelion", "minecraft:azure_bluet", "minecraft:oxeye_daisy"];
+  runEdit(ses.player, { label: "Bambuswald", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = Math.round(base + fbm(x / 15 + seed, 0.9, z / 15, 2) * 2);
+        const n = fbm(x / 7 + seed, 2.1, z / 7, 2);
+        const grove = n > thr;
+        const r = rand();
+        const stalk = grove && r < 0.55;
+        const sh = stalk ? Math.max(3, Math.round(hMax * (0.5 + 0.5 * rand()))) : 0;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = P(h - y <= 3 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === h) b = P(grove ? (r < 0.8 ? "minecraft:podzol" : "minecraft:coarse_dirt") : "minecraft:grass_block");
+          else if (stalk && y <= h + sh) {
+            const fromTop = h + sh - y;
+            b = P("minecraft:bamboo", { bamboo_leaf_size: fromTop === 0 || fromTop === 1 ? "large_leaves" : fromTop === 2 ? "small_leaves" : "no_leaves", bamboo_stalk_thickness: "thick" });
+          } else if (y === h + 1 && !grove) {
+            if (r < 0.06) b = P(FLOWERS[Math.floor(rand() * FLOWERS.length)]);
+            else if (r < 0.2) b = P("minecraft:fern");
+            else if (r < 0.45) b = P("minecraft:short_grass");
+          }
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Pilzwald in der Auswahl: sanfte Hügel mit Myzel, darauf Riesenpilze – rote mit gewölbtem, herabhängendem Hut und
  * braune mit breitem, flachem Hut – und kleine Pilze am Boden. Die Auswahl wird neu gefüllt.
  * @param {import("./state.js").Session} ses

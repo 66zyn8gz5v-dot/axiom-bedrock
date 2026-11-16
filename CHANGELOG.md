@@ -1,5 +1,10 @@
 # Änderungen
 
+## 0.93.0 – 16.11.2026 (nächtlicher Ausbau: Terraform)
+- **Bambuswald:** neu im Auswahl-Menü („Bambuswald erzeugen“) – füllt eine Box-Auswahl mit sanften Hügeln, dichten
+  Bambushainen auf Podsol (verschieden hohe Halme mit großen Blättern oben) und kleinen Lichtungen mit Gras, Farn
+  und Blumen. Der Bambusanteil (0 % = nur Wiese) und die Höhe der höchsten Halme sind einstellbar
+
 ## 0.92.0 – 16.11.2026 (nächtlicher Ausbau: Formen)
 - **Burgfried:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein eckiger, hohler Turm aus Muster 1 mit
   Tür zu dir und Schießscharten. Innen läuft eine Treppe aus echten Treppenblöcken an den Wänden entlang im Viereck

@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Bambuswald erzeugen",
+      run: async () => {
+        const c = ses.s.bamboo;
+        const r = await new Modal("Bambuswald")
+          .slider("density", "Bambus in % (Rest Lichtungen)", 0, 100, 10, c.density)
+          .slider("height", "Höhe der höchsten Halme", 4, 16, 1, c.height)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opBambooForest(ses, c);
+      },
+    },
+    {
       text: "Pilzwald erzeugen",
       run: async () => {
         const c = ses.s.mushrooms;

@@ -1560,6 +1560,46 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Bambuswald");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 39, y: 85, z: 39 });
+  let seed = 53;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Bambuswald", () => ops.opBambooForest(ses, { density: 60, height: 12 }, rnd));
+  seed = 53;
+  ops.opBambooForest(ses, { density: 60, height: 12 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const n = {};
+  let tall = 0;
+  let outside = 0;
+  let floating = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 39 || y < 60 || y > 85 || z < 0 || z > 39) outside++;
+    n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+    if (p.type.id === "minecraft:bamboo") {
+      const below = id(x, y - 1, z);
+      if (below !== "minecraft:bamboo" && below !== "minecraft:podzol" && below !== "minecraft:coarse_dirt") floating++;
+      if (id(x, y + 8, z) === "minecraft:bamboo") tall++;
+    }
+  }
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("bamboo") > 500 && tall > 0 && floating === 0 && outside === 0, "Bambuswald: dichte, hohe Bambushaine auf Podsol (" + c("bamboo") + ")");
+  check(c("podzol") > 200 && c("grass_block") > 200 && c("fern") + c("short_grass") > 50, "Bambuswald: Lichtungen mit Gras und Farn");
+  await undo();
+  seed = 53;
+  ops.opBambooForest(ses, { density: 0, height: 12 }, rnd);
+  await drain();
+  let b0 = 0;
+  for (const [, p] of dim.blocks) if (p.type.id === "minecraft:bamboo") b0++;
+  check(b0 === 0, "Bambuswald: Dichte 0 = nur Wiese");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Pilzwald");
 {
   dim.blocks.clear();
