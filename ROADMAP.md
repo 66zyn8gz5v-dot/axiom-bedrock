@@ -192,8 +192,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Bogen-Tunnel (Gewölbegang)** (v0.90): gemauerter Tunnel mit Rundbogen-Querschnitt zwischen zwei Punkten
 - [x] **Burgfried mit Wendeltreppe innen** (v0.92): viereckiger Turm, innen eine Treppe bis zum Dach mit Zinnen
 - [x] **Wasserrad** (v0.92): großes Rad mit Schaufeln an einer Achse, steht vor dir (z.B. an einem Bach)
-- [ ] **Glockenturm (Campanile)**: schlanker, eckiger Turm mit offener Glockenstube und Glocke oben, Pyramidendach
-- [ ] **Triumphbogen**: breiter Bogen mit zwei kleinen Seitenbögen und Attika, steht vor dir
+- [x] **Glockenturm (Campanile)** (v0.94): schlanker, eckiger Turm mit offener Glockenstube und Glocke oben, Pyramidendach
+- [x] **Triumphbogen** (v0.94): breiter Bogen mit zwei kleinen Seitenbögen und Attika, steht vor dir
+- [ ] **Amphitheater**: ovale Arena mit ansteigenden Sitzreihen aus Stufen in einer Box-Auswahl
+- [ ] **Säulenreihe mit Gebälk (Kolonnade)**: gerade Säulenreihe zwischen zwei Punkten mit Balken obendrauf
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

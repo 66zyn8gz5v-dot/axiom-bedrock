@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.94.0 – 17.11.2026 (nächtlicher Ausbau: Formen)
+- **Glockenturm:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein schlanker, eckiger, hohler Turm aus
+  Muster 1 mit Tür zu dir; oben eine Glockenstube mit offenen Bögen nach allen Seiten und einer hängenden Glocke,
+  darüber ein Pyramidendach aus Muster 2. Radius X = halbe Breite, Radius Y = Höhe
+- **Triumphbogen:** neue Form – steht vor dir: ein breiter Bau aus Muster 1 mit großem Rundbogen in der Mitte, zwei
+  kleineren Seitenbögen und einem Aufsatz (Attika) aus Muster 2. Radius X = halbe Breite des großen Bogens,
+  Radius Y = Höhe, Radius Z = Tiefe
+
 ## 0.93.0 – 16.11.2026 (nächtlicher Ausbau: Terraform)
 - **Bambuswald:** neu im Auswahl-Menü („Bambuswald erzeugen“) – füllt eine Box-Auswahl mit sanften Hügeln, dichten
   Bambushainen auf Podsol (verschieden hohe Halme mit großen Blättern oben) und kleinen Lichtungen mit Gras, Farn

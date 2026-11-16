@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["campanile", "Glockenturm (schlank, offene Glockenstube mit Glocke, Pyramidendach)"],
+  ["triumph", "Triumphbogen (großer Bogen, zwei Seitenbögen, Aufsatz – steht vor dir)"],
   ["keep", "Burgfried (eckiger Turm, innen Treppe bis aufs Dach mit Zinnen)"],
   ["waterwheel", "Wasserrad (Rad mit Schaufeln und Achse, steht vor dir)"],
   ["pantheon", "Kuppelhalle (Rundbau mit Kuppel, Oberlicht und Säulenvorhalle zu dir)"],
@@ -734,7 +736,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1262,6 +1264,98 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Glockenturm (Campanile): schlanker, eckiger, hohler Turm (Muster 1) mit Tür zu dir. Oben eine Glockenstube mit
+ * offenen Bögen nach allen Seiten und einer hängenden Glocke, darüber ein Pyramidendach (Muster 2) mit Überstand.
+ * Radius X = halbe Breite, Höhe = 2 × Radius Y + 1 (mindestens 10).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildCampanile(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(2, c.rx);
+  const H = Math.max(10, 2 * c.ry + 1);
+  const wall = picker(ses.s.pattern);
+  const roof = picker(ses.s.pattern2);
+  const A = air();
+  let bell;
+  try {
+    bell = BlockPermutation.resolve("minecraft:bell", { attachment: "hanging" });
+  } catch {
+    bell = BlockPermutation.resolve("minecraft:bell");
+  }
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const floorY = H - 5; // Boden der Glockenstube
+  runEdit(ses.player, { label: "Glockenturm", symmetry: true }, function* (es) {
+    for (let y = 0; y < H; y++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const edge = Math.abs(dx) === R || Math.abs(dz) === R;
+          const corner = Math.abs(dx) === R && Math.abs(dz) === R;
+          // offene Bögen der Glockenstube: zwei Reihen, Ecken bleiben als Pfeiler stehen
+          const arch = edge && !corner && (y === floorY + 1 || y === floorY + 2);
+          let b = A;
+          if (y === 0 || y === floorY) b = wall();
+          else if (edge && !arch) b = wall();
+          es.set(base.x + dx, base.y + y, base.z + dz, b);
+        }
+      yield;
+    }
+    for (let y = 1; y <= 2; y++) es.set(base.x - d.x * R, base.y + y, base.z - d.z * R, A);
+    // Pyramidendach mit Überstand
+    for (let k = 0; k <= R + 1; k++) {
+      const r = R + 1 - k;
+      for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) es.set(base.x + dx, base.y + H + k, base.z + dz, roof());
+    }
+    es.set(base.x, base.y + H - 1, base.z, bell);
+  });
+}
+
+/**
+ * Triumphbogen: breiter Bau (Muster 1), der vor dir steht, mit großem Rundbogen in der Mitte, zwei kleineren
+ * Seitenbögen und einem Aufsatz (Attika, Muster 2) obendrauf. Radius X = halbe Breite des großen Bogens,
+ * Radius Y = Höhe des geraden Teils (× 2), Radius Z = halbe Tiefe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildTriumph(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const a = Math.max(2, c.rx);
+  const h = Math.max(2 * a, 2 * c.ry);
+  const sa = Math.max(1, Math.round(a / 2));
+  const cs = a + 3 + sa; // Mitte der Seitenbögen
+  const W = cs + sa + 2; // halbe Gesamtbreite
+  const hs = Math.max(2, Math.round(h * 0.6));
+  const T = h + a + 2;
+  const D = Math.max(1, c.rz);
+  const body = picker(ses.s.pattern);
+  const attic = picker(ses.s.pattern2);
+  const A = air();
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const sx = -d.z;
+  const sz = d.x;
+  /** Öffnung mit Rundbogen. @param {number} l @param {number} y @param {number} cx @param {number} hw @param {number} hh */
+  const open = (l, y, cx, hw, hh) => Math.abs(l - cx) <= hw && y >= 0 && (y <= hh - 1 || (y - (hh - 1)) ** 2 + (l - cx) ** 2 <= (hw + 0.5) ** 2);
+  runEdit(ses.player, { label: "Triumphbogen", symmetry: true }, function* (es) {
+    for (let y = 0; y <= T + 2; y++) {
+      for (let l = -W; l <= W; l++)
+        for (let f = -D; f <= D; f++) {
+          const x = base.x + sx * l + d.x * f;
+          const z = base.z + sz * l + d.z * f;
+          if (y > T) {
+            if (Math.abs(l) <= W - 1) es.set(x, base.y + y, z, attic());
+            continue;
+          }
+          const hole = open(l, y, 0, a, h) || open(l, y, cs, sa, hs) || open(l, y, -cs, sa, hs);
+          es.set(x, base.y + y, z, hole ? A : body());
+        }
+      yield;
+    }
   });
 }
 
@@ -2188,6 +2282,8 @@ export const shapeTool = {
     if (c.type === "tunnel") return buildTunnel(ses, c);
     if (c.type === "keep") return buildKeep(ses, c);
     if (c.type === "waterwheel") return buildWaterwheel(ses, c);
+    if (c.type === "campanile") return buildCampanile(ses, c);
+    if (c.type === "triumph") return buildTriumph(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2245,7 +2341,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

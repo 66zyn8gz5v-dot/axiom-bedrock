@@ -3283,6 +3283,43 @@ console.log("Burgfried & Wasserrad");
   dim.blocks.clear();
 }
 
+console.log("Glockenturm & Triumphbogen");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("bricks");
+  ses.s.pattern2 = parsePattern("deepslate_tiles");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "campanile", rx: 2, ry: 7, rz: 2, anchor: "center" });
+  await roundTrip("Glockenturm", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const B = "minecraft:bricks";
+  const T = "minecraft:deepslate_tiles";
+  const AIR = "minecraft:air";
+  check(id(2, 70, 0) === B && id(0, 70, 0) === AIR && id(0, 66, -2) === AIR && id(0, 75, 0) === B, "Glockenturm: schlanker, hohler Turm mit Tür");
+  check(id(2, 76, 0) === AIR && id(0, 77, -2) === AIR && id(2, 76, 2) === B && id(2, 78, 0) === B && id(0, 79, 0) === "minecraft:bell", "Glockenturm: offene Glockenstube mit Glocke");
+  check(id(3, 80, 3) === T && id(0, 83, 0) === T && id(0, 84, 0) === AIR, "Glockenturm: Pyramidendach");
+  await undo();
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "triumph", rx: 2, ry: 3, rz: 1 });
+  ses.s.pattern = parsePattern("smooth_sandstone");
+  await roundTrip("Triumphbogen", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const SS = "minecraft:smooth_sandstone";
+  check(id(0, 65, 0) === AIR && id(0, 72, 0) === AIR && id(0, 73, 0) === SS && id(3, 65, 0) === SS, "Triumphbogen: großer Rundbogen");
+  check(id(6, 65, 0) === AIR && id(-6, 69, 0) === AIR && id(6, 70, 0) === SS && id(9, 65, 0) === SS && id(10, 65, 0) === AIR, "Triumphbogen: zwei Seitenbögen");
+  check(id(0, 76, 0) === T && id(8, 77, 0) === T && id(9, 76, 0) === AIR && id(0, 73, 1) === SS && id(0, 73, 2) === AIR, "Triumphbogen: Aufsatz und Tiefe");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
