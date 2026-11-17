@@ -726,6 +726,31 @@ export const pathTool = {
         },
       },
       {
+        text: "Steilküste mit Höhlen und Felsnadeln",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.seaCliffs;
+          const r = await new Modal("Steilküste")
+            .dropdown(
+              "side",
+              "Wo ist das Meer? (in Richtung der Punkte gesehen)",
+              [
+                ["right", "Rechts"],
+                ["left", "Links"],
+              ],
+              c.side
+            )
+            .slider("width", "Breite des Meeres-Streifens", 6, 24, 1, c.width)
+            .slider("cliff", "Höhe der Felswand über dem Wasser", 5, 30, 1, c.cliff)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { seaCliffs } = await import("./terrain.js");
+          seaCliffs(ses, c);
+        },
+      },
+      {
         text: "Fjord entlang der Punkte (vom Land zum Meer)",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

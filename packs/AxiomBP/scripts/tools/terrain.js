@@ -1164,6 +1164,83 @@ export function rockBridge(ses, o) {
   });
 }
 
+/**
+ * Steilküste entlang der Pfad-Punkte (die Punkte sind die Uferlinie): auf der Landseite eine hohe Felswand mit Gras
+ * oben, in die auf Wasserhöhe Brandungshöhlen geschlagen sind; auf der Meerseite tiefer werdendes Wasser mit
+ * einzelnen Felsnadeln (Brandungspfeilern), die aus dem Meer ragen.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, side:string, cliff:number}} o
+ */
+export function seaCliffs(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte entlang der gewünschten Uferlinie setzen.");
+  const samples = samplePath(ses.pathPoints, true);
+  const sea = Math.round(samples.reduce((a, p) => a + p.y, 0) / samples.length) - 1;
+  const W = Math.max(6, o.width);
+  const cliff = Math.max(5, o.cliff);
+  const land = 6;
+  const sign = o.side === "left" ? -1 : 1;
+  const cum = [0];
+  for (let i = 1; i < samples.length; i++) cum.push(cum[i - 1] + Math.hypot(samples[i].x - samples[i - 1].x, samples[i].z - samples[i - 1].z));
+  const xs = samples.map((p) => p.x);
+  const zs = samples.map((p) => p.z);
+  const min = v(Math.floor(Math.min(...xs)) - W - land, 0, Math.floor(Math.min(...zs)) - W - land);
+  const max = v(Math.ceil(Math.max(...xs)) + W + land, 0, Math.ceil(Math.max(...zs)) + W + land);
+  const stackS = Math.round(W * 0.6);
+  runEdit(ses.player, { label: "Steilküste" }, function* (es) {
+    const Wt = permOf("minecraft:water");
+    const A = air();
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        let best = Infinity;
+        let side = 0;
+        let along = 0;
+        for (let i = 0; i < samples.length - 1; i++) {
+          const a = samples[i];
+          const b = samples[i + 1];
+          const dx = b.x - a.x;
+          const dz = b.z - a.z;
+          const L2 = dx * dx + dz * dz || 1;
+          const tt = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / L2));
+          const d = Math.hypot(x - (a.x + dx * tt), z - (a.z + dz * tt));
+          if (d < best) {
+            best = d;
+            side = Math.sign(dx * (z - a.z) - dz * (x - a.x)) || 1;
+            along = cum[i] + tt * Math.sqrt(L2);
+          }
+        }
+        const s = best * side * sign; // > 0 = Meer, < 0 = Land
+        if (s > W + 0.5 || s < -(land + 0.5)) continue;
+        const g = groundY(es, x, z, sea + cliff + 24, cliff + 48);
+        if (g === null) continue;
+        // Felsnadel: alle 10 Blöcke ein Pfeiler draußen im Wasser
+        const ka = Math.round((along - 6) / 10);
+        const stack = s > 0 && Math.hypot(along - (6 + 10 * ka), s - stackS) <= 1.3;
+        // Brandungshöhle: alle 10 Blöcke (versetzt) ein Gang in die Wand
+        const kc = Math.round((along - 1) / 10);
+        const cave = s < 0 && s > -5 && Math.abs(along - (1 + 10 * kc)) <= 1.6;
+        if (s >= 0) {
+          const bed = Math.min(g, sea - 1 - Math.min(6, Math.floor(s / 2)));
+          for (let y = Math.max(g, sea + cliff); y > bed; y--) es.set(x, y, z, stack && y <= sea + Math.round(cliff * 0.6) ? permOf(rockId(x, y, z)) : y <= sea ? Wt : A);
+          if (stack) es.set(x, sea + Math.round(cliff * 0.6), z, permOf("minecraft:grass_block"));
+          es.set(x, bed, z, permOf(sea - bed > 3 ? "minecraft:gravel" : "minecraft:sand"));
+        } else {
+          const h = Math.max(g, sea + cliff);
+          for (let y = Math.min(g, sea - 2); y < h; y++) es.set(x, y, z, permOf(rockId(x, y, z)));
+          es.set(x, h, z, permOf(s < -1.5 ? "minecraft:grass_block" : rockId(x, h, z)));
+          if (cave) {
+            const top = sea + 3 - (s < -3.5 ? 1 : 0); // Höhle wird nach hinten niedriger
+            es.set(x, sea, z, Wt);
+            for (let y = sea + 1; y <= top; y++) es.set(x, y, z, A);
+          }
+        }
+        if (++n % 64 === 0) yield;
+      }
+      yield;
+    }
+  });
+}
+
 const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
   dirt: [
     ["minecraft:grass_path", 0.7],

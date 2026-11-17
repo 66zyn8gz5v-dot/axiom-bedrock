@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.95.0 – 17.11.2026 (nächtlicher Ausbau: Terraform)
+- **Steilküste mit Höhlen:** neu im Pfad-Menü („Steilküste mit Höhlen und Felsnadeln“) – Punkte entlang der
+  gewünschten Uferlinie setzen und die Meerseite wählen. Auf der Landseite entsteht eine hohe Felswand mit Gras oben,
+  in die auf Wasserhöhe alle paar Blöcke Brandungshöhlen geschlagen sind. Auf der Meerseite wird das Wasser nach
+  außen tiefer, und einzelne Felsnadeln (Brandungspfeiler) mit grüner Spitze ragen aus dem Meer. Wandhöhe und Breite
+  des Meeres-Streifens sind einstellbar
+
 ## 0.94.0 – 17.11.2026 (nächtlicher Ausbau: Formen)
 - **Glockenturm:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein schlanker, eckiger, hohler Turm aus
   Muster 1 mit Tür zu dir; oben eine Glockenstube mit offenen Bögen nach allen Seiten und einer hängenden Glocke,

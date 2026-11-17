@@ -140,7 +140,9 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Bergsee mit Wasserfall-Zulauf** (v0.89): Mulde zwischen Bergen, gefüllt mit Wasser, ein Bach fällt von oben hinein
 - [x] **Pilzwald** (v0.91): Riesenpilze (rot und braun) auf Myzel in einer Auswahl
 - [x] **Bambuswald** (v0.93): dichte Bambushaine mit Podsol und kleinen Lichtungen in einer Auswahl
-- [ ] **Steilküste mit Höhlen**: Felsküste mit Brandungshöhlen und Felsnadeln im Wasser entlang der Pfad-Punkte
+- [x] **Steilküste mit Höhlen** (v0.95): Felsküste mit Brandungshöhlen und Felsnadeln im Wasser entlang der Pfad-Punkte
+- [ ] **Wüstenoase-Stadt-Platz / Dünenmeer mit Kamelpfad**: weite Dünen mit einem festgetretenen Pfad entlang der Punkte
+- [ ] **Unterwasser-Riff**: Korallenriff mit Korallenblöcken, Seegras und Seegurken in einer Auswahl unter Wasser
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

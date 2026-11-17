@@ -1532,6 +1532,27 @@ console.log("Hafenmole");
   dim.blocks.clear();
 }
 
+console.log("Steilküste");
+{
+  const { seaCliffs } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  dim.blocks.clear();
+  ses.pathPoints = [];
+  seaCliffs(ses, { width: 8, side: "right", cliff: 10 });
+  check(player.messages.at(-1).includes("Pfad"), "Steilküste: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -15, y: 65, z: 0 }, { x: 15, y: 65, z: 0 }];
+  await roundTrip("Steilküste", () => seaCliffs(ses, { width: 8, side: "right", cliff: 10 }));
+  seaCliffs(ses, { width: 8, side: "right", cliff: 10 });
+  await drain();
+  const rock = (b) => ["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone"].includes(b);
+  check(id(-2, 64, 4) === "minecraft:water" && id(-2, 65, 4) === "minecraft:air" && rock(id(-2, 72, -3)) && id(-2, 74, -3) === "minecraft:grass_block", "Steilküste: Meer und hohe Felswand mit Gras oben");
+  check(id(-4, 64, -2) === "minecraft:water" && id(-4, 65, -2) === "minecraft:air" && id(-4, 67, -2) === "minecraft:air" && rock(id(-4, 68, -2)), "Steilküste: Brandungshöhle auf Wasserhöhe");
+  check(rock(id(1, 66, 5)) && rock(id(1, 62, 5)) && id(1, 70, 5) === "minecraft:grass_block" && id(3, 66, 5) === "minecraft:air", "Steilküste: Felsnadel im Wasser");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Zwiebelturm & Rippen");
 {
   const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
