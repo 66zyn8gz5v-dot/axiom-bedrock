@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["amphitheater", "Amphitheater (in die Box-Auswahl: Arena mit ansteigenden Sitzreihen)"],
+  ["colonnade", "Säulenreihe mit Gebälk (Punkt A → B)"],
   ["campanile", "Glockenturm (schlank, offene Glockenstube mit Glocke, Pyramidendach)"],
   ["triumph", "Triumphbogen (großer Bogen, zwei Seitenbögen, Aufsatz – steht vor dir)"],
   ["keep", "Burgfried (eckiger Turm, innen Treppe bis aufs Dach mit Zinnen)"],
@@ -736,7 +738,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1264,6 +1266,108 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Amphitheater in der Box-Auswahl: ovale Arena mit Sandboden in der Mitte, ringsum Sitzreihen aus echten
+ * Treppenblöcken (passend zu Muster 1), die nach außen ansteigen, außen eine Mauer und an beiden Enden der langen
+ * Achse ein Eingang zur Arena.
+ * @param {import("../core/state.js").Session} ses
+ */
+function buildAmphitheater(ses) {
+  const sel = ses.sel;
+  if (!sel) return err(ses.player, "Für das Amphitheater erst eine Box-Auswahl machen (Grundfläche und Höhe).");
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (Math.min(sx, sz) < 11 || sy < 5) return err(ses.player, "Die Auswahl ist zu klein – mindestens 11×5×11 Blöcke.");
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const hx = sx / 2;
+  const hz = sz / 2;
+  const qa = 0.45;
+  const rows = Math.max(2, Math.min(sy - 3, Math.round((1 - qa) * Math.min(hx, hz))));
+  const alongX = hx >= hz;
+  const wall = picker(ses.s.pattern);
+  const A = air();
+  const sand = BlockPermutation.resolve("minecraft:sand");
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:stone";
+  let stairId = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:stone_stairs";
+  }
+  /** Sitzstufe, die nach außen ansteigt. @param {number} dx @param {number} dz */
+  const seat = (dx, dz) => {
+    const [ax, az] = Math.abs(dx) >= Math.abs(dz) ? [Math.sign(dx) || 1, 0] : [0, Math.sign(dz) || 1];
+    return BlockPermutation.resolve(stairId, { weirdo_direction: STAIR_DIRS.find(([a, b]) => a === ax && b === az)?.[2] ?? 0, upside_down_bit: false });
+  };
+  runEdit(ses.player, { label: "Amphitheater", symmetry: true, region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const q = Math.hypot((x - cx) / hx, (z - cz) / hz);
+        if (q > 1.02) continue;
+        const gate = Math.abs(alongX ? z - cz : x - cx) <= 1.01;
+        const outer = q > 0.92;
+        const k = Math.min(rows - 1, Math.floor(((q - qa) / (1 - qa - 0.08)) * rows));
+        for (let y = min.y; y <= max.y; y++) {
+          const dy = y - min.y;
+          let b = A;
+          if (q < qa) b = dy === 0 ? sand : A; // Arena
+          else if (outer) b = gate && dy >= 1 && dy <= 3 ? A : dy <= rows + 1 ? wall() : A; // Außenmauer mit Tor
+          else if (gate) b = dy === 0 ? sand : A; // Eingang zur Arena
+          else if (dy <= k) b = wall();
+          else if (dy === k + 1) b = seat(x - cx, z - cz);
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Säulenreihe mit Gebälk: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B. Entlang der Hauptrichtung alle 3 Blöcke eine
+ * Säule aus Muster 1 (bis zum Boden verlängert), oben ein durchgehender Balken aus Muster 2.
+ * Höhe der Säulen = 2 × Radius Y + 1, Breite des Balkens = 2 × Radius X + 1 (Säulen stehen in der Mitte).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildColonnade(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.adjacent : t.pos;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, "Säulenreihe: Anfang (Punkt A) gesetzt – jetzt auf das Ende (Punkt B) zielen und benutzen.");
+  }
+  const A = ses.shapeA;
+  ses.shapeA = undefined;
+  const ddx = p.x - A.x;
+  const ddz = p.z - A.z;
+  const [sx, sz] = Math.abs(ddx) >= Math.abs(ddz) ? [Math.sign(ddx) || 1, 0] : [0, Math.sign(ddz) || 1];
+  const L = Math.abs(sx ? ddx : ddz);
+  if (L < 3) return err(ses.player, "Punkt B ist zu nah – mindestens 4 Blöcke Länge.");
+  const H = Math.max(3, 2 * c.ry + 1);
+  const Wb = Math.max(0, Math.min(3, c.rx));
+  const col = picker(ses.s.pattern);
+  const beam = picker(ses.s.pattern2);
+  const y0 = Math.min(A.y, p.y);
+  runEdit(ses.player, { label: "Säulenreihe", symmetry: true }, function* (es) {
+    for (let u = 0; u <= L; u++) {
+      const x = A.x + sx * u;
+      const z = A.z + sz * u;
+      if (u % 3 === 0 || u === L) {
+        // Säule bis zum Boden verlängern
+        let g = y0 - 1;
+        while (g > y0 - 24 && !isSolidId(es.id(x, g, z) ?? "minecraft:air")) g--;
+        for (let y = g + 1; y < y0 + H; y++) es.set(x, y, z, col());
+      }
+      for (let w = -Wb; w <= Wb; w++) es.set(x - sz * w, y0 + H, z + sx * w, beam());
+      yield;
+    }
   });
 }
 
@@ -2284,6 +2388,8 @@ export const shapeTool = {
     if (c.type === "waterwheel") return buildWaterwheel(ses, c);
     if (c.type === "campanile") return buildCampanile(ses, c);
     if (c.type === "triumph") return buildTriumph(ses, c);
+    if (c.type === "amphitheater") return buildAmphitheater(ses);
+    if (c.type === "colonnade") return buildColonnade(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2339,9 +2445,9 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
-    if (c.type === "temple" || c.type === "cloister") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel" || c.type === "colonnade") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater") return; // die Auswahl ist schon sichtbar
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.96.0 – 18.11.2026 (nächtlicher Ausbau: Formen)
+- **Amphitheater:** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen (mindestens 11×5×11), dann
+  mit dem Formen-Werkzeug benutzen. Es entsteht eine ovale Arena mit Sandboden, ringsum Sitzreihen aus echten
+  Treppenblöcken (passend zu Muster 1), die nach außen ansteigen, eine Außenmauer und an beiden Enden ein Eingang
+- **Säulenreihe mit Gebälk:** neue Form – Punkt A, dann Punkt B anklicken. Entlang der Linie steht alle 3 Blöcke
+  eine Säule aus Muster 1 (bis zum Boden verlängert), oben liegt ein durchgehender Balken aus Muster 2.
+  Radius Y = Säulenhöhe, Radius X = Breite des Balkens
+
 ## 0.95.0 – 17.11.2026 (nächtlicher Ausbau: Terraform)
 - **Steilküste mit Höhlen:** neu im Pfad-Menü („Steilküste mit Höhlen und Felsnadeln“) – Punkte entlang der
   gewünschten Uferlinie setzen und die Meerseite wählen. Auf der Landseite entsteht eine hohe Felswand mit Gras oben,

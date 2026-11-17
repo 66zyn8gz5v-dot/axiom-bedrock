@@ -3341,6 +3341,49 @@ console.log("Glockenturm & Triumphbogen");
   dim.blocks.clear();
 }
 
+console.log("Amphitheater & Säulenreihe");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("smooth_stone");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const ST = "minecraft:stone_brick_stairs";
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 30, y: 74, z: 20 });
+  Object.assign(ses.s.shape, { type: "amphitheater" });
+  await roundTrip("Amphitheater", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(15, 65, 10) === "minecraft:sand" && id(15, 66, 10) === "minecraft:air" && id(15, 70, 10) === "minecraft:air", "Amphitheater: Arena mit Sandboden");
+  // Sitzreihen entlang z (quer zur langen Achse) steigen nach außen an
+  const seatY = (z) => {
+    for (let y = 74; y >= 65; y--) if (id(15, y, z) === ST) return y;
+    return -1;
+  };
+  const ys = [16, 17, 18].map(seatY);
+  check(ys.every((y) => y > 65) && ys[0] < ys[2], "Amphitheater: Sitzreihen aus Stufen steigen nach außen an (" + ys.join(",") + ")");
+  let seats = 0;
+  for (const [, p] of dim.blocks) if (p.type.id === ST) seats++;
+  check(seats > 80 && id(15, 66, 20) === S && id(1, 66, 10) === "minecraft:air" && id(3, 67, 10) === "minecraft:air" && id(1, 65, 10) === "minecraft:sand", "Amphitheater: Außenmauer und Eingänge an den Enden (" + seats + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "colonnade", rx: 1, ry: 2, rz: 1 });
+  ses.shapeA = undefined;
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await roundTrip("Säulenreihe", () => use("axiom:shape", { x: 12, y: 64, z: 0 }));
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 12, y: 64, z: 0 });
+  check(id(0, 65, 0) === S && id(3, 69, 0) === S && id(12, 67, 0) === S && id(1, 67, 0) === "minecraft:air" && id(4, 66, 0) === "minecraft:air", "Säulenreihe: Säulen alle 3 Blöcke");
+  check(id(1, 70, 0) === "minecraft:smooth_stone" && id(6, 70, 1) === "minecraft:smooth_stone" && id(6, 70, -1) === "minecraft:smooth_stone" && id(6, 71, 0) === "minecraft:air", "Säulenreihe: durchgehender Balken oben");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
