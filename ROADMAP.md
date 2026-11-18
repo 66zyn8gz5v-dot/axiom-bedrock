@@ -200,8 +200,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Triumphbogen** (v0.94): breiter Bogen mit zwei kleinen Seitenbögen und Attika, steht vor dir
 - [x] **Amphitheater** (v0.96): ovale Arena mit ansteigenden Sitzreihen aus Stufen in einer Box-Auswahl
 - [x] **Säulenreihe mit Gebälk (Kolonnade)** (v0.96): gerade Säulenreihe zwischen zwei Punkten mit Balken obendrauf
-- [ ] **Sternwarte**: runder Turm mit drehbarer Kuppel (Spalt) und Fernrohr-Andeutung
-- [ ] **Treppenbrunnen (Stufenbrunnen)**: eckiger, in den Boden versenkter Brunnen mit Treppen an allen Seiten bis zum Wasser
+- [x] **Sternwarte** (v0.98): runder Turm mit drehbarer Kuppel (Spalt) und Fernrohr-Andeutung
+- [x] **Treppenbrunnen (Stufenbrunnen)** (v0.98): eckiger, in den Boden versenkter Brunnen mit Treppen an allen Seiten bis zum Wasser
+- [ ] **Gewächshaus**: Glashaus mit Satteldach aus Glas, Beeten und Weg in einer Box-Auswahl
+- [ ] **Leuchtschrift-Säule (Litfaßsäule)**: runde Säule mit Kappe und farbigen Streifen
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

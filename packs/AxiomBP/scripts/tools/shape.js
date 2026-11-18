@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["observatory", "Sternwarte (Rundturm mit Kuppel, Spalt und Fernrohr)"],
+  ["stepwell", "Stufenbrunnen (in den Boden versenkt, Terrassen und Treppen bis zum Wasser)"],
   ["amphitheater", "Amphitheater (in die Box-Auswahl: Arena mit ansteigenden Sitzreihen)"],
   ["colonnade", "Säulenreihe mit Gebälk (Punkt A → B)"],
   ["campanile", "Glockenturm (schlank, offene Glockenstube mit Glocke, Pyramidendach)"],
@@ -738,7 +740,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1266,6 +1268,107 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Sternwarte: runder, hohler Turm (Muster 1) mit Tür zu dir und Plattform oben, darauf eine Kuppel (Muster 2) mit
+ * einem Spalt von unten bis zum Scheitel auf deiner Seite und einem schrägen Fernrohr aus Eisenblöcken, das durch den
+ * Spalt zeigt. Radius X = Radius, Höhe des Turms = 2 × Radius Y + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildObservatory(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const H = Math.max(6, 2 * c.ry + 1);
+  const wall = picker(ses.s.pattern);
+  const dome = picker(ses.s.pattern2);
+  const A = air();
+  const iron = BlockPermutation.resolve("minecraft:iron_block");
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const fx = -d.x; // zum Spieler
+  const fz = -d.z;
+  runEdit(ses.player, { label: "Sternwarte", symmetry: true }, function* (es) {
+    for (let y = 0; y <= H; y++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const dd = Math.hypot(dx, dz);
+          if (dd > R + 0.5) continue;
+          es.set(base.x + dx, base.y + y, base.z + dz, y === 0 || y === H || dd > R - 0.5 ? wall() : A);
+        }
+      yield;
+    }
+    for (let y = 1; y <= 2; y++) es.set(base.x + fx * R, base.y + y, base.z + fz * R, A);
+    // Kuppel mit Spalt auf der Spielerseite
+    for (let dy = 1; dy <= R; dy++) {
+      for (let dx = -R; dx <= R; dx++)
+        for (let dz = -R; dz <= R; dz++) {
+          const dd = Math.hypot(Math.hypot(dx, dz), dy);
+          if (dd > R + 0.5) continue;
+          const lat = fx ? dz : dx; // seitlich zur Spielerrichtung
+          const toward = dx * fx + dz * fz >= 0;
+          const slit = lat === 0 && toward;
+          es.set(base.x + dx, base.y + H + dy, base.z + dz, dd > R - 0.5 && !slit ? dome() : A);
+        }
+      yield;
+    }
+    // Fernrohr: schräg vom Boden der Kuppel zum Spalt
+    for (let k = 1; k < R; k++) es.set(base.x + fx * k, base.y + H + k, base.z + fz * k, iron);
+  });
+}
+
+/**
+ * Stufenbrunnen: auf den Boden zielen. Ein eckiger Schacht wird in den Boden gegraben: rundherum Terrassen, die
+ * Stufe um Stufe nach innen tiefer werden (Muster 1), in der Mitte jeder Seite eine Treppe aus echten
+ * Treppenblöcken, und ganz unten ein Wasserbecken. Radius X = halbe Breite, Radius Y = Anzahl Stufen (Tiefe).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildStepwell(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const g = t.hit ? t.pos.y : t.pos.y - 1;
+  const cx = t.pos.x;
+  const cz = t.pos.z;
+  const D = Math.max(2, c.ry);
+  const R = Math.max(D + 1, c.rx);
+  const stone = picker(ses.s.pattern);
+  const A = air();
+  const W = BlockPermutation.resolve("minecraft:water");
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:stone";
+  let stairId = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:stone_stairs";
+  }
+  /** Stufe, die nach außen ansteigt. @param {number} dx @param {number} dz */
+  const stair = (dx, dz) => {
+    const [ax, az] = Math.abs(dx) >= Math.abs(dz) ? [Math.sign(dx), 0] : [0, Math.sign(dz)];
+    return BlockPermutation.resolve(stairId, { weirdo_direction: STAIR_DIRS.find(([a, b]) => a === ax && b === az)?.[2] ?? 0, upside_down_bit: false });
+  };
+  runEdit(ses.player, { label: "Stufenbrunnen", symmetry: true }, function* (es) {
+    for (let dx = -R; dx <= R; dx++) {
+      for (let dz = -R; dz <= R; dz++) {
+        const m = Math.max(Math.abs(dx), Math.abs(dz));
+        const L = Math.min(D, R - m); // wie tief diese Terrasse liegt
+        const x = cx + dx;
+        const z = cz + dz;
+        for (let y = g + 3; y > g - L; y--) es.set(x, y, z, A);
+        if (L === D) {
+          // Wasserbecken: zwei tief, darunter Grund
+          es.set(x, g - D, z, W);
+          es.set(x, g - D - 1, z, W);
+          es.set(x, g - D - 2, z, stone());
+          continue;
+        }
+        const middle = Math.min(Math.abs(dx), Math.abs(dz)) <= 1 && m > 0;
+        es.set(x, g - L, z, middle ? stair(dx, dz) : stone());
+        es.set(x, g - L - 1, z, stone());
+      }
+      yield;
+    }
   });
 }
 
@@ -2390,6 +2493,8 @@ export const shapeTool = {
     if (c.type === "triumph") return buildTriumph(ses, c);
     if (c.type === "amphitheater") return buildAmphitheater(ses);
     if (c.type === "colonnade") return buildColonnade(ses, c);
+    if (c.type === "observatory") return buildObservatory(ses, c);
+    if (c.type === "stepwell") return buildStepwell(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2447,7 +2552,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel" || c.type === "colonnade") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

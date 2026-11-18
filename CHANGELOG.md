@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.98.0 – 19.11.2026 (nächtlicher Ausbau: Formen)
+- **Sternwarte:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein runder, hohler Turm aus Muster 1 mit
+  Tür zu dir und einer Plattform oben, darauf eine Kuppel aus Muster 2 mit einem Spalt vom Rand bis zum Scheitel auf
+  deiner Seite und einem schrägen Fernrohr aus Eisenblöcken, das durch den Spalt zeigt. Radius X = Radius,
+  Radius Y = Turmhöhe
+- **Stufenbrunnen:** neue Form – auf den Boden zielen und benutzen. Ein eckiger Schacht wird in den Boden gegraben:
+  ringsum Terrassen aus Muster 1, die nach innen Stufe um Stufe tiefer liegen, in der Mitte jeder Seite eine Treppe
+  aus echten Treppenblöcken und ganz unten ein Wasserbecken. Radius X = halbe Breite, Radius Y = Anzahl Stufen
+
 ## 0.97.0 – 18.11.2026 (nächtlicher Ausbau: Terraform)
 - **Korallenriff:** neu im Auswahl-Menü („Korallenriff unter Wasser erzeugen“) – die Box-Auswahl wird zu Meer (Wasser
   bis eine Lage unter die Oberkante). Auf dem Sandgrund wachsen bunte Korallenhügel aus allen fünf Korallenarten,

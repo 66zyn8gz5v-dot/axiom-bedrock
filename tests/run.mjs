@@ -3434,6 +3434,42 @@ console.log("Amphitheater & Säulenreihe");
   dim.blocks.clear();
 }
 
+console.log("Sternwarte & Stufenbrunnen");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("white_concrete");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "observatory", rx: 4, ry: 3, rz: 4, anchor: "center" });
+  await roundTrip("Sternwarte", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const WC = "minecraft:white_concrete";
+  const AIR = "minecraft:air";
+  check(id(4, 68, 0) === S && id(0, 68, 0) === AIR && id(0, 66, -4) === AIR && id(0, 72, 0) === S, "Sternwarte: Rundturm mit Tür und Plattform");
+  check(id(4, 73, 0) === WC && id(0, 73, 4) === WC && id(0, 73, -4) === AIR && id(0, 76, 0) === AIR && id(1, 76, 0) === WC, "Sternwarte: Kuppel mit Spalt zu dir");
+  check(id(0, 73, -1) === "minecraft:iron_block" && id(0, 75, -3) === "minecraft:iron_block", "Sternwarte: Fernrohr zeigt durch den Spalt");
+  await undo();
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "stepwell", rx: 5, ry: 3, rz: 5 });
+  await roundTrip("Stufenbrunnen", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const ST = "minecraft:stone_brick_stairs";
+  check(id(4, 63, 3) === S && id(4, 64, 3) === AIR && id(3, 62, 3) === S && id(3, 63, 3) === AIR, "Stufenbrunnen: Terrassen werden nach innen tiefer");
+  check(id(1, 61, 1) === "minecraft:water" && id(1, 60, 1) === "minecraft:water" && id(1, 59, 1) === S && id(1, 62, 1) === AIR, "Stufenbrunnen: Wasserbecken unten");
+  check(id(4, 63, 0) === ST && id(3, 62, 0) === ST && id(0, 62, -3) === ST && dim._get(4, 63, 0).getAllStates().weirdo_direction !== dim._get(-4, 63, 0).getAllStates().weirdo_direction, "Stufenbrunnen: Treppen an allen Seiten");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
