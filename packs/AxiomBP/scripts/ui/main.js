@@ -207,6 +207,19 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Korallenriff unter Wasser erzeugen",
+      run: async () => {
+        const c = ses.s.reef;
+        const r = await new Modal("Korallenriff")
+          .slider("density", "Korallen in % (Rest Sand mit Seegras und Tang)", 0, 100, 10, c.density)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opReef(ses, c);
+      },
+    },
+    {
       text: "Bambuswald erzeugen",
       run: async () => {
         const c = ses.s.bamboo;

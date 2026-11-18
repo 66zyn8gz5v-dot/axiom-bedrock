@@ -141,8 +141,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Pilzwald** (v0.91): Riesenpilze (rot und braun) auf Myzel in einer Auswahl
 - [x] **Bambuswald** (v0.93): dichte Bambushaine mit Podsol und kleinen Lichtungen in einer Auswahl
 - [x] **Steilküste mit Höhlen** (v0.95): Felsküste mit Brandungshöhlen und Felsnadeln im Wasser entlang der Pfad-Punkte
-- [ ] **Wüstenoase-Stadt-Platz / Dünenmeer mit Kamelpfad**: weite Dünen mit einem festgetretenen Pfad entlang der Punkte
-- [ ] **Unterwasser-Riff**: Korallenriff mit Korallenblöcken, Seegras und Seegurken in einer Auswahl unter Wasser
+- [x] **Wüstenoase-Stadt-Platz / Dünenmeer mit Kamelpfad** (v0.97, Dünenfeld + Trampelpfad-Art „Kamelpfad“): weite Dünen mit einem festgetretenen Pfad entlang der Punkte
+- [x] **Unterwasser-Riff** (v0.97): Korallenriff mit Korallenblöcken, Seegras und Seegurken in einer Auswahl unter Wasser
+- [ ] **Tundra mit Frostmustern**: flache, karge Ebene mit Schnee- und Kiesflecken, kleinen Tümpeln aus Eis und Steinkreisen
+- [ ] **Vulkanische Spalte**: lange Erdspalte mit Lava am Grund entlang der Pfad-Punkte, Ränder aus Basalt und Magma
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

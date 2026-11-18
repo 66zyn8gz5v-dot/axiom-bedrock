@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.97.0 – 18.11.2026 (nächtlicher Ausbau: Terraform)
+- **Korallenriff:** neu im Auswahl-Menü („Korallenriff unter Wasser erzeugen“) – die Box-Auswahl wird zu Meer (Wasser
+  bis eine Lage unter die Oberkante). Auf dem Sandgrund wachsen bunte Korallenhügel aus allen fünf Korallenarten,
+  darauf Korallen, Korallenfächer und Seegurken, dazwischen Seegras und in den Sandflächen Seetang. Der
+  Korallenanteil ist einstellbar
+- **Kamelpfad:** der Trampelpfad im Pfad-Menü hat eine neue Art „Kamelpfad“ – ein festgetretener Weg aus Sandstein,
+  glattem Sandstein und grober Erde, z.B. quer durch ein Dünenfeld
+
 ## 0.96.0 – 18.11.2026 (nächtlicher Ausbau: Formen)
 - **Amphitheater:** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen (mindestens 11×5×11), dann
   mit dem Formen-Werkzeug benutzen. Es entsteht eine ovale Arena mit Sandboden, ringsum Sitzreihen aus echten

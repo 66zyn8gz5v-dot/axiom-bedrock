@@ -1581,6 +1581,56 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Korallenriff & Kamelpfad");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 50, z: 0 }, { x: 31, y: 64, z: 31 });
+  let seed = 59;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Korallenriff", () => ops.opReef(ses, { density: 60 }, rnd));
+  seed = 59;
+  ops.opReef(ses, { density: 60 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let blocks = 0;
+  let plants = 0;
+  let kelp = 0;
+  let water = 0;
+  let top = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 31 || y < 50 || y > 64 || z < 0 || z > 31) outside++;
+    const t = p.type.id;
+    if (t.endsWith("_coral_block")) blocks++;
+    if (t.endsWith("_coral") || t.endsWith("_coral_fan") || t === "minecraft:sea_pickle") plants++;
+    if (t === "minecraft:kelp") kelp++;
+    if (t === "minecraft:water") water++;
+    if (y === 64 && t !== "minecraft:air") top++;
+  }
+  check(water > 5000 && top === 0 && outside === 0, "Korallenriff: Meer bis unter die Oberkante, nur in der Auswahl");
+  check(blocks > 100 && plants > 30 && kelp > 5, "Korallenriff: Korallenhügel, Korallen und Seetang (" + blocks + "/" + plants + "/" + kelp + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+  // Kamelpfad durch Sand
+  const { trail } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  ses.sel = boxSel(dim.id, { x: -10, y: 64, z: -5 }, { x: 10, y: 64, z: 5 });
+  ops.opFill(ses, parsePattern("sand"));
+  await drain();
+  ses.sel = undefined;
+  ses.pathPoints = [{ x: -8, y: 65, z: 0 }, { x: 8, y: 65, z: 0 }];
+  trail(ses, { width: 3, style: "sand" });
+  await drain();
+  const SAND_TRAIL = ["minecraft:sandstone", "minecraft:smooth_sandstone", "minecraft:coarse_dirt", "minecraft:gravel"];
+  let hits = 0;
+  for (let x = -6; x <= 6; x++) if (SAND_TRAIL.includes(id(x, 64, 0))) hits++;
+  check(hits >= 10 && id(0, 64, 4) === "minecraft:sand", "Kamelpfad: festgetretener Weg durch den Sand (" + hits + ")");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Bambuswald");
 {
   dim.blocks.clear();

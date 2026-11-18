@@ -66,6 +66,7 @@ export function defaultSettings() {
     mountainLake: { lake: 50, peaks: 80 },
     mushrooms: { density: 50, red: 50 },
     bamboo: { density: 60, height: 12 },
+    reef: { density: 50 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

@@ -780,6 +780,7 @@ export const pathTool = {
                 ["dirt", "Erdweg (Trampelpfad)"],
                 ["gravel", "Kiesweg"],
                 ["stone", "Pflaster (Bruchstein, bemoost)"],
+                ["sand", "Kamelpfad (festgetretener Sand durch Dünen)"],
               ],
               c.style
             )

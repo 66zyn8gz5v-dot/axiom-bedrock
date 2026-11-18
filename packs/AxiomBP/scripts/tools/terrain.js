@@ -1252,6 +1252,12 @@ const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
     ["minecraft:coarse_dirt", 0.15],
     ["minecraft:cobblestone", 0.1],
   ],
+  sand: [
+    ["minecraft:sandstone", 0.5],
+    ["minecraft:smooth_sandstone", 0.2],
+    ["minecraft:coarse_dirt", 0.2],
+    ["minecraft:gravel", 0.1],
+  ],
   stone: [
     ["minecraft:cobblestone", 0.5],
     ["minecraft:mossy_cobblestone", 0.25],

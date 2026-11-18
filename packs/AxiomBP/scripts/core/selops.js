@@ -708,6 +708,65 @@ function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
 }
 
 /**
+ * Korallenriff in der Auswahl: die Auswahl wird zu Meer (Wasser bis eine Lage unter die Oberkante). Auf dem
+ * Sandgrund wachsen bunte Korallenhügel aus Korallenblöcken, darauf Korallen und Korallenfächer, dazwischen
+ * Seegras, Seegurken und in den tieferen Sandflächen Seetang. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{density:number}} o density = Korallen in %
+ * @param {() => number} [rand]
+ */
+export function opReef(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 6) return err(ses.player, "Die Auswahl ist zu flach – mindestens 6 Blöcke hoch.");
+  const seaY = max.y - 1;
+  const seed = rand() * 1000;
+  const floor0 = min.y + 1;
+  const thr = o.density <= 0 ? Infinity : 0.5 - (Math.min(100, o.density) / 100) * 0.9;
+  const KINDS = ["tube", "brain", "bubble", "fire", "horn"];
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  const W = P("minecraft:water");
+  runEdit(ses.player, { label: "Korallenriff", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const ground = floor0 + Math.round((fbm(x / 10 + seed, 0.2, z / 10, 2) + 0.5) * 2);
+        const n = fbm(x / 5 + seed, 1.7, z / 5, 2);
+        const reef = n > thr;
+        const mound = reef ? Math.max(0, Math.min(seaY - ground - 2, Math.round((n - thr) * 6))) : 0;
+        const kind = KINDS[Math.floor(((fbm(x / 3 + seed, 3.3, z / 3, 1) + 1) / 2) * KINDS.length) % KINDS.length];
+        const top = ground + mound;
+        const r = rand();
+        let deco = null;
+        if (reef) deco = r < 0.35 ? `minecraft:${kind}_coral` : r < 0.55 ? `minecraft:${kind}_coral_fan` : r < 0.62 ? "minecraft:sea_pickle" : null;
+        else deco = r < 0.25 ? "minecraft:seagrass" : null;
+        const kelp = !reef && r > 0.93 ? 2 + Math.floor(rand() * Math.max(1, seaY - top - 3)) : 0;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b;
+          if (y > seaY) b = A;
+          else if (y <= ground) b = P(y < ground - 1 ? "minecraft:stone" : ground - floor0 > 2 ? "minecraft:gravel" : "minecraft:sand");
+          else if (y <= top) b = P(`minecraft:${kind}_coral_block`);
+          else if (y === top + 1 && deco) b = P(deco);
+          else if (y > top && y <= top + kelp && y < seaY) b = P("minecraft:kelp");
+          else b = W;
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Bambuswald in der Auswahl: sanfte Hügel, dichte Bambushaine auf Podsol (verschieden hohe Halme mit großen Blättern
  * oben) und dazwischen kleine Lichtungen mit Gras, Farn und Blumen. Die Auswahl wird neu gefüllt.
  * @param {import("./state.js").Session} ses
