@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.100.0 – 20.11.2026 (nächtlicher Ausbau: Formen)
+- **Gewächshaus:** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen, dann mit dem Formen-Werkzeug
+  benutzen. Es entsteht ein Glashaus mit Glaswänden und Glas-Satteldach, Pfosten und Firstbalken aus Muster 1 und
+  einer Tür in der Mitte einer Giebelseite. Innen führt ein Kiesweg durch die Mitte, links und rechts Beete mit
+  Blumen, Farn und Azaleen. Der First läuft entlang der längeren Seite
+- **Litfaßsäule:** neue Form – auf den Boden zielen und benutzen: eine runde Säule mit Sockel und Kappe aus Muster 1,
+  dazwischen bunte waagerechte Beton-Streifen wie Plakate. Radius X = Radius, Radius Y = Höhe
+
 ## 0.99.0 – 19.11.2026 (nächtlicher Ausbau: Terraform)
 - **Tundra:** neu im Auswahl-Menü („Tundra mit Frostmustern erzeugen“) – füllt eine Box-Auswahl mit einer flachen,
   kargen Ebene: Steinkreise aus Kies und Bruchstein teilen den Boden in Vielecke (Frostmuster), dazwischen Gras,

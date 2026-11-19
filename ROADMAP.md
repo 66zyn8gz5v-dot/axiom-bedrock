@@ -204,8 +204,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Säulenreihe mit Gebälk (Kolonnade)** (v0.96): gerade Säulenreihe zwischen zwei Punkten mit Balken obendrauf
 - [x] **Sternwarte** (v0.98): runder Turm mit drehbarer Kuppel (Spalt) und Fernrohr-Andeutung
 - [x] **Treppenbrunnen (Stufenbrunnen)** (v0.98): eckiger, in den Boden versenkter Brunnen mit Treppen an allen Seiten bis zum Wasser
-- [ ] **Gewächshaus**: Glashaus mit Satteldach aus Glas, Beeten und Weg in einer Box-Auswahl
-- [ ] **Leuchtschrift-Säule (Litfaßsäule)**: runde Säule mit Kappe und farbigen Streifen
+- [x] **Gewächshaus** (v0.100): Glashaus mit Satteldach aus Glas, Beeten und Weg in einer Box-Auswahl
+- [x] **Leuchtschrift-Säule (Litfaßsäule)** (v0.100): runde Säule mit Kappe und farbigen Streifen
+- [ ] **Zugbrücke mit Torhaus**: hochgeklappte Brücke aus Holz an Ketten vor einem Tor über einen Graben
+- [ ] **Holzsteg mit Pfählen**: Steg auf Pfählen übers Wasser entlang der Pfad-Punkte, mit Geländer
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

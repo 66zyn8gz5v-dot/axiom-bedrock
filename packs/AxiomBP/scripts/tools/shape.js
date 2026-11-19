@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["greenhouse", "Gewächshaus (in die Box-Auswahl: Glashaus mit Satteldach, Beete, Weg)"],
+  ["adcolumn", "Litfaßsäule (runde Säule mit bunten Streifen und Kappe)"],
   ["observatory", "Sternwarte (Rundturm mit Kuppel, Spalt und Fernrohr)"],
   ["stepwell", "Stufenbrunnen (in den Boden versenkt, Terrassen und Treppen bis zum Wasser)"],
   ["amphitheater", "Amphitheater (in die Box-Auswahl: Arena mit ansteigenden Sitzreihen)"],
@@ -740,7 +742,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1268,6 +1270,93 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Gewächshaus in der Box-Auswahl: Wände und Satteldach aus Glas, Eckpfosten, Pfosten alle 3 Blöcke und Firstbalken
+ * aus Muster 1, eine Tür in der Mitte einer Giebelseite. Innen ein Kiesweg entlang der Mitte und Beete mit Blumen,
+ * Farn und Azaleen. Der First läuft entlang der längeren Seite.
+ * @param {import("../core/state.js").Session} ses
+ */
+function buildGreenhouse(ses) {
+  const sel = ses.sel;
+  if (!sel) return err(ses.player, "Für das Gewächshaus erst eine Box-Auswahl machen (Grundfläche und Höhe).");
+  const { min, max } = sel;
+  const W = max.x - min.x + 1;
+  const D = max.z - min.z + 1;
+  const H = max.y - min.y + 1;
+  if (Math.min(W, D) < 5) return err(ses.player, "Die Auswahl ist zu schmal – mindestens 5×5 Blöcke.");
+  const alongX = W >= D;
+  const short = alongX ? D : W;
+  const half = Math.floor(short / 2);
+  const roofH = half;
+  const wallH = H - roofH - 1;
+  if (wallH < 3) return err(ses.player, `Die Auswahl ist zu niedrig – für diese Breite mindestens §e${roofH + 4}§r Blöcke hoch.`);
+  const frame = picker(ses.s.pattern);
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const glass = P("minecraft:glass");
+  const A = air();
+  const PLANTS = ["minecraft:poppy", "minecraft:dandelion", "minecraft:azure_bluet", "minecraft:fern", "minecraft:azalea", "minecraft:flowering_azalea", "minecraft:cornflower"];
+  const [w0, w1] = alongX ? [min.z, max.z] : [min.x, max.x];
+  const [u0, u1] = alongX ? [min.x, max.x] : [min.z, max.z];
+  const mid = (w0 + w1) / 2;
+  runEdit(ses.player, { label: "Gewächshaus", symmetry: true, region: { min, max } }, function* (es) {
+    for (let a = u0; a <= u1; a++) {
+      for (let b = w0; b <= w1; b++) {
+        const x = alongX ? a : b;
+        const z = alongX ? b : a;
+        const dw = Math.abs(b - mid);
+        const roofTop = min.y + wallH + Math.floor(half - dw);
+        const side = b === w0 || b === w1;
+        const end = a === u0 || a === u1;
+        const post = side && ((a - u0) % 3 === 0 || a === u1); // Pfosten an den Längswänden (inkl. Ecken)
+        const path = dw < 1;
+        const door = end && path && a === u0;
+        for (let y = min.y; y <= max.y; y++) {
+          const dy = y - min.y;
+          let blk = A;
+          if (dy === 0) blk = path ? P("minecraft:gravel") : side || end ? frame() : P("minecraft:grass_block");
+          else if (y > roofTop) blk = A;
+          else if (y === roofTop) blk = dw < 1 ? frame() : glass; // Dachfläche, First aus Muster 1
+          else if (side && dy <= wallH) blk = post ? frame() : glass;
+          else if (end) blk = door && dy <= 2 ? A : glass; // Giebelwand
+          else if (dy === 1 && !path && (a - u0) % 2 === 1) blk = P(PLANTS[Math.abs((a * 7 + b * 13) % PLANTS.length)]);
+          es.set(x, y, z, blk);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Litfaßsäule: runde Säule mit Sockel und Kappe aus Muster 1, dazwischen bunte waagerechte Streifen aus Beton wie
+ * Plakate. Radius X = Radius, Höhe = 2 × Radius Y + 1. Steht auf dem Blickziel.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildAdColumn(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(1, c.rx);
+  const H = Math.max(4, 2 * c.ry + 1);
+  const frame = picker(ses.s.pattern);
+  const COLORS = ["red", "yellow", "blue", "white", "green", "orange", "light_blue", "magenta"];
+  const off = Math.floor(Math.random() * COLORS.length);
+  const disk = (/** @type {any} */ es, /** @type {number} */ y, /** @type {number} */ r, /** @type {() => BlockPermutation} */ b) => {
+    for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) if (Math.hypot(dx, dz) <= r + 0.5) es.set(base.x + dx, y, base.z + dz, b());
+  };
+  runEdit(ses.player, { label: "Litfaßsäule", symmetry: true }, function* (es) {
+    disk(es, base.y, R + 1, frame);
+    for (let y = 1; y < H; y++) {
+      const col = BlockPermutation.resolve(`minecraft:${COLORS[(Math.floor((y - 1) / 2) + off) % COLORS.length]}_concrete`);
+      disk(es, base.y + y, R, () => col);
+    }
+    yield;
+    disk(es, base.y + H, R + 1, frame);
+    disk(es, base.y + H + 1, R, frame);
+    es.set(base.x, base.y + H + 2, base.z, frame());
   });
 }
 
@@ -2495,6 +2584,8 @@ export const shapeTool = {
     if (c.type === "colonnade") return buildColonnade(ses, c);
     if (c.type === "observatory") return buildObservatory(ses, c);
     if (c.type === "stepwell") return buildStepwell(ses, c);
+    if (c.type === "greenhouse") return buildGreenhouse(ses);
+    if (c.type === "adcolumn") return buildAdColumn(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2551,8 +2642,8 @@ export const shapeTool = {
   preview(ses) {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel" || c.type === "colonnade") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
-    if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater" || c.type === "greenhouse") return; // die Auswahl ist schon sichtbar
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

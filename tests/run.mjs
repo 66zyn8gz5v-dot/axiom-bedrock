@@ -3510,6 +3510,39 @@ console.log("Sternwarte & Stufenbrunnen");
   dim.blocks.clear();
 }
 
+console.log("Gewächshaus & Litfaßsäule");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("dark_oak_planks");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const F = "minecraft:dark_oak_planks";
+  const GL = "minecraft:glass";
+  ses.sel = boxSel(dim.id, { x: 0, y: 65, z: 0 }, { x: 10, y: 74, z: 6 });
+  Object.assign(ses.s.shape, { type: "greenhouse" });
+  await roundTrip("Gewächshaus", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(5, 66, 0) === GL && id(0, 66, 0) === F && id(3, 66, 0) === F && id(5, 70, 3) === "minecraft:air", "Gewächshaus: Glaswände mit Pfosten, innen frei");
+  check(id(5, 73, 2) === GL && id(5, 74, 3) === F && id(0, 72, 2) === GL && id(0, 66, 3) === "minecraft:air" && id(0, 67, 3) === "minecraft:air", "Gewächshaus: Glas-Satteldach mit First, Giebel mit Tür");
+  let plants = 0;
+  for (let x = 1; x <= 9; x++) for (let z = 1; z <= 5; z++) if (!["minecraft:air", GL, F].includes(id(x, 66, z))) plants++;
+  check(id(5, 65, 3) === "minecraft:gravel" && id(5, 65, 1) === "minecraft:grass_block" && plants > 5, "Gewächshaus: Kiesweg und Beete mit Pflanzen (" + plants + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "adcolumn", rx: 2, ry: 3, rz: 2, anchor: "center" });
+  await roundTrip("Litfaßsäule", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const colors = new Set();
+  for (let y = 66; y <= 71; y++) colors.add(id(2, y, 0));
+  check(id(3, 65, 0) === F && id(2, 66, 0).endsWith("_concrete") && id(3, 66, 0) === "minecraft:air" && colors.size >= 3, "Litfaßsäule: Sockel und bunte Streifen (" + colors.size + ")");
+  check(id(3, 72, 0) === F && id(2, 73, 0) === F && id(0, 74, 0) === F && id(0, 75, 0) === "minecraft:air", "Litfaßsäule: Kappe");
+  await undo();
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
