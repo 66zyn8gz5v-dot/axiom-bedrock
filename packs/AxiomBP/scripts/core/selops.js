@@ -708,6 +708,85 @@ function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
 }
 
 /**
+ * Tundra in der Auswahl: flache, karge Ebene mit Frostmustern – Steinkreise aus Kies und Bruchstein, die den Boden
+ * in Vielecke teilen –, dazwischen Gras, grobe Erde, Schneeflecken, Schneedecken und kleine zugefrorene Tümpel.
+ * Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{snow:number, pools:number}} o snow = Schnee in %, pools = Eistümpel in %
+ * @param {() => number} [rand]
+ */
+export function opTundra(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 4) return err(ses.player, "Die Auswahl ist zu flach – mindestens 4 Blöcke hoch.");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(1, Math.round((sy - 1) * 0.5));
+  const cell = 5; // Größe der Frost-Vielecke
+  /** Zufälliger Mittelpunkt je Rasterzelle. @param {number} i @param {number} j */
+  const site = (i, j) => {
+    let h = (i * 374761393 + j * 668265263 + Math.floor(seed) * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    const a = ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    const b = (((h * 31) ^ (h >>> 7)) >>> 0) / 4294967296;
+    return { x: (i + 0.2 + a * 0.6) * cell, z: (j + 0.2 + b * 0.6) * cell };
+  };
+  /** Abstand zur Grenze zwischen zwei Vielecken (klein = Steinkreis). @param {number} x @param {number} z */
+  const border = (x, z) => {
+    const i0 = Math.floor(x / cell);
+    const j0 = Math.floor(z / cell);
+    let d1 = Infinity;
+    let d2 = Infinity;
+    for (let i = i0 - 1; i <= i0 + 1; i++)
+      for (let j = j0 - 1; j <= j0 + 1; j++) {
+        const p = site(i, j);
+        const d = Math.hypot(x - p.x, z - p.z);
+        if (d < d1) ((d2 = d1), (d1 = d));
+        else if (d < d2) d2 = d;
+      }
+    return d2 - d1;
+  };
+  const poolThr = o.pools <= 0 ? -Infinity : -0.6 + (Math.min(100, o.pools) / 100) * 0.5;
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Tundra", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = base + (fbm(x / 18 + seed, 0.4, z / 18, 2) > 0.3 ? 1 : 0);
+        const pool = fbm(x / 6 + seed, 3.3, z / 6, 2) < poolThr;
+        const ring = !pool && border(x, z) < 0.9;
+        const r = rand();
+        const snowy = r * 100 < o.snow;
+        let top;
+        if (pool) top = "minecraft:ice";
+        else if (ring) top = r < 0.6 ? "minecraft:gravel" : "minecraft:cobblestone";
+        else if (snowy && r < o.snow / 300) top = "minecraft:snow";
+        else top = fbm(x / 4 + seed, 5.5, z / 4, 1) > 0.3 ? "minecraft:coarse_dirt" : "minecraft:grass_block";
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = P(h - y <= 2 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === h) b = P(top);
+          else if (y === h + 1 && !pool && !ring && top !== "minecraft:snow") {
+            if (snowy) b = P("minecraft:snow_layer");
+            else if (r > 0.92) b = P("minecraft:short_grass");
+          }
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Korallenriff in der Auswahl: die Auswahl wird zu Meer (Wasser bis eine Lage unter die Oberkante). Auf dem
  * Sandgrund wachsen bunte Korallenhügel aus Korallenblöcken, darauf Korallen und Korallenfächer, dazwischen
  * Seegras, Seegurken und in den tieferen Sandflächen Seetang. Die Auswahl wird neu gefüllt.

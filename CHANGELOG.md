@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.99.0 – 19.11.2026 (nächtlicher Ausbau: Terraform)
+- **Tundra:** neu im Auswahl-Menü („Tundra mit Frostmustern erzeugen“) – füllt eine Box-Auswahl mit einer flachen,
+  kargen Ebene: Steinkreise aus Kies und Bruchstein teilen den Boden in Vielecke (Frostmuster), dazwischen Gras,
+  grobe Erde, Schneeflecken, Schneedecken und kleine zugefrorene Tümpel. Schnee und Eistümpel sind einstellbar
+- **Vulkanische Spalte:** neu im Pfad-Menü – Punkte entlang der gewünschten Spalte setzen. Es entsteht eine lange,
+  schmale, tiefe Erdspalte, die dem Boden folgt, mit Lava am Grund, Wänden aus Basalt und Rändern aus Basalt,
+  Schwarzstein und Magma. Breite und Tiefe sind einstellbar
+
 ## 0.98.0 – 19.11.2026 (nächtlicher Ausbau: Formen)
 - **Sternwarte:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein runder, hohler Turm aus Muster 1 mit
   Tür zu dir und einer Plattform oben, darauf eine Kuppel aus Muster 2 mit einem Spalt vom Rand bis zum Scheitel auf

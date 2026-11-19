@@ -751,6 +751,22 @@ export const pathTool = {
         },
       },
       {
+        text: "Vulkanische Spalte mit Lava entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.fissure;
+          const r = await new Modal("Vulkanische Spalte")
+            .slider("width", "Breite (halbe Breite, 0 = 1 Block)", 0, 4, 1, c.width)
+            .slider("depth", "Tiefe bis zur Lava", 3, 20, 1, c.depth)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { fissure } = await import("./terrain.js");
+          fissure(ses, c);
+        },
+      },
+      {
         text: "Fjord entlang der Punkte (vom Land zum Meer)",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

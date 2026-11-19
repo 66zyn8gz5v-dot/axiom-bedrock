@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Tundra mit Frostmustern erzeugen",
+      run: async () => {
+        const c = ses.s.tundra;
+        const r = await new Modal("Tundra")
+          .slider("snow", "Schnee in %", 0, 100, 10, c.snow)
+          .slider("pools", "Eistümpel in %", 0, 100, 10, c.pools)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opTundra(ses, c);
+      },
+    },
+    {
       text: "Korallenriff unter Wasser erzeugen",
       run: async () => {
         const c = ses.s.reef;

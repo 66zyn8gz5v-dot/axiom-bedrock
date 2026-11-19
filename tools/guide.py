@@ -132,7 +132,7 @@ PAGES = [
         [("h", "Auswahl bearbeiten"),
          ("p", "Axiom-Menü → Auswahl bearbeiten:"),
          ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Überziehen · Natürlich machen · Glätten · "
-               "Verlauf · Landschaft · Inseln · Vulkaninsel · Canyon · Kirschhain · Moor · Gletscher · Savanne · Bergsee · Pilzwald · Bambus · Riff · Reisterrassen · Delta · Dünen · Mond · Höhlen · Tropfsteinhöhle · Ausdünnen · Dach · Bogenfenster · Stapeln · Array · Verschieben · Drehen · Spiegeln · "
+               "Verlauf · Landschaft · Inseln · Vulkaninsel · Canyon · Kirschhain · Moor · Gletscher · Savanne · Bergsee · Pilzwald · Bambus · Riff · Tundra · Reisterrassen · Delta · Dünen · Mond · Höhlen · Tropfsteinhöhle · Ausdünnen · Dach · Bogenfenster · Stapeln · Array · Verschieben · Drehen · Spiegeln · "
                "Gespiegelte Kopie · Wasser · Analysieren"),
          ("p", "Die Partikel zeigen dir immer, was gerade ausgewählt ist."),
          ("p", "Lasso: Mit dem Pfad Punkte setzen → „Lasso“.")],
@@ -176,7 +176,7 @@ PAGES = [
     (
         [("h", "6. Pfad & Co."),
          ("tool", "path", "Pfad", "Benutzen setzt Punkte. Schleichen + Benutzen zum Bauen."),
-         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Kaskade · Küste · Steilküste · Fjord · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole"),
+         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Kaskade · Küste · Steilküste · Fjord · Lavaspalte · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole"),
          ("img", "bridge")],
         [("h", "Text & Pixel-Art"),
          ("tool", "text", "Text", "Schreibt Wörter aus Blöcken – an die Wand oder auf den Boden."),

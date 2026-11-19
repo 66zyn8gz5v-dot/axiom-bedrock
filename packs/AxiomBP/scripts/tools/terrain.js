@@ -1241,6 +1241,51 @@ export function seaCliffs(ses, o) {
   });
 }
 
+/**
+ * Vulkanische Spalte entlang der Pfad-Punkte: eine lange, schmale Erdspalte, die dem Boden folgt, unten glüht Lava,
+ * die Wände sind aus Basalt, die Ränder oben aus Basalt, Schwarzstein und Magma.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, depth:number}} o width = halbe Breite, depth = Tiefe bis zur Lava
+ */
+export function fissure(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte entlang der gewünschten Spalte setzen.");
+  const samples = samplePath(ses.pathPoints, true);
+  const w = Math.max(0, Math.min(4, o.width));
+  const D = Math.max(3, o.depth);
+  const rim = w + 2;
+  const xs = samples.map((p) => p.x);
+  const zs = samples.map((p) => p.z);
+  const min = v(Math.floor(Math.min(...xs)) - rim - 1, 0, Math.floor(Math.min(...zs)) - rim - 1);
+  const max = v(Math.ceil(Math.max(...xs)) + rim + 1, 0, Math.ceil(Math.max(...zs)) + rim + 1);
+  const ref = Math.round(samples.reduce((a, p) => a + p.y, 0) / samples.length);
+  runEdit(ses.player, { label: "Vulkanische Spalte" }, function* (es) {
+    const L = permOf("minecraft:lava");
+    const A = air();
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        let best = Infinity;
+        for (const p of samples) best = Math.min(best, Math.hypot(x - p.x, z - p.z));
+        if (best > rim + 0.5) continue;
+        const g = groundY(es, x, z, ref + 16, 48);
+        if (g === null) continue;
+        if (best <= w + 0.5) {
+          for (let y = g; y > g - D; y--) es.set(x, y, z, A);
+          es.set(x, g - D, z, L);
+          es.set(x, g - D - 1, z, permOf("minecraft:basalt"));
+        } else {
+          // Wand und Rand der Spalte
+          for (let y = g - D; y < g; y++) es.set(x, y, z, permOf("minecraft:basalt"));
+          const h = hash01(x, z, 7);
+          es.set(x, g, z, permOf(h < 0.25 ? "minecraft:magma" : h < 0.6 ? "minecraft:blackstone" : "minecraft:basalt"));
+        }
+        if (++n % 64 === 0) yield;
+      }
+      yield;
+    }
+  });
+}
+
 const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
   dirt: [
     ["minecraft:grass_path", 0.7],

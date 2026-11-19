@@ -1581,6 +1581,46 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Tundra & Vulkanische Spalte");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 39, y: 70, z: 39 });
+  let seed = 61;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Tundra", () => ops.opTundra(ses, { snow: 40, pools: 40 }, rnd));
+  seed = 61;
+  ops.opTundra(ses, { snow: 40, pools: 40 }, rnd);
+  await drain();
+  const n = {};
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 39 || y < 60 || y > 70 || z < 0 || z > 39) outside++;
+    n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+  }
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("gravel") + c("cobblestone") > 150 && outside === 0, "Tundra: Steinkreise (Frostmuster)");
+  check(c("ice") > 10 && c("snow_layer") > 30 && c("grass_block") + c("coarse_dirt") > 300, "Tundra: Eistümpel, Schnee und karger Boden (" + c("ice") + "/" + c("snow_layer") + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+  const { fissure } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  ses.pathPoints = [];
+  fissure(ses, { width: 1, depth: 6 });
+  check(player.messages.at(-1).includes("Pfad"), "Vulkanische Spalte: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -10, y: 65, z: 0 }, { x: 10, y: 65, z: 0 }];
+  await roundTrip("Vulkanische Spalte", () => fissure(ses, { width: 1, depth: 6 }));
+  fissure(ses, { width: 1, depth: 6 });
+  await drain();
+  const EDGE = ["minecraft:basalt", "minecraft:blackstone", "minecraft:magma"];
+  check(id(0, 64, 0) === "minecraft:air" && id(0, 59, 1) === "minecraft:air" && id(0, 58, 0) === "minecraft:lava" && id(0, 57, 0) === "minecraft:basalt", "Vulkanische Spalte: tiefe Spalte mit Lava am Grund");
+  check(EDGE.includes(id(0, 64, 2)) && id(0, 61, 2) === "minecraft:basalt" && EDGE.includes(id(5, 64, -3)) && id(0, 64, 5) === "minecraft:grass_block", "Vulkanische Spalte: Ränder aus Basalt und Magma");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Korallenriff & Kamelpfad");
 {
   dim.blocks.clear();

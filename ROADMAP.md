@@ -143,8 +143,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Steilküste mit Höhlen** (v0.95): Felsküste mit Brandungshöhlen und Felsnadeln im Wasser entlang der Pfad-Punkte
 - [x] **Wüstenoase-Stadt-Platz / Dünenmeer mit Kamelpfad** (v0.97, Dünenfeld + Trampelpfad-Art „Kamelpfad“): weite Dünen mit einem festgetretenen Pfad entlang der Punkte
 - [x] **Unterwasser-Riff** (v0.97): Korallenriff mit Korallenblöcken, Seegras und Seegurken in einer Auswahl unter Wasser
-- [ ] **Tundra mit Frostmustern**: flache, karge Ebene mit Schnee- und Kiesflecken, kleinen Tümpeln aus Eis und Steinkreisen
-- [ ] **Vulkanische Spalte**: lange Erdspalte mit Lava am Grund entlang der Pfad-Punkte, Ränder aus Basalt und Magma
+- [x] **Tundra mit Frostmustern** (v0.99): flache, karge Ebene mit Schnee- und Kiesflecken, kleinen Tümpeln aus Eis und Steinkreisen
+- [x] **Vulkanische Spalte** (v0.99): lange Erdspalte mit Lava am Grund entlang der Pfad-Punkte, Ränder aus Basalt und Magma
+- [ ] **Heidelandschaft**: sanfte Hügel mit Heidekraut-Farben (lila Blumen, Farn), Findlingen und Wacholderbüschen
+- [ ] **Wasserfall-Treppe (Sinterterrassen)**: weiße Kalkterrassen am Hang mit Wasserbecken, die übereinander überlaufen
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
