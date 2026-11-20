@@ -708,6 +708,150 @@ function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
 }
 
 /**
+ * Heidelandschaft in der Auswahl: sanfte Hügel mit Gras, Podsol und grober Erde, große Flecken lila Heidekraut
+ * (Zierlauch), Farn und Gras, dazu einzelne Findlinge aus Stein und kleine Wacholderbüsche. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{flowers:number, boulders:number}} o flowers = Heidekraut in %, boulders = Anzahl Findlinge
+ * @param {() => number} [rand]
+ */
+export function opHeath(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 8) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 8 Blöcke hoch.");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(2, Math.round((sy - 1) * 0.35));
+  const relief = Math.min(4, max.y - 3 - base);
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++) for (let z = min.z; z <= max.z; z++) H.set(x + "," + z, Math.round(base + relief * (0.5 + fbm(x / 16 + seed, 0.6, z / 16, 2) * 0.6)));
+  const thr = o.flowers <= 0 ? Infinity : 0.45 - (Math.min(100, o.flowers) / 100) * 0.9;
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Heidelandschaft", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = /** @type {number} */ (H.get(x + "," + z));
+        const n = fbm(x / 6 + seed, 2.6, z / 6, 2);
+        const heather = n > thr;
+        const g = fbm(x / 4 + seed, 4.1, z / 4, 1);
+        const top = g > 0.4 ? "minecraft:coarse_dirt" : g < -0.35 ? "minecraft:podzol" : "minecraft:grass_block";
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = P(h - y <= 3 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === h) b = P(top);
+          else if (y === h + 1) {
+            if (heather && r < 0.7) b = P("minecraft:allium");
+            else if (r < 0.15) b = P("minecraft:fern");
+            else if (r < 0.4) b = P("minecraft:short_grass");
+          }
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    const leaves = P("minecraft:spruce_leaves", { persistent_bit: true });
+    const log = P("minecraft:spruce_log");
+    const put = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {BlockPermutation} */ b) => {
+      if (selContains(sel, x, y, z)) es.set(x, y, z, b);
+    };
+    // Findlinge: kleine runde Felsbrocken, halb im Boden
+    for (let i = 0; i < Math.max(0, Math.min(20, o.boulders)); i++) {
+      const cx = Math.round(min.x + 2 + rand() * (sx - 5));
+      const cz = Math.round(min.z + 2 + rand() * (sz - 5));
+      const g = /** @type {number} */ (H.get(cx + "," + cz));
+      const r = 1 + rand() * 1.2;
+      for (let dx = -2; dx <= 2; dx++)
+        for (let dy = -1; dy <= 2; dy++)
+          for (let dz = -2; dz <= 2; dz++)
+            if (dx * dx + dy * dy * 1.4 + dz * dz <= r * r) put(cx + dx, g + dy, cz + dz, P(rand() < 0.3 ? "minecraft:mossy_cobblestone" : rand() < 0.5 ? "minecraft:andesite" : "minecraft:stone"));
+      yield;
+    }
+    // Wacholderbüsche
+    const bushes = Math.round((sx * sz) / 120);
+    for (let i = 0; i < bushes; i++) {
+      const x = Math.round(min.x + 1 + rand() * (sx - 3));
+      const z = Math.round(min.z + 1 + rand() * (sz - 3));
+      const g = /** @type {number} */ (H.get(x + "," + z));
+      if (g + 3 > max.y) continue;
+      if (rand() < 0.5) {
+        put(x, g + 1, z, log);
+        for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) put(x + ox, g + 1, z + oz, leaves);
+        put(x, g + 2, z, leaves);
+      } else put(x, g + 1, z, leaves);
+    }
+  });
+}
+
+/**
+ * Sinterterrassen in der Auswahl (wie in Pamukkale): ein weißer Kalkhang aus Calcit, der in Blickrichtung Stufe um
+ * Stufe abfällt. Jede Stufe ist ein flaches Wasserbecken, eingefasst von einem geschwungenen Kalkrand, über den es
+ * scheinbar ins nächste Becken überläuft. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{step:number}} o step = Höhe jeder Stufe
+ * @param {{x:number, z:number}} dir Blickrichtung (bergab)
+ * @param {() => number} [rand]
+ */
+export function opTravertine(ses, o, dir, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  const step = Math.max(1, Math.min(3, o.step));
+  if (sy < step * 2 + 3) return err(ses.player, "Die Auswahl ist zu niedrig für mehrere Stufen.");
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const sgn = (alongX ? dir.x : dir.z) >= 0 ? 1 : -1;
+  const [u0, u1] = alongX ? [min.x, max.x] : [min.z, max.z];
+  const [w0, w1] = alongX ? [min.z, max.z] : [min.x, max.x];
+  const top = max.y - 2;
+  const nTer = Math.max(2, Math.floor((top - min.y - 1) / step));
+  const len = Math.max(3, Math.ceil((u1 - u0 + 1) / nTer));
+  const seed = rand() * 1000;
+  /** Stufe je Spalte (0 = oben). @param {number} a @param {number} b */
+  const terrace = (a, b) => {
+    const u = sgn > 0 ? a - u0 : u1 - a;
+    const lip = Math.round(fbm(b / 4 + seed, 0.5, Math.floor(u / len), 2) * len * 0.5);
+    return Math.max(0, Math.min(nTer - 1, Math.floor((u + lip) / len)));
+  };
+  const calcite = BlockPermutation.resolve("minecraft:calcite");
+  const W = BlockPermutation.resolve("minecraft:water");
+  const A = air();
+  runEdit(ses.player, { label: "Sinterterrassen", region: { min, max } }, function* (es) {
+    for (let a = u0; a <= u1; a++) {
+      for (let b = w0; b <= w1; b++) {
+        const k = terrace(a, b);
+        const T = top - k * step; // Boden des Beckens
+        const next = a + sgn <= u1 && a + sgn >= u0 ? terrace(a + sgn, b) : k + 1;
+        const prevSide = [b - 1, b + 1].some((bb) => bb < w0 || bb > w1 || terrace(a, bb) > k);
+        const rim = next > k || prevSide || b === w0 || b === w1 || (sgn > 0 ? a === u0 : a === u1);
+        const x = alongX ? a : b;
+        const z = alongX ? b : a;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let blk = A;
+          if (y <= T) blk = calcite;
+          else if (y === T + 1) blk = rim ? calcite : W;
+          es.set(x, y, z, blk);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Tundra in der Auswahl: flache, karge Ebene mit Frostmustern – Steinkreise aus Kies und Bruchstein, die den Boden
  * in Vielecke teilen –, dazwischen Gras, grobe Erde, Schneeflecken, Schneedecken und kleine zugefrorene Tümpel.
  * Die Auswahl wird neu gefüllt.

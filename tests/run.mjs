@@ -1581,6 +1581,46 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Heide & Sinterterrassen");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 39, y: 72, z: 39 });
+  let seed = 67;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Heidelandschaft", () => ops.opHeath(ses, { flowers: 60, boulders: 5 }, rnd));
+  seed = 67;
+  ops.opHeath(ses, { flowers: 60, boulders: 5 }, rnd);
+  await drain();
+  const n = {};
+  for (const [, p] of dim.blocks) n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("allium") > 200 && c("fern") > 20 && c("podzol") + c("coarse_dirt") > 50, "Heidelandschaft: lila Heidekraut, Farn, karger Boden (" + c("allium") + ")");
+  check(c("mossy_cobblestone") + c("andesite") > 10 && c("spruce_leaves") > 5, "Heidelandschaft: Findlinge und Wacholderbüsche");
+  await undo();
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 23, y: 72, z: 11 });
+  await roundTrip("Sinterterrassen", () => ops.opTravertine(ses, { step: 1 }, { x: 1, z: 0 }, rnd));
+  ops.opTravertine(ses, { step: 1 }, { x: 1, z: 0 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let water = 0;
+  let leak = 0;
+  const levels = new Set();
+  for (const [k, p] of dim.blocks) {
+    if (p.type.id !== "minecraft:water") continue;
+    const [x, y, z] = k.split(",").map(Number);
+    water++;
+    levels.add(y);
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+  }
+  check(water > 50 && levels.size >= 4, "Sinterterrassen: viele Becken auf verschiedenen Stufen (" + water + "/" + levels.size + ")");
+  check(leak === 0, "Sinterterrassen: jedes Becken ist vom Kalkrand eingefasst (" + leak + ")");
+  check(id(0, 71, 5) === "minecraft:calcite" && id(23, 64, 5) !== "minecraft:air", "Sinterterrassen: Kalkhang fällt in Blickrichtung ab");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Tundra & Vulkanische Spalte");
 {
   dim.blocks.clear();

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.101.0 – 20.11.2026 (nächtlicher Ausbau: Terraform)
+- **Heidelandschaft:** neu im Auswahl-Menü – füllt eine Box-Auswahl mit sanften Hügeln aus Gras, Podsol und grober
+  Erde, großen Flecken lila Heidekraut (Zierlauch), Farn und Gras, einzelnen Findlingen aus Stein und Moos-Bruchstein
+  und kleinen Wacholderbüschen. Heidekraut-Anteil und Anzahl der Findlinge sind einstellbar
+- **Sinterterrassen:** neu im Auswahl-Menü – ein weißer Kalkhang aus Calcit wie in Pamukkale, der in deiner
+  Blickrichtung Stufe um Stufe abfällt. Jede Stufe ist ein flaches Wasserbecken mit geschwungenem Kalkrand, das
+  Wasser bleibt überall eingefasst. Die Höhe der Stufen (1–3) ist einstellbar
+
 ## 0.100.0 – 20.11.2026 (nächtlicher Ausbau: Formen)
 - **Gewächshaus:** neue Form – erst mit der Box-Auswahl Grundfläche und Höhe aufziehen, dann mit dem Formen-Werkzeug
   benutzen. Es entsteht ein Glashaus mit Glaswänden und Glas-Satteldach, Pfosten und Firstbalken aus Muster 1 und

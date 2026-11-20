@@ -207,6 +207,32 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Heidelandschaft erzeugen",
+      run: async () => {
+        const c = ses.s.heath;
+        const r = await new Modal("Heidelandschaft")
+          .slider("flowers", "Heidekraut in %", 0, 100, 10, c.flowers)
+          .slider("boulders", "Anzahl Findlinge", 0, 20, 1, c.boulders)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opHeath(ses, c);
+      },
+    },
+    {
+      text: "Sinterterrassen erzeugen (fällt in Blickrichtung ab)",
+      run: async () => {
+        const c = ses.s.travertine;
+        const r = await new Modal("Sinterterrassen").slider("step", "Höhe jeder Stufe", 1, 3, 1, c.step).show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opTravertine(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Tundra mit Frostmustern erzeugen",
       run: async () => {
         const c = ses.s.tundra;

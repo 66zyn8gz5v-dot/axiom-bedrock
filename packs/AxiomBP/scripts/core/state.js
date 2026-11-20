@@ -69,6 +69,8 @@ export function defaultSettings() {
     bamboo: { density: 60, height: 12 },
     reef: { density: 50 },
     tundra: { snow: 40, pools: 30 },
+    heath: { flowers: 50, boulders: 5 },
+    travertine: { step: 1 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

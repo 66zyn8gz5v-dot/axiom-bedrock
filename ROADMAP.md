@@ -145,8 +145,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Unterwasser-Riff** (v0.97): Korallenriff mit Korallenblöcken, Seegras und Seegurken in einer Auswahl unter Wasser
 - [x] **Tundra mit Frostmustern** (v0.99): flache, karge Ebene mit Schnee- und Kiesflecken, kleinen Tümpeln aus Eis und Steinkreisen
 - [x] **Vulkanische Spalte** (v0.99): lange Erdspalte mit Lava am Grund entlang der Pfad-Punkte, Ränder aus Basalt und Magma
-- [ ] **Heidelandschaft**: sanfte Hügel mit Heidekraut-Farben (lila Blumen, Farn), Findlingen und Wacholderbüschen
-- [ ] **Wasserfall-Treppe (Sinterterrassen)**: weiße Kalkterrassen am Hang mit Wasserbecken, die übereinander überlaufen
+- [x] **Heidelandschaft** (v0.101): sanfte Hügel mit Heidekraut-Farben (lila Blumen, Farn), Findlingen und Wacholderbüschen
+- [x] **Wasserfall-Treppe (Sinterterrassen)** (v0.101): weiße Kalkterrassen am Hang mit Wasserbecken, die übereinander überlaufen
+- [ ] **Sanddünen-Insel (Sandbank)**: flache Sandinsel mit Strandgras und Treibholz in einer Auswahl im Meer
+- [ ] **Schluchtwald (Klamm)**: enge Schlucht mit Moos, Farn und Wasserfall-Bach am Grund entlang der Pfad-Punkte
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
