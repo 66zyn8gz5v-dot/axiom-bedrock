@@ -208,8 +208,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Treppenbrunnen (Stufenbrunnen)** (v0.98): eckiger, in den Boden versenkter Brunnen mit Treppen an allen Seiten bis zum Wasser
 - [x] **Gewächshaus** (v0.100): Glashaus mit Satteldach aus Glas, Beeten und Weg in einer Box-Auswahl
 - [x] **Leuchtschrift-Säule (Litfaßsäule)** (v0.100): runde Säule mit Kappe und farbigen Streifen
-- [ ] **Zugbrücke mit Torhaus**: hochgeklappte Brücke aus Holz an Ketten vor einem Tor über einen Graben
-- [ ] **Holzsteg mit Pfählen**: Steg auf Pfählen übers Wasser entlang der Pfad-Punkte, mit Geländer
+- [x] **Zugbrücke mit Torhaus** (v0.102): hochgeklappte Brücke aus Holz an Ketten vor einem Tor über einen Graben
+- [x] **Holzsteg mit Pfählen** (v0.102): Steg auf Pfählen übers Wasser entlang der Pfad-Punkte, mit Geländer
+- [ ] **Brunnenhaus mit Dachreiter**: kleines Fachwerkhaus mit Glockentürmchen auf dem First
+- [ ] **Wehrturm-Ruine**: halb eingestürzter Rundturm mit zerbrochener Mauerkrone und Schutt
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

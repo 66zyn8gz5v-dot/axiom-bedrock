@@ -50,6 +50,7 @@ export function defaultSettings() {
     fissure: { width: 1, depth: 8 },
     seaCliffs: { width: 10, side: "right", cliff: 12 },
     pier: { width: 1, rail: true },
+    boardwalk: { width: 1, rail: true },
     rockBridge: { height: 8, width: 2, river: true },
     islands: { count: 4, size: 45, sea: 40 },
     caves: { tunnels: 4, width: 3, chambers: 4 },

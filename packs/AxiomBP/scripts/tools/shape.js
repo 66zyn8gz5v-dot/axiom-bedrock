@@ -38,6 +38,7 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["drawbridge", "Zugbrücke (Mauer mit Tor, Graben mit Wasser, hochgeklappte Brücke an Ketten – zu dir)"],
   ["greenhouse", "Gewächshaus (in die Box-Auswahl: Glashaus mit Satteldach, Beete, Weg)"],
   ["adcolumn", "Litfaßsäule (runde Säule mit bunten Streifen und Kappe)"],
   ["observatory", "Sternwarte (Rundturm mit Kuppel, Spalt und Fernrohr)"],
@@ -742,7 +743,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1270,6 +1271,71 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/**
+ * Zugbrücke: ein Mauerstück (Muster 1) mit Zinnen und rundem Tor, davor (zu dir hin) ein Graben mit Wasser und eine
+ * hochgeklappte Brücke aus Muster 2, die an zwei Ketten von der Mauerkrone hängt. Auf das Blickziel am Boden zielen.
+ * Radius X = halbe Breite der Mauer, Radius Y = Höhe (2 × Radius Y + 1).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildDrawbridge(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const H = Math.max(6, 2 * c.ry + 1);
+  const a = Math.max(1, Math.round(R / 3));
+  const h = a + 2;
+  const Mw = 2 * a + 2; // Breite des Grabens = Länge der Brücke
+  const wall = picker(ses.s.pattern);
+  const plank = picker(ses.s.pattern2);
+  const A = air();
+  const W = BlockPermutation.resolve("minecraft:water");
+  let chain;
+  try {
+    chain = BlockPermutation.resolve("minecraft:chain");
+  } catch {
+    chain = BlockPermutation.resolve("minecraft:iron_bars");
+  }
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const sx = -d.z;
+  const sz = d.x;
+  // f > 0 = zum Spieler hin
+  const at = (/** @type {number} */ l, /** @type {number} */ f) => [base.x + sx * l - d.x * f, base.z + sz * l - d.z * f];
+  const open = (/** @type {number} */ l, /** @type {number} */ y) => Math.abs(l) <= a && y >= 0 && (y <= h - 1 || (y - (h - 1)) ** 2 + l * l <= (a + 0.5) ** 2);
+  runEdit(ses.player, { label: "Zugbrücke", symmetry: true }, function* (es) {
+    // Mauer mit Tor und Zinnen
+    for (let l = -R; l <= R; l++)
+      for (const f of [0, -1]) {
+        const [x, z] = at(l, f);
+        for (let y = 0; y < H; y++) es.set(x, base.y + y, z, open(l, y) ? A : wall());
+        if ((l + R) % 2 === 0) es.set(x, base.y + H, z, wall());
+      }
+    yield;
+    // Graben mit Wasser vor der Mauer
+    for (let l = -R; l <= R; l++)
+      for (let f = 1; f <= Mw; f++) {
+        const [x, z] = at(l, f);
+        for (let y = base.y + 2; y >= base.y; y--) es.set(x, y, z, A);
+        es.set(x, base.y - 1, z, W);
+        es.set(x, base.y - 2, z, W);
+        es.set(x, base.y - 3, z, W);
+        es.set(x, base.y - 4, z, wall());
+      }
+    yield;
+    // hochgeklappte Brücke direkt vor dem Tor, Ketten von der Mauerkrone
+    for (let l = -a; l <= a; l++)
+      for (let y = 0; y < Mw; y++) {
+        const [x, z] = at(l, 1);
+        es.set(x, base.y + y, z, plank());
+      }
+    for (const l of [-a, a])
+      for (let y = Mw; y < H; y++) {
+        const [x, z] = at(l, 1);
+        es.set(x, base.y + y, z, chain);
+      }
   });
 }
 
@@ -2586,6 +2652,7 @@ export const shapeTool = {
     if (c.type === "stepwell") return buildStepwell(ses, c);
     if (c.type === "greenhouse") return buildGreenhouse(ses);
     if (c.type === "adcolumn") return buildAdColumn(ses, c);
+    if (c.type === "drawbridge") return buildDrawbridge(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2643,7 +2710,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel" || c.type === "colonnade") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater" || c.type === "greenhouse") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

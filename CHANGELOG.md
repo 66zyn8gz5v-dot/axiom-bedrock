@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.102.0 – 21.11.2026 (nächtlicher Ausbau: Formen)
+- **Zugbrücke:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein Mauerstück aus Muster 1 mit Zinnen
+  und rundem Tor, davor (zu dir hin) ein Graben mit Wasser und eine hochgeklappte Brücke aus Muster 2, die an zwei
+  Ketten von der Mauerkrone hängt. Radius X = halbe Breite der Mauer, Radius Y = Höhe
+- **Holzsteg:** neu im Pfad-Menü („Holzsteg auf Pfählen“) – Punkte vom Ufer übers Wasser setzen. Es entsteht ein
+  Bohlenweg aus Muster 1 auf Höhe der Punkte, an beiden Seiten alle 3 Blöcke ein Pfahl aus Muster 2 bis zum Grund
+  und auf Wunsch ein Zaungeländer passend zum Holz
+
 ## 0.101.0 – 20.11.2026 (nächtlicher Ausbau: Terraform)
 - **Heidelandschaft:** neu im Auswahl-Menü – füllt eine Box-Auswahl mit sanften Hügeln aus Gras, Podsol und grober
   Erde, großen Flecken lila Heidekraut (Zierlauch), Farn und Gras, einzelnen Findlingen aus Stein und Moos-Bruchstein

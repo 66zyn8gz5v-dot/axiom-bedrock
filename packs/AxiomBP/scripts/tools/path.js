@@ -348,6 +348,73 @@ export function buildPier(ses, o) {
 }
 
 /**
+ * Holzsteg entlang der Punkte (weiche Kurve): ein Bohlenweg aus Muster 1 auf Höhe der Punkte, an beiden Seiten alle
+ * 3 Blöcke ein Pfahl aus Muster 2 bis zum Grund (auch unter Wasser) und auf Wunsch ein Zaungeländer.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, rail:boolean}} o width = halbe Breite
+ */
+export function buildBoardwalk(ses, o) {
+  const pts = ses.pathPoints;
+  if (pts.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen – vom Ufer hinaus aufs Wasser.");
+  const deck = picker(ses.s.pattern);
+  const post = picker(ses.s.pattern2);
+  const wood = /^minecraft:(\w+)_planks$/.exec(ses.s.pattern[0]?.id ?? "")?.[1];
+  let fence;
+  try {
+    fence = BlockPermutation.resolve(wood ? `minecraft:${wood}_fence` : "minecraft:oak_fence");
+  } catch {
+    fence = BlockPermutation.resolve("minecraft:oak_fence");
+  }
+  const W = Math.max(1, o.width);
+  const samples = samplePath(pts, true);
+  /** @param {any} es @param {number} x @param {number} z @param {number} from */
+  const down = (es, x, z, from) => {
+    for (let y = from; y > from - 48; y--) {
+      const id = es.id(x, y, z);
+      if (id && isSolidId(id)) return y;
+    }
+    return from - 48;
+  };
+  runEdit(ses.player, { label: "Holzsteg", symmetry: true }, function* (es) {
+    /** @type {Map<string, {top:number, d:number, along:number}>} */
+    const cols = new Map();
+    let along = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const p = samples[i];
+      if (i > 0) along += Math.hypot(p.x - samples[i - 1].x, p.z - samples[i - 1].z);
+      const q = samples[Math.min(samples.length - 1, i + 1)];
+      const o0 = samples[Math.max(0, i - 1)];
+      let ux = q.x - o0.x;
+      let uz = q.z - o0.z;
+      const L = Math.hypot(ux, uz) || 1;
+      ux /= L;
+      uz /= L;
+      for (let k = -W - 0.01; k <= W + 0.01; k += 0.5) {
+        const x = Math.round(p.x - uz * k);
+        const z = Math.round(p.z + ux * k);
+        const key = x + "," + z;
+        const d = Math.hypot(x - p.x, z - p.z);
+        const prev = cols.get(key);
+        if (!prev || d < prev.d) cols.set(key, { top: Math.round(p.y) - 1, d, along });
+      }
+    }
+    let n = 0;
+    for (const [key, c] of cols) {
+      const [x, z] = key.split(",").map(Number);
+      es.set(x, c.top, z, deck());
+      const edge = c.d > W - 0.5;
+      if (edge && Math.round(c.along) % 3 === 0) {
+        // Pfahl bis zum Grund
+        const g = down(es, x, z, c.top - 1);
+        for (let y = g + 1; y < c.top; y++) es.set(x, y, z, post());
+      }
+      if (edge && o.rail) es.set(x, c.top + 1, z, fence);
+      if (++n % 64 === 0) yield;
+    }
+  });
+}
+
+/**
  * Hängebrücke vom ersten zum letzten Punkt: gerader Belag (Muster 1), an beiden Enden Pfeilertürme (Muster 2) bis
  * zum Boden, Tragketten im Bogen von Turm zu Turm und senkrechte Hängeketten zum Belag.
  * @param {import("../core/state.js").Session} ses
@@ -614,6 +681,26 @@ export const pathTool = {
           markDirty(ses);
           if (r.pat) await patternMenu(ses);
           buildCityWall(ses, c);
+        },
+      },
+      {
+        text: "Holzsteg auf Pfählen entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.boardwalk;
+          const r = await new Modal("Holzsteg")
+            .slider("width", "Breite (halbe Breite)", 1, 4, 1, c.width)
+            .toggle("rail", "Geländer aus Zaun", c.rail)
+            .toggle("pat", "Danach Blöcke wählen (Bohlen = Muster 1, Pfähle = Muster 2)", false)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, { width: r.width, rail: r.rail });
+          markDirty(ses);
+          if (r.pat) {
+            await patternMenu(ses);
+            await patternMenu(ses, "pattern2");
+          }
+          buildBoardwalk(ses, c);
         },
       },
       {

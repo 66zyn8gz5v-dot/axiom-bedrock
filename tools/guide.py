@@ -151,7 +151,7 @@ PAGES = [
     ),
     (
         [("h", "4. Formen"),
-         ("tool", "shape", "Formen", "62 Formen: Kugel, Pyramide, Burgfried, Sternwarte, Gewächshaus, Litfaßsäule …"),
+         ("tool", "shape", "Formen", "63 Formen: Kugel, Pyramide, Burgfried, Zugbrücke, Gewächshaus, Litfaßsäule …"),
          ("p", "Schleichen + Benutzen: Form, Größe, hohl, offen oder nur Kanten, drehen & kippen, in die Auswahl einpassen oder von Punkt A nach B ziehen."),
          ("p", "Benutzen setzt die Form dort, wo du hinschaust – auch in der Luft. Der Umriss aus Partikeln zeigt sie vorher."),
          ("img", "sphere")],
@@ -176,7 +176,7 @@ PAGES = [
     (
         [("h", "6. Pfad & Co."),
          ("tool", "path", "Pfad", "Benutzen setzt Punkte. Schleichen + Benutzen zum Bauen."),
-         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Kaskade · Küste · Steilküste · Fjord · Lavaspalte · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole"),
+         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Kaskade · Küste · Steilküste · Fjord · Lavaspalte · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole · Steg"),
          ("img", "bridge")],
         [("h", "Text & Pixel-Art"),
          ("tool", "text", "Text", "Schreibt Wörter aus Blöcken – an die Wand oder auf den Boden."),

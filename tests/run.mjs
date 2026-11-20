@@ -3583,6 +3583,56 @@ console.log("Gewächshaus & Litfaßsäule");
   dim.blocks.clear();
 }
 
+console.log("Zugbrücke & Holzsteg");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("spruce_planks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "drawbridge", rx: 4, ry: 3, rz: 4, anchor: "center" });
+  await roundTrip("Zugbrücke", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const SP = "minecraft:spruce_planks";
+  check(id(3, 66, 0) === S && id(3, 66, 1) === S && id(0, 66, 0) === "minecraft:air" && id(0, 68, 1) === "minecraft:air" && id(0, 69, 0) === S && id(-4, 72, 0) === S, "Zugbrücke: Mauer mit rundem Tor und Zinnen");
+  check(id(0, 64, -3) === "minecraft:water" && id(3, 62, -4) === "minecraft:water" && id(0, 61, -3) === S && id(0, 65, -3) === "minecraft:air", "Zugbrücke: Graben mit Wasser vor der Mauer");
+  check(id(0, 66, -1) === SP && id(1, 68, -1) === SP && id(1, 69, -1) === "minecraft:chain" && id(-1, 71, -1) === "minecraft:chain" && id(0, 69, -1) === "minecraft:air", "Zugbrücke: hochgeklappte Brücke an Ketten");
+  await undo();
+  player.view = oldView;
+  dim.blocks.clear();
+  // Holzsteg über Wasser
+  const { buildBoardwalk } = await import("../packs/AxiomBP/scripts/tools/path.js");
+  ses.sel = boxSel(dim.id, { x: -2, y: 58, z: -6 }, { x: 22, y: 64, z: 6 });
+  ops.opFill(ses, parsePattern("water"));
+  await drain();
+  ses.sel = undefined;
+  ses.s.pattern = parsePattern("oak_planks");
+  ses.s.pattern2 = parsePattern("oak_log");
+  ses.pathPoints = [{ x: 0, y: 66, z: 0 }, { x: 20, y: 66, z: 0 }];
+  await roundTrip("Holzsteg", () => buildBoardwalk(ses, { width: 1, rail: true }));
+  buildBoardwalk(ses, { width: 1, rail: true });
+  await drain();
+  check(id(5, 65, 0) === "minecraft:oak_planks" && id(5, 65, 1) === "minecraft:oak_planks" && id(5, 66, 0) === "minecraft:air" && id(5, 64, 0) === "minecraft:water", "Holzsteg: Bohlenweg über dem Wasser");
+  let posts = 0;
+  let fence = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (p.type.id === "minecraft:oak_log" && y === 60) posts++;
+    if (p.type.id === "minecraft:oak_fence") fence++;
+  }
+  check(posts >= 10 && fence > 30, "Holzsteg: Pfähle bis zum Grund und Zaungeländer (" + posts + "/" + fence + ")");
+  await undo();
+  ses.pathPoints = [];
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
