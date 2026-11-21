@@ -38,6 +38,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["wellhouse", "Brunnenhaus (Fachwerkhäuschen mit Satteldach und Dachreiter mit Glocke)"],
+  ["ruin", "Turmruine (halb eingestürzter Rundturm mit Moos und Schutt)"],
   ["drawbridge", "Zugbrücke (Mauer mit Tor, Graben mit Wasser, hochgeklappte Brücke an Ketten – zu dir)"],
   ["greenhouse", "Gewächshaus (in die Box-Auswahl: Glashaus mit Satteldach, Beete, Weg)"],
   ["adcolumn", "Litfaßsäule (runde Säule mit bunten Streifen und Kappe)"],
@@ -743,7 +745,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1271,6 +1273,147 @@ function buildLanternDome(ses, c) {
     }
     es.set(base.x, top + 3, base.z, light);
     es.set(base.x, top + 5 + cr, base.z, rod);
+  });
+}
+
+/** Feste Zufallszahl 0..1 für eine Stelle (gleiches Ergebnis beim Wiederholen). @param {number} a @param {number} b @param {number} c */
+function hashAt(a, b, c) {
+  let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * Brunnenhaus: kleines Fachwerkhaus – Wände aus Muster 1, Eckpfosten und umlaufender Balken aus Muster 2, Tür zu dir,
+ * Fenster an den Seiten, Satteldach aus Muster 2 mit Überstand und auf dem First ein Dachreiter (Türmchen mit Glocke
+ * und Spitze). Radius X / Z = halbe Breite / Tiefe, Radius Y = Wandhöhe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildWellhouse(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const d = cardinal(ses.player.getViewDirection(), true);
+  // Länge quer zur Blickrichtung, Tiefe in Blickrichtung
+  const L = Math.max(3, c.rx);
+  const Dp = Math.max(2, c.rz);
+  const Hw = Math.max(3, c.ry);
+  const wall = picker(ses.s.pattern);
+  const timber = picker(ses.s.pattern2);
+  const A = air();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    try {
+      return BlockPermutation.resolve(id, st);
+    } catch {
+      return BlockPermutation.resolve(id);
+    }
+  };
+  const pane = P("minecraft:glass_pane");
+  const bell = P("minecraft:bell");
+  const rod = P("minecraft:lightning_rod");
+  const sx = -d.z;
+  const sz = d.x;
+  // l = seitlich (Länge), f = zum Spieler hin
+  const at = (/** @type {number} */ l, /** @type {number} */ f) => [base.x + sx * l - d.x * f, base.z + sz * l - d.z * f];
+  runEdit(ses.player, { label: "Brunnenhaus", symmetry: true }, function* (es) {
+    for (let l = -L; l <= L; l++)
+      for (let f = -Dp; f <= Dp; f++) {
+        const [x, z] = at(l, f);
+        const edge = Math.abs(l) === L || Math.abs(f) === Dp;
+        const corner = Math.abs(l) === L && Math.abs(f) === Dp;
+        for (let y = 0; y <= Hw; y++) {
+          let b = A;
+          if (y === 0) b = wall();
+          else if (edge) {
+            if (corner || y === Hw) b = timber();
+            else if (f === Dp && l === 0 && y <= 2) b = A; // Tür
+            else if (Math.abs(l) === L && f === 0 && y === 2) b = pane; // Fenster an den Giebelseiten
+            else if (Math.abs(f) === Dp && Math.abs(l) === Math.ceil(L / 2) && y === 2) b = pane; // Fenster vorn/hinten
+            else b = wall();
+          }
+          es.set(x, base.y + y, z, b);
+        }
+      }
+    yield;
+    // Satteldach (First quer zur Blickrichtung) mit Giebelwänden
+    const half = Dp + 1;
+    for (let k = 0; k <= half; k++) {
+      const y = base.y + Hw + 1 + k;
+      for (let l = -L - 1; l <= L + 1; l++)
+        for (let f = -half; f <= half; f++) {
+          const [x, z] = at(l, f);
+          if (Math.abs(f) === half - k) es.set(x, y, z, timber());
+          else if (Math.abs(f) < half - k && Math.abs(l) === L) es.set(x, y, z, wall());
+          else if (Math.abs(f) < half - k && Math.abs(l) < L) es.set(x, y, z, A);
+        }
+      yield;
+    }
+    // Dachreiter auf dem First: vier Pfosten, Glocke, Haube und Spitze
+    const ridge = base.y + Hw + 1 + half;
+    for (const [l, f] of [[-1, -1], [-1, 1], [1, -1], [1, 1]])
+      for (let y = 1; y <= 2; y++) {
+        const [x, z] = at(l, f);
+        es.set(x, ridge + y, z, timber());
+      }
+    es.set(base.x, ridge + 1, base.z, bell);
+    for (let l = -1; l <= 1; l++)
+      for (let f = -1; f <= 1; f++) {
+        const [x, z] = at(l, f);
+        es.set(x, ridge + 3, z, timber());
+      }
+    es.set(base.x, ridge + 4, base.z, rod);
+  });
+}
+
+/**
+ * Turmruine: runder Turm aus Muster 1, dessen Mauerkrone unregelmäßig abgebrochen ist, mit Löchern in der Wand,
+ * Moos zwischen den Steinen und Schutt (Bruchstein, bemooster Bruchstein) innen und rund um den Fuß.
+ * Radius X = Radius, Radius Y = ursprüngliche Höhe (2 × Radius Y + 1).
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildRuin(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const R = Math.max(3, c.rx);
+  const H = Math.max(6, 2 * c.ry + 1);
+  const wall = picker(ses.s.pattern);
+  const A = air();
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const moss = P("minecraft:mossy_cobblestone");
+  const cobble = P("minecraft:cobblestone");
+  const seed = (base.x * 7 + base.z * 13) | 0;
+  runEdit(ses.player, { label: "Turmruine", symmetry: true }, function* (es) {
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++) {
+        const dd = Math.hypot(dx, dz);
+        if (dd > R + 0.5) continue;
+        const x = base.x + dx;
+        const z = base.z + dz;
+        es.set(x, base.y, z, wall());
+        if (dd <= R - 0.5) continue;
+        // abgebrochene Krone: Höhe je nach Winkel, eine große Bresche auf einer Seite
+        const a = Math.atan2(dz, dx);
+        const wave = 0.5 + 0.5 * Math.sin(a * 3 + seed) * Math.cos(a * 2 - seed * 0.5);
+        const top = Math.max(1, Math.round(H * (0.35 + 0.65 * wave)) - Math.floor(hashAt(dx, dz, seed) * 3));
+        for (let y = 1; y < top; y++) {
+          const hole = y > 2 && hashAt(dx, y, dz + seed) < 0.1;
+          es.set(x, base.y + y, z, hole ? A : hashAt(dz, y, dx + seed) < 0.25 ? moss : wall());
+        }
+      }
+    yield;
+    // Schutt innen und rund um den Fuß
+    for (let dx = -R - 3; dx <= R + 3; dx++)
+      for (let dz = -R - 3; dz <= R + 3; dz++) {
+        const dd = Math.hypot(dx, dz);
+        if (Math.abs(dd - R) < 0.6 || dd > R + 3.5) continue;
+        const r = hashAt(dx, 77, dz + seed);
+        if (r > (dd < R ? 0.35 : 0.25)) continue;
+        const x = base.x + dx;
+        const z = base.z + dz;
+        const y = dd < R ? base.y + 1 : base.y;
+        es.set(x, y, z, r < 0.1 ? moss : cobble);
+      }
   });
 }
 
@@ -2653,6 +2796,8 @@ export const shapeTool = {
     if (c.type === "greenhouse") return buildGreenhouse(ses);
     if (c.type === "adcolumn") return buildAdColumn(ses, c);
     if (c.type === "drawbridge") return buildDrawbridge(ses, c);
+    if (c.type === "wellhouse") return buildWellhouse(ses, c);
+    if (c.type === "ruin") return buildRuin(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -2710,7 +2855,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel" || c.type === "colonnade") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater" || c.type === "greenhouse") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

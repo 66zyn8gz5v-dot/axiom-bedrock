@@ -3671,6 +3671,55 @@ console.log("Zugbrücke & Holzsteg");
   dim.blocks.clear();
 }
 
+console.log("Brunnenhaus & Turmruine");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("white_terracotta");
+  ses.s.pattern2 = parsePattern("dark_oak_planks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "wellhouse", rx: 4, ry: 3, rz: 3, anchor: "center" });
+  await roundTrip("Brunnenhaus", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const Wt = "minecraft:white_terracotta";
+  const D = "minecraft:dark_oak_planks";
+  check(id(4, 66, 3) === D && id(1, 67, 3) === Wt && id(2, 67, 3) === "minecraft:glass_pane" && id(4, 68, 1) === D && id(0, 67, 0) === "minecraft:air" && id(0, 66, -3) === "minecraft:air" && id(4, 67, 0) === "minecraft:glass_pane", "Brunnenhaus: Fachwerk mit Tür und Fenstern");
+  check(id(0, 69, 4) === D && id(0, 72, 1) === D && id(0, 73, 0) === D && id(4, 70, 0) === Wt && id(0, 70, 0) === "minecraft:air", "Brunnenhaus: Satteldach mit Giebelwand");
+  check(id(1, 74, 1) === D && id(0, 74, 0) === "minecraft:bell" && id(0, 76, 0) === D && id(0, 77, 0) === "minecraft:lightning_rod", "Brunnenhaus: Dachreiter mit Glocke");
+  await undo();
+  player.view = oldView;
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("stone_bricks");
+  Object.assign(ses.s.shape, { type: "ruin", rx: 4, ry: 6, rz: 4 });
+  await roundTrip("Turmruine", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const tops = new Set();
+  let rubble = 0;
+  let moss = 0;
+  for (let a = 0; a < 32; a++) {
+    const x = Math.round(Math.cos((a / 32) * Math.PI * 2) * 4);
+    const z = Math.round(Math.sin((a / 32) * Math.PI * 2) * 4);
+    let y = 80;
+    while (y > 65 && id(x, y, z) === "minecraft:air") y--;
+    tops.add(y);
+  }
+  for (const [k, p] of dim.blocks) {
+    const [x, , z] = k.split(",").map(Number);
+    if (p.type.id === "minecraft:mossy_cobblestone") moss++;
+    if ((p.type.id === "minecraft:cobblestone" || p.type.id === "minecraft:mossy_cobblestone") && Math.hypot(x, z) > 4.6) rubble++;
+  }
+  check(tops.size >= 4 && Math.max(...tops) >= 72 && Math.min(...tops) <= 71, "Turmruine: unregelmäßig abgebrochene Mauerkrone (" + [...tops].sort().join(",") + ")");
+  check(moss > 10 && rubble > 5 && id(0, 66, 0) !== "minecraft:stone_bricks", "Turmruine: Moos und Schutt (" + moss + "/" + rubble + ")");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

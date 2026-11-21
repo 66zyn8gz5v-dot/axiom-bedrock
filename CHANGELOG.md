@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.104.0 – 22.11.2026 (nächtlicher Ausbau: Formen)
+- **Brunnenhaus:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein kleines Fachwerkhaus: Wände aus
+  Muster 1, Eckpfosten und umlaufender Balken aus Muster 2, Tür zu dir, Fenster, Satteldach mit Überstand und auf dem
+  First ein Dachreiter – ein Türmchen mit Glocke, Haube und Blitzableiter-Spitze. Radius X/Z = Größe, Radius Y = Wandhöhe
+- **Turmruine:** neue Form – ein halb eingestürzter Rundturm aus Muster 1 mit unregelmäßig abgebrochener Mauerkrone,
+  Löchern in der Wand, Moos zwischen den Steinen und Schutt innen und rund um den Fuß. Radius X = Radius,
+  Radius Y = ursprüngliche Höhe
+
 ## 0.103.0 – 21.11.2026 (nächtlicher Ausbau: Terraform)
 - **Sandbank:** neu im Auswahl-Menü („Sandbank im Meer erzeugen“) – füllt eine Box-Auswahl mit Meer und einer
   flachen, unregelmäßigen Sandinsel: Sand über Sandstein, flaches Wasser rundherum mit Seegras, tote Büsche und

@@ -212,8 +212,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Leuchtschrift-Säule (Litfaßsäule)** (v0.100): runde Säule mit Kappe und farbigen Streifen
 - [x] **Zugbrücke mit Torhaus** (v0.102): hochgeklappte Brücke aus Holz an Ketten vor einem Tor über einen Graben
 - [x] **Holzsteg mit Pfählen** (v0.102): Steg auf Pfählen übers Wasser entlang der Pfad-Punkte, mit Geländer
-- [ ] **Brunnenhaus mit Dachreiter**: kleines Fachwerkhaus mit Glockentürmchen auf dem First
-- [ ] **Wehrturm-Ruine**: halb eingestürzter Rundturm mit zerbrochener Mauerkrone und Schutt
+- [x] **Brunnenhaus mit Dachreiter** (v0.104): kleines Fachwerkhaus mit Glockentürmchen auf dem First
+- [x] **Wehrturm-Ruine** (v0.104): halb eingestürzter Rundturm mit zerbrochener Mauerkrone und Schutt
+- [ ] **Bootshaus am Wasser**: Holzhaus auf Pfählen mit offenem Tor zur Wasserseite
+- [ ] **Steinkreis (Henge)**: Ring aus großen Steinblöcken mit Decksteinen, Mittelstein
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges
