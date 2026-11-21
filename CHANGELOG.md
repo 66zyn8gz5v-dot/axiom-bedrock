@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.103.0 – 21.11.2026 (nächtlicher Ausbau: Terraform)
+- **Sandbank:** neu im Auswahl-Menü („Sandbank im Meer erzeugen“) – füllt eine Box-Auswahl mit Meer und einer
+  flachen, unregelmäßigen Sandinsel: Sand über Sandstein, flaches Wasser rundherum mit Seegras, tote Büsche und
+  Zuckerrohr am Ufer und angespültes Treibholz (liegende Stämme). Inselgröße und Anzahl Treibholz sind einstellbar
+- **Klamm:** neu im Pfad-Menü – Punkte entlang der gewünschten Schlucht setzen. Es entsteht eine enge, tiefe
+  Schlucht, die dem Boden folgt: unten fließt ein Bach über Kiesgrund, die steilen Felswände sind mit Moos bewachsen,
+  oben an den Rändern wachsen Farn und Gras. Breite und Tiefe sind einstellbar
+
 ## 0.102.0 – 21.11.2026 (nächtlicher Ausbau: Formen)
 - **Zugbrücke:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein Mauerstück aus Muster 1 mit Zinnen
   und rundem Tor, davor (zu dir hin) ein Graben mit Wasser und eine hochgeklappte Brücke aus Muster 2, die an zwei

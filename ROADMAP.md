@@ -147,8 +147,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Vulkanische Spalte** (v0.99): lange Erdspalte mit Lava am Grund entlang der Pfad-Punkte, Ränder aus Basalt und Magma
 - [x] **Heidelandschaft** (v0.101): sanfte Hügel mit Heidekraut-Farben (lila Blumen, Farn), Findlingen und Wacholderbüschen
 - [x] **Wasserfall-Treppe (Sinterterrassen)** (v0.101): weiße Kalkterrassen am Hang mit Wasserbecken, die übereinander überlaufen
-- [ ] **Sanddünen-Insel (Sandbank)**: flache Sandinsel mit Strandgras und Treibholz in einer Auswahl im Meer
-- [ ] **Schluchtwald (Klamm)**: enge Schlucht mit Moos, Farn und Wasserfall-Bach am Grund entlang der Pfad-Punkte
+- [x] **Sanddünen-Insel (Sandbank)** (v0.103): flache Sandinsel mit Strandgras und Treibholz in einer Auswahl im Meer
+- [x] **Schluchtwald (Klamm)** (v0.103): enge Schlucht mit Moos, Farn und Wasserfall-Bach am Grund entlang der Pfad-Punkte
+- [ ] **Hochmoor-Plateau mit Felsen (Tepui)**: Tafelberg mit steilen Wänden, oben Wald und Wasserfälle über die Kante
+- [ ] **Salzsee (Salzwüste)**: weiße, flache Ebene aus Calcit/Diorit mit Wabenmuster und flachem Wasser am Rand
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

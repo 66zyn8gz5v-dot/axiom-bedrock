@@ -708,6 +708,85 @@ function writeTerrain(ses, sel, H, seaY, snowY, label, after) {
 }
 
 /**
+ * Sandbank in der Auswahl: Meer mit einer flachen, unregelmäßigen Sandinsel – Sand über Sandstein, flaches Wasser
+ * rundherum mit Seegras, auf der Insel tote Büsche, Zuckerrohr am Wasser und angespültes Treibholz.
+ * Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{size:number, wood:number}} o size = Inselgröße in %, wood = Treibholz-Stücke
+ * @param {() => number} [rand]
+ */
+export function opSandbar(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 6) return err(ses.player, "Die Auswahl ist zu flach – mindestens 6 Blöcke hoch.");
+  const seaY = min.y + Math.max(3, Math.round((sy - 1) * 0.5));
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const rx = (sx / 2) * (o.size / 100);
+  const rz = (sz / 2) * (o.size / 100) * 0.6;
+  const seed = rand() * 1000;
+  /** @type {Map<string, number>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const wob = 1 + fbm(x / 7 + seed, 0.3, z / 7, 2) * 0.35;
+      const q = Math.hypot((x - cx) / Math.max(1, rx), (z - cz) / Math.max(1, rz)) / wob;
+      const h = q < 1 ? seaY + 1 + (q < 0.45 ? 1 : 0) : Math.round(seaY - 1 - Math.min(3, (q - 1) * 4));
+      H.set(x + "," + z, Math.max(min.y + 1, h));
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const A = air();
+  const W = P("minecraft:water");
+  runEdit(ses.player, { label: "Sandbank", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const h = /** @type {number} */ (H.get(x + "," + z));
+        const shore = h > seaY && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => (H.get(x + dx + "," + (z + dz)) ?? seaY) <= seaY);
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = P(h - y <= 2 ? "minecraft:sand" : "minecraft:sandstone");
+          else if (y === h) b = P(h < seaY - 2 ? "minecraft:gravel" : "minecraft:sand");
+          else if (y <= seaY) b = y === h + 1 && r < 0.2 && h < seaY - 1 ? P("minecraft:seagrass") : W;
+          else if (y === h + 1 && h > seaY) {
+            if (shore && r < 0.25) b = P("minecraft:reeds");
+            else if (r < 0.06) b = P("minecraft:deadbush");
+          }
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    // Treibholz: liegende Stämme am Strand
+    for (let i = 0; i < Math.max(0, Math.min(12, o.wood)); i++) {
+      const alongX = rand() < 0.5;
+      const len = 2 + Math.floor(rand() * 3);
+      const x0 = Math.round(cx + (rand() - 0.5) * rx * 1.4);
+      const z0 = Math.round(cz + (rand() - 0.5) * rz * 1.4);
+      for (let k = 0; k < len; k++) {
+        const x = x0 + (alongX ? k : 0);
+        const z = z0 + (alongX ? 0 : k);
+        const h = H.get(x + "," + z);
+        if (h === undefined || h <= seaY || !selContains(sel, x, h + 1, z)) continue;
+        es.set(x, h + 1, z, P("minecraft:stripped_oak_log", { pillar_axis: alongX ? "x" : "z" }));
+      }
+    }
+  });
+}
+
+/**
  * Heidelandschaft in der Auswahl: sanfte Hügel mit Gras, Podsol und grober Erde, große Flecken lila Heidekraut
  * (Zierlauch), Farn und Gras, dazu einzelne Findlinge aus Stein und kleine Wacholderbüsche. Die Auswahl wird neu gefüllt.
  * @param {import("./state.js").Session} ses

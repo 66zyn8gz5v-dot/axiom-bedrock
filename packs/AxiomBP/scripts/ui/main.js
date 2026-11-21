@@ -207,6 +207,20 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Sandbank im Meer erzeugen",
+      run: async () => {
+        const c = ses.s.sandbar;
+        const r = await new Modal("Sandbank")
+          .slider("size", "Größe der Sandinsel in %", 20, 100, 5, c.size)
+          .slider("wood", "Treibholz-Stücke", 0, 12, 1, c.wood)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opSandbar(ses, c);
+      },
+    },
+    {
       text: "Heidelandschaft erzeugen",
       run: async () => {
         const c = ses.s.heath;

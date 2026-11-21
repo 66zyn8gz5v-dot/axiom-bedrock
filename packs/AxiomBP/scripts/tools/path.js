@@ -838,6 +838,22 @@ export const pathTool = {
         },
       },
       {
+        text: "Klamm (enge Schlucht mit Bach) entlang der Punkte",
+        run: async () => {
+          if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
+          const c = ses.s.gorge;
+          const r = await new Modal("Klamm")
+            .slider("width", "Breite (halbe Breite, 0 = 1 Block)", 0, 4, 1, c.width)
+            .slider("depth", "Tiefe", 4, 30, 1, c.depth)
+            .show(ses.player);
+          if (!r) return;
+          Object.assign(c, r);
+          markDirty(ses);
+          const { gorge } = await import("./terrain.js");
+          gorge(ses, c);
+        },
+      },
+      {
         text: "Vulkanische Spalte mit Lava entlang der Punkte",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");

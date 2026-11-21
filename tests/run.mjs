@@ -1581,6 +1581,44 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Sandbank & Klamm");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 39, y: 68, z: 29 });
+  let seed = 71;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Sandbank", () => ops.opSandbar(ses, { size: 70, wood: 6 }, rnd));
+  seed = 71;
+  ops.opSandbar(ses, { size: 70, wood: 6 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const seaY = 58 + 5;
+  check(id(20, seaY + 1, 15) === "minecraft:sand" && id(0, seaY, 0) === "minecraft:water" && id(39, seaY, 29) === "minecraft:water", "Sandbank: Sandinsel mitten im Meer");
+  const n = {};
+  for (const [, p] of dim.blocks) n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("stripped_oak_log") > 3 && c("seagrass") > 20 && c("reeds") + c("deadbush") > 3, "Sandbank: Treibholz, Seegras, Strandpflanzen (" + c("stripped_oak_log") + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+  const { gorge } = await import("../packs/AxiomBP/scripts/tools/terrain.js");
+  ses.pathPoints = [];
+  gorge(ses, { width: 1, depth: 10 });
+  check(player.messages.at(-1).includes("Pfad"), "Klamm: ohne Punkte kommt ein Hinweis");
+  ses.pathPoints = [{ x: -10, y: 65, z: 0 }, { x: 10, y: 65, z: 0 }];
+  await roundTrip("Klamm", () => gorge(ses, { width: 1, depth: 10 }));
+  gorge(ses, { width: 1, depth: 10 });
+  await drain();
+  const MOSSY = ["minecraft:moss_block", "minecraft:mossy_cobblestone", "minecraft:stone", "minecraft:andesite", "minecraft:cobblestone"];
+  check(id(0, 64, 0) === "minecraft:air" && id(0, 56, 1) === "minecraft:air" && id(0, 54, 0) === "minecraft:water" && id(0, 53, 0) === "minecraft:gravel", "Klamm: tiefe, enge Schlucht mit Bach");
+  let moss = 0;
+  for (let x = -8; x <= 8; x++) for (let y = 55; y <= 63; y++) if (id(x, y, 2) === "minecraft:moss_block") moss++;
+  check(MOSSY.includes(id(0, 60, 2)) && moss > 5 && id(0, 64, 3) === "minecraft:grass_block", "Klamm: bemooste Felswände, oben Gras (" + moss + ")");
+  await undo();
+  ses.pathPoints = [];
+  dim.blocks.clear();
+}
+
 console.log("Heide & Sinterterrassen");
 {
   dim.blocks.clear();

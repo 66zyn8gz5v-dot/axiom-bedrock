@@ -1286,6 +1286,53 @@ export function fissure(ses, o) {
   });
 }
 
+/**
+ * Klamm entlang der Pfad-Punkte: eine enge, tiefe Schlucht, die dem Boden folgt. Unten fließt ein Bach über
+ * Kiesgrund (wo der Boden abfällt, entstehen kleine Wasserfälle), die steilen Felswände sind mit Moos bewachsen,
+ * oben an den Rändern wachsen Farn und Gras.
+ * @param {import("../core/state.js").Session} ses
+ * @param {{width:number, depth:number}} o width = halbe Breite, depth = Tiefe
+ */
+export function gorge(ses, o) {
+  if (ses.pathPoints.length < 2) return err(ses.player, "Erst mit dem Pfad-Werkzeug mindestens 2 Punkte entlang der gewünschten Schlucht setzen.");
+  const samples = samplePath(ses.pathPoints, true);
+  const w = Math.max(0, Math.min(4, o.width));
+  const D = Math.max(4, o.depth);
+  const rim = w + 2;
+  const xs = samples.map((p) => p.x);
+  const zs = samples.map((p) => p.z);
+  const min = v(Math.floor(Math.min(...xs)) - rim - 1, 0, Math.floor(Math.min(...zs)) - rim - 1);
+  const max = v(Math.ceil(Math.max(...xs)) + rim + 1, 0, Math.ceil(Math.max(...zs)) + rim + 1);
+  const ref = Math.round(samples.reduce((a, p) => a + p.y, 0) / samples.length);
+  runEdit(ses.player, { label: "Klamm" }, function* (es) {
+    const Wt = permOf("minecraft:water");
+    const A = air();
+    let n = 0;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        let best = Infinity;
+        for (const p of samples) best = Math.min(best, Math.hypot(x - p.x, z - p.z));
+        if (best > rim + 0.5) continue;
+        const g = groundY(es, x, z, ref + 24, 64);
+        if (g === null) continue;
+        const h = hash01(x, z, 11);
+        if (best <= w + 0.5) {
+          for (let y = g + 2; y > g - D; y--) es.set(x, y, z, A);
+          es.set(x, g - D, z, Wt);
+          es.set(x, g - D - 1, z, permOf("minecraft:gravel"));
+        } else {
+          // bemooste Felswand
+          for (let y = g - D - 1; y <= g; y++) es.set(x, y, z, permOf(hash01(x, y, z) < 0.3 ? "minecraft:moss_block" : hash01(z, y, x) < 0.2 ? "minecraft:mossy_cobblestone" : rockId(x, y, z)));
+          es.set(x, g, z, permOf("minecraft:grass_block"));
+          if (h < 0.35) es.set(x, g + 1, z, permOf(h < 0.18 ? "minecraft:fern" : "minecraft:short_grass"));
+        }
+        if (++n % 64 === 0) yield;
+      }
+      yield;
+    }
+  });
+}
+
 const TRAILS = /** @type {Record<string, [string, number][]>} */ ({
   dirt: [
     ["minecraft:grass_path", 0.7],
