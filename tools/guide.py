@@ -131,9 +131,10 @@ PAGES = [
          ("tool", "brush_select", "Pinsel-Auswahl", "Gedrückt halten und über Blöcke malen.")],
         [("h", "Auswahl bearbeiten"),
          ("p", "Axiom-Menü → Auswahl bearbeiten:"),
-         ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Überziehen · Natürlich machen · Glätten · "
-               "Verlauf · Landschaft · Inseln · Vulkaninsel · Canyon · Kirschhain · Moor · Gletscher · Savanne · Bergsee · Pilzwald · Bambus · Riff · Tundra · Heide · Sinter · Sandbank · Reisterrassen · Delta · Dünen · Mond · Höhlen · Tropfsteinhöhle · Ausdünnen · Dach · Bogenfenster · Stapeln · Array · Verschieben · Drehen · Spiegeln · "
-               "Gespiegelte Kopie · Wasser · Analysieren"),
+         ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Glätten · Verlauf · Ausdünnen · Dach · Bogenfenster · "
+               "Stapeln · Array · Verschieben · Drehen · Spiegeln · Wasser · Analysieren"),
+         ("p", "Landschaften: Inseln · Vulkan · Canyon · Kirschhain · Moor · Gletscher · Savanne · Bergsee · Pilze · Bambus · "
+               "Riff · Tundra · Heide · Sinter · Sandbank · Reis · Delta · Dünen · Mond · Höhlen · Tropfstein"),
          ("p", "Die Partikel zeigen dir immer, was gerade ausgewählt ist."),
          ("p", "Lasso: Mit dem Pfad Punkte setzen → „Lasso“.")],
     ),
@@ -176,7 +177,7 @@ PAGES = [
     (
         [("h", "6. Pfad & Co."),
          ("tool", "path", "Pfad", "Benutzen setzt Punkte. Schleichen + Benutzen zum Bauen."),
-         ("p", "Daraus wird: Rohr oder Straße · Brücke mit Bogen & Geländer · Fluss · Kaskade · Küste · Steilküste · Fjord · Lavaspalte · Klamm · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole · Steg"),
+         ("p", "Daraus wird: Straße · Brücke · Fluss · Kaskade · Küste · Steilküste · Fjord · Lavaspalte · Klamm · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole · Steg"),
          ("img", "bridge")],
         [("h", "Text & Pixel-Art"),
          ("tool", "text", "Text", "Schreibt Wörter aus Blöcken – an die Wand oder auf den Boden."),
