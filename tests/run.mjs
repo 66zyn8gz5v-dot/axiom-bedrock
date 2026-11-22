@@ -1581,6 +1581,56 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Tafelberg & Salzsee");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 47, y: 90, z: 47 });
+  let seed = 73;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Tafelberg", () => ops.opTepui(ses, { falls: 3, trees: 60 }, rnd));
+  seed = 73;
+  ops.opTepui(ses, { falls: 3, trees: 60 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const surf = (x, z) => {
+    let y = 90;
+    while (y > 58 && ["minecraft:air", "minecraft:jungle_leaves", "minecraft:jungle_log", "minecraft:short_grass", "minecraft:fern"].includes(id(x, y, z))) y--;
+    return y;
+  };
+  check(surf(24, 24) >= 81 && surf(1, 1) <= 63, "Tafelberg: hohes Plateau über grünem Tiefland (" + surf(24, 24) + "/" + surf(1, 1) + ")");
+  // senkrechte Wand: zwischen Plateau und Tiefland liegen höchstens wenige Blöcke
+  let steep = false;
+  for (let x = 24; x < 47; x++) if (surf(x, 24) - surf(x + 2, 24) >= 12) steep = true;
+  let waterTop = 0;
+  let logs = 0;
+  for (const [k, p] of dim.blocks) {
+    const y = Number(k.split(",")[1]);
+    if (p.type.id === "minecraft:water" && y >= 81) waterTop++;
+    if (p.type.id === "minecraft:jungle_log") logs++;
+  }
+  check(steep && waterTop >= 10 && logs >= 10, "Tafelberg: steile Wände, Bäche oben, Wald (" + waterTop + "/" + logs + ")");
+  await undo();
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 62, z: 0 }, { x: 39, y: 66, z: 29 });
+  await roundTrip("Salzsee", () => ops.opSaltFlat(ses, { cells: 6, water: true }, rnd));
+  ops.opSaltFlat(ses, { cells: 6, water: true }, rnd);
+  await drain();
+  const n = {};
+  let leak = 0;
+  for (const [k, p] of dim.blocks) {
+    n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+    if (p.type.id !== "minecraft:water") continue;
+    const [x, y, z] = k.split(",").map(Number);
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+  }
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("calcite") > 500 && c("diorite") > 100 && id(20, 64, 15) !== "minecraft:air", "Salzsee: weiße Salzebene mit Wabenmuster (" + c("diorite") + ")");
+  check(c("water") > 30 && leak === 0, "Salzsee: flacher Wasserrand, eingefasst (" + c("water") + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Sandbank & Klamm");
 {
   dim.blocks.clear();

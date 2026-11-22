@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.105.0 – 22.11.2026 (nächtlicher Ausbau: Terraform)
+- **Tafelberg (Tepui):** neu im Auswahl-Menü – füllt eine Box-Auswahl (mindestens 20×16×20) mit grünem Tiefland und
+  einem riesigen Tafelberg mit senkrechten, geschichteten Felswänden. Oben wächst Wald auf Gras und Podsol, und
+  mehrere Bäche fließen in Rinnen zur Kante und stürzen dort als Wasserfälle hinab. Anzahl der Wasserfälle und Wald
+  sind einstellbar
+- **Salzsee:** neu im Auswahl-Menü – eine weite, flache, weiße Salzebene aus Calcit mit einem Wabenmuster aus
+  Diorit-Rippen, am Rand auf Wunsch ein Ring aus flachem Wasser über Sand. Die Größe der Waben ist einstellbar
+
 ## 0.104.0 – 22.11.2026 (nächtlicher Ausbau: Formen)
 - **Brunnenhaus:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein kleines Fachwerkhaus: Wände aus
   Muster 1, Eckpfosten und umlaufender Balken aus Muster 2, Tür zu dir, Fenster, Satteldach mit Überstand und auf dem

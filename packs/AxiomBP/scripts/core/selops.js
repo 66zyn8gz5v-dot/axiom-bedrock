@@ -931,6 +931,198 @@ export function opTravertine(ses, o, dir, rand = Math.random) {
 }
 
 /**
+ * Abstand zur nächsten Grenze in einem zufälligen Vieleck-Muster (Voronoi): klein = auf einer Grenzlinie.
+ * Für Frostmuster, Salzkrusten u.ä. @param {number} x @param {number} z @param {number} cell Größe der Vielecke @param {number} seed
+ */
+function voronoiBorder(x, z, cell, seed) {
+  const site = (/** @type {number} */ i, /** @type {number} */ j) => {
+    let h = (i * 374761393 + j * 668265263 + Math.floor(seed) * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    const a = ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    const b = (((h * 31) ^ (h >>> 7)) >>> 0) / 4294967296;
+    return { x: (i + 0.2 + a * 0.6) * cell, z: (j + 0.2 + b * 0.6) * cell };
+  };
+  const i0 = Math.floor(x / cell);
+  const j0 = Math.floor(z / cell);
+  let d1 = Infinity;
+  let d2 = Infinity;
+  for (let i = i0 - 1; i <= i0 + 1; i++)
+    for (let j = j0 - 1; j <= j0 + 1; j++) {
+      const p = site(i, j);
+      const d = Math.hypot(x - p.x, z - p.z);
+      if (d < d1) ((d2 = d1), (d1 = d));
+      else if (d < d2) d2 = d;
+    }
+  return d2 - d1;
+}
+
+/**
+ * Salzsee in der Auswahl: weite, flache, weiße Salzebene aus Calcit mit einem Wabenmuster aus Diorit-Rippen, am Rand
+ * ein Ring aus flachem Wasser über Sand und ganz außen ein schmaler Uferstreifen. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{cells:number, water:boolean}} o cells = Größe der Waben, water = Wasserrand
+ * @param {() => number} [rand]
+ */
+export function opSaltFlat(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 3) return err(ses.player, "Die Auswahl ist zu flach – mindestens 3 Blöcke hoch.");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(1, Math.round((sy - 1) * 0.5));
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const cell = Math.max(3, o.cells);
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Salzsee", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const q = Math.hypot((x - cx) / (sx / 2), (z - cz) / (sz / 2)) + fbm(x / 8 + seed, 0.5, z / 8, 2) * 0.06;
+        const edge = x === min.x || x === max.x || z === min.z || z === max.z;
+        const water = o.water && !edge && q > 0.82 && q < 0.95;
+        const shore = edge || q >= 0.95;
+        const ridge = voronoiBorder(x, z, cell, seed) < 0.8;
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < base - 1) b = P("minecraft:stone");
+          else if (y === base - 1) b = P(water ? "minecraft:sand" : shore ? "minecraft:dirt" : "minecraft:calcite");
+          else if (y === base) b = water ? P("minecraft:water") : shore ? P("minecraft:coarse_dirt") : P(ridge ? "minecraft:diorite" : "minecraft:calcite");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Tafelberg (Tepui) in der Auswahl: ringsum grünes Tiefland, in der Mitte ein riesiger Tafelberg mit senkrechten,
+ * geschichteten Felswänden. Oben wächst Wald auf Gras und Podsol, und mehrere Bäche fließen in Rinnen zur Kante und
+ * stürzen als Wasserfälle die Wand hinab. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{falls:number, trees:number}} o falls = Anzahl Wasserfälle, trees = Wald oben in %
+ * @param {() => number} [rand]
+ */
+export function opTepui(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 16 || Math.min(sx, sz) < 20) return err(ses.player, "Die Auswahl ist zu klein – mindestens 20×16×20 Blöcke.");
+  const seed = rand() * 1000;
+  const low = min.y + 2;
+  const top = max.y - 8; // Platz für Bäume
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const hx = sx / 2;
+  const hz = sz / 2;
+  /** @type {Map<string, {h:number, plateau:boolean, q:number}>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const q = Math.hypot((x - cx) / hx, (z - cz) / hz) * (1 + fbm(x / 9 + seed, 0.4, z / 9, 2) * 0.18);
+      const plateau = q < 0.62;
+      const h = plateau ? top + (fbm(x / 6 + seed, 1.2, z / 6, 1) > 0.4 ? 1 : 0) : Math.round(low + (q < 0.75 ? 2 * (0.75 - q) * 8 : 0) + fbm(x / 10 + seed, 2.2, z / 10, 2) * 1.5);
+      H.set(x + "," + z, { h: Math.max(min.y + 1, Math.min(max.y - 1, h)), plateau, q });
+    }
+  // Bäche: von der Mitte des Plateaus strahlenförmig zur Kante
+  /** @type {Set<string>} */
+  const stream = new Set();
+  /** @type {Set<string>} */
+  const lip = new Set();
+  const N = Math.max(0, Math.min(6, o.falls));
+  for (let i = 0; i < N; i++) {
+    const a = ((i + rand() * 0.6) / Math.max(1, N)) * Math.PI * 2;
+    for (let r = 0.2; ; r += 0.02) {
+      const x = Math.round(cx + Math.cos(a) * hx * r);
+      const z = Math.round(cz + Math.sin(a) * hz * r);
+      const c = H.get(x + "," + z);
+      if (!c) break;
+      if (!c.plateau) break;
+      stream.add(x + "," + z);
+      const nx = Math.round(cx + Math.cos(a) * hx * (r + 0.02));
+      const nz = Math.round(cz + Math.sin(a) * hz * (r + 0.02));
+      if (!H.get(nx + "," + nz)?.plateau) {
+        lip.add(x + "," + z);
+        break;
+      }
+    }
+  }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) cache.set(k, (p = BlockPermutation.resolve(id, st)));
+    return p;
+  };
+  const A = air();
+  const W = P("minecraft:water");
+  const LAYERS = ["minecraft:stone", "minecraft:andesite", "minecraft:stone", "minecraft:tuff", "minecraft:granite"];
+  runEdit(ses.player, { label: "Tafelberg", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, plateau } = /** @type {{h:number, plateau:boolean}} */ (H.get(x + "," + z));
+        const k = x + "," + z;
+        const isStream = stream.has(k);
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = plateau && y > low ? P(LAYERS[(y - low) % LAYERS.length]) : P(h - y <= 3 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === h) b = isStream ? W : P(plateau && r < 0.3 ? "minecraft:podzol" : "minecraft:grass_block");
+          else if (y === h + 1 && !isStream && r > 0.9) b = P(r > 0.96 ? "minecraft:fern" : "minecraft:short_grass");
+          es.set(x, y, z, b);
+        }
+        // Bachbett unter dem Wasser
+        if (isStream) es.set(x, h - 1, z, P("minecraft:gravel"));
+      }
+      yield;
+    }
+    // Wald auf dem Plateau
+    const leaves = P("minecraft:jungle_leaves", { persistent_bit: true });
+    const log = P("minecraft:jungle_log");
+    /** @type {{x:number, z:number}[]} */
+    const trees = [];
+    const tries = Math.round((sx * sz * o.trees) / 2000);
+    for (let i = 0; i < tries; i++) {
+      const x = Math.round(min.x + rand() * (sx - 1));
+      const z = Math.round(min.z + rand() * (sz - 1));
+      const c = H.get(x + "," + z);
+      if (!c || !c.plateau || c.q > 0.55 || stream.has(x + "," + z)) continue;
+      if (!trees.every((p) => Math.abs(p.x - x) + Math.abs(p.z - z) >= 4)) continue;
+      trees.push({ x, z });
+      const th = 3 + Math.floor(rand() * 3);
+      for (let y = 1; y <= th; y++) es.set(x, c.h + y, z, log);
+      for (let dx = -2; dx <= 2; dx++)
+        for (let dz = -2; dz <= 2; dz++)
+          for (let dy = 0; dy <= 1; dy++) {
+            if (Math.abs(dx) + Math.abs(dz) > 3 - dy) continue;
+            if (!dx && !dz && dy === 0) continue;
+            const px = x + dx;
+            const pz = z + dz;
+            const py = c.h + th + dy;
+            if (selContains(sel, px, py, pz) && es.id(px, py, pz) === "minecraft:air") es.set(px, py, pz, leaves);
+          }
+    }
+    yield;
+  });
+}
+
+/**
  * Tundra in der Auswahl: flache, karge Ebene mit Frostmustern – Steinkreise aus Kies und Bruchstein, die den Boden
  * in Vielecke teilen –, dazwischen Gras, grobe Erde, Schneeflecken, Schneedecken und kleine zugefrorene Tümpel.
  * Die Auswahl wird neu gefüllt.
@@ -946,30 +1138,7 @@ export function opTundra(ses, o, rand = Math.random) {
   if (sy < 4) return err(ses.player, "Die Auswahl ist zu flach – mindestens 4 Blöcke hoch.");
   const seed = rand() * 1000;
   const base = min.y + Math.max(1, Math.round((sy - 1) * 0.5));
-  const cell = 5; // Größe der Frost-Vielecke
-  /** Zufälliger Mittelpunkt je Rasterzelle. @param {number} i @param {number} j */
-  const site = (i, j) => {
-    let h = (i * 374761393 + j * 668265263 + Math.floor(seed) * 1442695041) | 0;
-    h = Math.imul(h ^ (h >>> 13), 1274126177);
-    const a = ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-    const b = (((h * 31) ^ (h >>> 7)) >>> 0) / 4294967296;
-    return { x: (i + 0.2 + a * 0.6) * cell, z: (j + 0.2 + b * 0.6) * cell };
-  };
-  /** Abstand zur Grenze zwischen zwei Vielecken (klein = Steinkreis). @param {number} x @param {number} z */
-  const border = (x, z) => {
-    const i0 = Math.floor(x / cell);
-    const j0 = Math.floor(z / cell);
-    let d1 = Infinity;
-    let d2 = Infinity;
-    for (let i = i0 - 1; i <= i0 + 1; i++)
-      for (let j = j0 - 1; j <= j0 + 1; j++) {
-        const p = site(i, j);
-        const d = Math.hypot(x - p.x, z - p.z);
-        if (d < d1) ((d2 = d1), (d1 = d));
-        else if (d < d2) d2 = d;
-      }
-    return d2 - d1;
-  };
+  const border = (/** @type {number} */ x, /** @type {number} */ z) => voronoiBorder(x, z, 5, seed);
   const poolThr = o.pools <= 0 ? -Infinity : -0.6 + (Math.min(100, o.pools) / 100) * 0.5;
   /** @type {Map<string, BlockPermutation>} */
   const cache = new Map();

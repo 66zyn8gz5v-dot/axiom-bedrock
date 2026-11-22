@@ -207,6 +207,34 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Tafelberg (Tepui) mit Wasserfällen erzeugen",
+      run: async () => {
+        const c = ses.s.tepui;
+        const r = await new Modal("Tafelberg")
+          .slider("falls", "Anzahl Wasserfälle", 0, 6, 1, c.falls)
+          .slider("trees", "Wald oben in %", 0, 100, 10, c.trees)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opTepui(ses, c);
+      },
+    },
+    {
+      text: "Salzsee erzeugen",
+      run: async () => {
+        const c = ses.s.saltflat;
+        const r = await new Modal("Salzsee")
+          .slider("cells", "Größe der Salzwaben", 3, 12, 1, c.cells)
+          .toggle("water", "Flaches Wasser am Rand", c.water)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opSaltFlat(ses, c);
+      },
+    },
+    {
       text: "Sandbank im Meer erzeugen",
       run: async () => {
         const c = ses.s.sandbar;
