@@ -3770,6 +3770,46 @@ console.log("Brunnenhaus & Turmruine");
   dim.blocks.clear();
 }
 
+console.log("Bootshaus & Steinkreis");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("spruce_planks");
+  ses.s.pattern2 = parsePattern("oak_log");
+  ses.sel = boxSel(dim.id, { x: -6, y: 58, z: 0 }, { x: 6, y: 64, z: 12 });
+  ops.opFill(ses, parsePattern("water"));
+  await drain();
+  ses.sel = undefined;
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "boathouse", rx: 3, ry: 3, rz: 3, anchor: "center" });
+  const shore = { x: 0, y: 64, z: -1 };
+  await roundTrip("Bootshaus", () => use("axiom:shape", shore));
+  await use("axiom:shape", shore);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const SP = "minecraft:spruce_planks";
+  const LOG = "minecraft:oak_log";
+  check(id(3, 65, 1) === SP && id(2, 65, 2) === SP && id(0, 65, 2) === "minecraft:air" && id(0, 64, 2) === "minecraft:water", "Bootshaus: Boden mit offener Bootsrinne über dem Wasser");
+  check(id(3, 66, 1) === SP && id(0, 66, 5) === "minecraft:air" && id(0, 67, 5) === "minecraft:air" && id(0, 66, -1) === SP && id(2, 66, -1) === "minecraft:air", "Bootshaus: Wände, Tor zur Wasserseite, Tür zum Ufer");
+  check(id(3, 60, 2) === LOG && id(-3, 59, 5) === LOG && id(0, 73, 2) === LOG && id(0, 70, 2) === "minecraft:air", "Bootshaus: Pfähle bis zum Grund und Satteldach");
+  await undo();
+  player.view = oldView;
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("andesite");
+  Object.assign(ses.s.shape, { type: "henge", rx: 6, ry: 1, rz: 6, sides: 4 });
+  await roundTrip("Steinkreis", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const AN = "minecraft:andesite";
+  check(id(6, 65, 0) === AN && id(6, 67, 0) === AN && id(6, 66, 1) === AN && id(6, 66, 2) === "minecraft:air" && id(6, 68, 2) === AN, "Steinkreis: stehende Steine mit Decksteinen");
+  check(id(0, 66, 0) === AN && id(0, 67, 0) === "minecraft:air" && id(3, 66, 0) === "minecraft:air", "Steinkreis: Mittelstein, innen frei");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4, sides: 6 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

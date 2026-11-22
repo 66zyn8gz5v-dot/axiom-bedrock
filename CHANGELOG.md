@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.106.0 – 23.11.2026 (nächtlicher Ausbau: Formen)
+- **Bootshaus:** neue Form – vom Ufer aus aufs Wasser schauen und auf die Uferkante zielen. Das Haus ragt in
+  Blickrichtung übers Wasser: Boden aus Muster 1 mit offener Bootsrinne in der Mitte, Laufstege an den Seiten, Pfähle
+  aus Muster 2 bis zum Grund, eine Tür zum Ufer, ein offenes Tor zur Wasserseite und ein Satteldach.
+  Radius X = halbe Breite, Radius Z = Länge, Radius Y = Wandhöhe
+- **Steinkreis:** neue Form – ein Ring aus großen, stehenden Steinen aus Muster 1, oben mit Decksteinen verbunden,
+  und ein Mittelstein. Radius X = Radius, Radius Y = Höhe der Steine, „Anzahl Ecken“ × 2 = Anzahl Steine
+
 ## 0.105.0 – 22.11.2026 (nächtlicher Ausbau: Terraform)
 - **Tafelberg (Tepui):** neu im Auswahl-Menü – füllt eine Box-Auswahl (mindestens 20×16×20) mit grünem Tiefland und
   einem riesigen Tafelberg mit senkrechten, geschichteten Felswänden. Oben wächst Wald auf Gras und Podsol, und

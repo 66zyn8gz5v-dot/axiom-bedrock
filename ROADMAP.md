@@ -216,8 +216,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Holzsteg mit Pfählen** (v0.102): Steg auf Pfählen übers Wasser entlang der Pfad-Punkte, mit Geländer
 - [x] **Brunnenhaus mit Dachreiter** (v0.104): kleines Fachwerkhaus mit Glockentürmchen auf dem First
 - [x] **Wehrturm-Ruine** (v0.104): halb eingestürzter Rundturm mit zerbrochener Mauerkrone und Schutt
-- [ ] **Bootshaus am Wasser**: Holzhaus auf Pfählen mit offenem Tor zur Wasserseite
-- [ ] **Steinkreis (Henge)**: Ring aus großen Steinblöcken mit Decksteinen, Mittelstein
+- [x] **Bootshaus am Wasser** (v0.106): Holzhaus auf Pfählen mit offenem Tor zur Wasserseite
+- [x] **Steinkreis (Henge)** (v0.106): Ring aus großen Steinblöcken mit Decksteinen, Mittelstein
+- [ ] **Hängende Gärten (Terrassenbau)**: gestufter Bau mit bepflanzten Terrassen und herabhängenden Ranken
+- [ ] **Leuchtender Kristall**: große Kristallform aus Amethyst mit spitzen Zacken in alle Richtungen
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges
