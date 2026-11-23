@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.108.0 – 24.11.2026 (nächtlicher Ausbau: Formen)
+- **Hängende Gärten:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein gestufter Bau aus Muster 1,
+  jede Stufe zwei Blöcke schmaler. Auf jeder Terrasse liegt ein Beet aus Gras mit Blumen, Farn und Azaleen, an den
+  Kanten hängen Ranken aus Azaleenblättern herab, und oben steht ein kleiner Baum. Radius X = halbe Breite unten,
+  Radius Y = Anzahl Stufen
+- **Kristall:** neue Grundform – ein Büschel spitzer Zacken, die von unten ausgehen: einer senkrecht, sechs schräg und
+  drei steil nach oben. Sieht mit Amethyst (Muster 1) besonders schön aus. Radius Y = Größe, Radius X = Dicke der
+  Zacken; lässt sich drehen und mit Materialien wie „Verlauf“ bemalen
+
 ## 0.107.0 – 23.11.2026 (nächtlicher Ausbau: Terraform)
 - **Mäander-Fluss:** neu im Auswahl-Menü – füllt eine Box-Auswahl mit einer flachen Wiesenaue, durch die sich ein
   breiter Fluss in Schleifen in deiner Blickrichtung schlängelt. Neben einigen Schleifen liegen abgeschnittene

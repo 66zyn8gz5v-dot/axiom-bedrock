@@ -220,8 +220,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Wehrturm-Ruine** (v0.104): halb eingestürzter Rundturm mit zerbrochener Mauerkrone und Schutt
 - [x] **Bootshaus am Wasser** (v0.106): Holzhaus auf Pfählen mit offenem Tor zur Wasserseite
 - [x] **Steinkreis (Henge)** (v0.106): Ring aus großen Steinblöcken mit Decksteinen, Mittelstein
-- [ ] **Hängende Gärten (Terrassenbau)**: gestufter Bau mit bepflanzten Terrassen und herabhängenden Ranken
-- [ ] **Leuchtender Kristall**: große Kristallform aus Amethyst mit spitzen Zacken in alle Richtungen
+- [x] **Hängende Gärten (Terrassenbau)** (v0.108): gestufter Bau mit bepflanzten Terrassen und herabhängenden Ranken
+- [x] **Leuchtender Kristall** (v0.108): große Kristallform aus Amethyst mit spitzen Zacken in alle Richtungen
+- [ ] **Rundbogenbrücke aus Stein**: steinerne Bogenbrücke mit mehreren Bögen über einen Fluss zwischen zwei Punkten
+- [ ] **Dorfbrunnen-Platz**: gepflasterter runder Platz mit Brunnen in der Mitte und Bänken
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

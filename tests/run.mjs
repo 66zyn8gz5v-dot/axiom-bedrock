@@ -3872,6 +3872,40 @@ console.log("Bootshaus & Steinkreis");
   dim.blocks.clear();
 }
 
+console.log("Kristall & Hängende Gärten");
+{
+  const { shapeFn } = await import("../packs/AxiomBP/scripts/tools/shape.js");
+  const f = shapeFn({ type: "crystal", rx: 3, ry: 8, rz: 3 });
+  let cells = 0;
+  for (let x = -12; x <= 12; x++) for (let y = -8; y <= 8; y++) for (let z = -12; z <= 12; z++) if (f.inside(x, y, z)) cells++;
+  check(f.inside(0, -8, 0) && f.inside(0, 7, 0) && !f.inside(0, 9, 0) && f.inside(3, -6, 0) && !f.inside(4, 4, 4) && cells > 60, "Kristall: Zacken von unten nach oben und schräg (" + cells + ")");
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "crystal", rx: 3, ry: 8, rz: 3, anchor: "base", hollow: false, wire: false, material: "single", yaw: 0, tilt: 0, roll: 0, confirm: false });
+  await roundTrip("Kristall", () => use("axiom:shape", G));
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  ses.s.pattern = parsePattern("sandstone");
+  Object.assign(ses.s.shape, { type: "gardens", rx: 6, ry: 3, rz: 6, anchor: "center" });
+  await roundTrip("Hängende Gärten", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const SS = "minecraft:sandstone";
+  const GB = "minecraft:grass_block";
+  check(id(6, 65, 0) === SS && id(6, 67, 0) === GB && id(5, 67, 2) === GB && id(3, 67, 0) === SS && id(4, 69, 0) === SS && id(4, 70, 0) === GB && id(5, 69, 0) !== SS, "Hängende Gärten: gestufter Bau mit Beeten auf jeder Terrasse");
+  let leaves = 0;
+  let plants = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, , z] = k.split(",").map(Number);
+    if (p.type.id === "minecraft:azalea_leaves" && Math.max(Math.abs(x), Math.abs(z)) === 7) leaves++;
+    if (["minecraft:poppy", "minecraft:dandelion", "minecraft:azure_bluet", "minecraft:fern", "minecraft:azalea", "minecraft:flowering_azalea", "minecraft:short_grass"].includes(p.type.id)) plants++;
+  }
+  check(leaves >= 10 && plants >= 10 && id(0, 71, 0) === "minecraft:oak_log", "Hängende Gärten: Ranken, Pflanzen und Baum oben (" + leaves + "/" + plants + ")");
+  await undo();
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
