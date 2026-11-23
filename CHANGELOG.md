@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.107.0 – 23.11.2026 (nächtlicher Ausbau: Terraform)
+- **Mäander-Fluss:** neu im Auswahl-Menü – füllt eine Box-Auswahl mit einer flachen Wiesenaue, durch die sich ein
+  breiter Fluss in Schleifen in deiner Blickrichtung schlängelt. Neben einigen Schleifen liegen abgeschnittene
+  Altarme mit Seerosen, die Ufer sind aus Sand, auf der Wiese wachsen Gras und Blumen. Flussbreite und Stärke der
+  Schleifen sind einstellbar
+- **Basaltsäulen-Küste:** neu im Auswahl-Menü – dicht an dicht stehende, sechseckige Basaltsäulen in verschiedenen
+  Höhen (wie am Giant’s Causeway), die zum Meer in deiner Blickrichtung hin wie eine Treppe ins Wasser abfallen.
+  Die Dicke der Säulen ist einstellbar
+
 ## 0.106.0 – 23.11.2026 (nächtlicher Ausbau: Formen)
 - **Bootshaus:** neue Form – vom Ufer aus aufs Wasser schauen und auf die Uferkante zielen. Das Haus ragt in
   Blickrichtung übers Wasser: Boden aus Muster 1 mit offener Bootsrinne in der Mitte, Laufstege an den Seiten, Pfähle

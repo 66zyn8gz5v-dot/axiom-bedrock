@@ -207,6 +207,33 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Mäander-Fluss erzeugen (fließt in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.meander;
+        const r = await new Modal("Mäander")
+          .slider("width", "Flussbreite (halbe Breite)", 1, 8, 1, c.width)
+          .slider("bends", "Stärke der Schleifen in %", 0, 100, 10, c.bends)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opMeander(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
+      text: "Basaltsäulen-Küste erzeugen (Meer in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.basalt;
+        const r = await new Modal("Basaltsäulen").slider("size", "Dicke der Säulen", 2, 6, 1, c.size).show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opBasaltColumns(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Tafelberg (Tepui) mit Wasserfällen erzeugen",
       run: async () => {
         const c = ses.s.tepui;

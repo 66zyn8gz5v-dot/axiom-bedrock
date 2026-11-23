@@ -76,6 +76,8 @@ export function defaultSettings() {
     sandbar: { size: 70, wood: 4 },
     saltflat: { cells: 6, water: true },
     tepui: { falls: 3, trees: 50 },
+    meander: { width: 3, bends: 80 },
+    basalt: { size: 3 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

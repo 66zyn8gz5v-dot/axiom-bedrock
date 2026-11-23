@@ -1581,6 +1581,68 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Mäander & Basaltsäulen");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 63, y: 68, z: 39 });
+  let seed = 79;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Mäander", () => ops.opMeander(ses, { width: 2, bends: 100 }, { x: 1, z: 0 }, rnd));
+  seed = 79;
+  ops.opMeander(ses, { width: 2, bends: 100 }, { x: 1, z: 0 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const base = 64;
+  const mids = [];
+  for (let x = 0; x <= 63; x += 4) {
+    const zs = [];
+    for (let z = 0; z <= 39; z++) if (id(x, base, z) === "minecraft:water") zs.push(z);
+    if (zs.length) mids.push(zs.reduce((a, b) => a + b, 0) / zs.length);
+  }
+  check(mids.length >= 14 && Math.max(...mids) - Math.min(...mids) >= 8, "Mäander: Fluss schlängelt sich durch die Aue (" + Math.round(Math.max(...mids) - Math.min(...mids)) + ")");
+  // Altarme: Wasser, das nicht mit dem Fluss verbunden ist
+  const water = new Set();
+  for (const [k, p] of dim.blocks) if (p.type.id === "minecraft:water" && Number(k.split(",")[1]) === base) water.add(k);
+  let start = null;
+  for (let z = 0; z <= 39; z++) if (water.has("0," + base + "," + z)) ((start = "0," + base + "," + z), (z = 99));
+  const seen = new Set(start ? [start] : []);
+  const todo = start ? [start] : [];
+  while (todo.length) {
+    const [x, y, z] = todo.pop().split(",").map(Number);
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const k = x + ox + "," + y + "," + (z + oz);
+      if (water.has(k) && !seen.has(k)) (seen.add(k), todo.push(k));
+    }
+  }
+  const cut = water.size - seen.size;
+  let sand = 0;
+  for (const [, p] of dim.blocks) if (p.type.id === "minecraft:sand") sand++;
+  check(cut > 10 && sand > 50, "Mäander: abgeschnittene Altarme und Sandufer (" + cut + "/" + sand + ")");
+  await undo();
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 23, y: 72, z: 23 });
+  await roundTrip("Basaltsäulen", () => ops.opBasaltColumns(ses, { size: 3 }, { x: 1, z: 0 }, rnd));
+  ops.opBasaltColumns(ses, { size: 3 }, { x: 1, z: 0 }, rnd);
+  await drain();
+  const top = (x, z) => {
+    let y = 72;
+    while (y > 58 && ["minecraft:air", "minecraft:water"].includes(id(x, y, z))) y--;
+    return y;
+  };
+  const heights = new Set();
+  let steps = 0;
+  for (let x = 0; x <= 23; x++)
+    for (let z = 0; z <= 23; z++) {
+      heights.add(top(x, z));
+      if (z > 0 && top(x, z) !== top(x, z - 1)) steps++;
+    }
+  check(heights.size >= 8 && steps > 60 && id(2, top(2, 5), 5) === "minecraft:polished_basalt" && top(1, 5) > top(22, 5), "Basaltsäulen: viele Säulen in verschiedenen Höhen, zum Meer hin tiefer (" + heights.size + ")");
+  check(id(23, 60, 5) === "minecraft:water" && id(2, 60, 5) === "minecraft:basalt", "Basaltsäulen: Meer auf der Meerseite");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Tafelberg & Salzsee");
 {
   dim.blocks.clear();

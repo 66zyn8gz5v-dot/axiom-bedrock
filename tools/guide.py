@@ -134,7 +134,7 @@ PAGES = [
          ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Glätten · Verlauf · Ausdünnen · Dach · Bogenfenster · "
                "Stapeln · Array · Verschieben · Drehen · Spiegeln · Wasser · Analysieren"),
          ("p", "Landschaften: Inseln · Vulkan · Canyon · Kirschhain · Moor · Gletscher · Savanne · Bergsee · Pilze · Bambus · "
-               "Riff · Tundra · Heide · Sinter · Sandbank · Tepui · Salz · Reis · Delta · Dünen · Mond · Höhlen · Tropfstein"),
+               "Riff · Tundra · Heide · Sinter · Sandbank · Tepui · Salz · Mäander · Basalt · Reis · Delta · Dünen · Mond · Höhlen · Tropfstein"),
          ("p", "Die Partikel zeigen dir immer, was gerade ausgewählt ist."),
          ("p", "Lasso: Mit dem Pfad Punkte setzen → „Lasso“.")],
     ),

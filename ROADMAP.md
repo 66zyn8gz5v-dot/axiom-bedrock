@@ -151,8 +151,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Schluchtwald (Klamm)** (v0.103): enge Schlucht mit Moos, Farn und Wasserfall-Bach am Grund entlang der Pfad-Punkte
 - [x] **Hochmoor-Plateau mit Felsen (Tepui)** (v0.105): Tafelberg mit steilen Wänden, oben Wald und Wasserfälle über die Kante
 - [x] **Salzsee (Salzwüste)** (v0.105): weiße, flache Ebene aus Calcit/Diorit mit Wabenmuster und flachem Wasser am Rand
-- [ ] **Flusslandschaft mit Mäandern**: breiter Fluss, der in Schleifen durch eine Wiesenaue fließt, mit Altarmen
-- [ ] **Basaltsäulen-Küste**: sechseckige Säulen in verschiedenen Höhen wie am Giant’s Causeway
+- [x] **Flusslandschaft mit Mäandern** (v0.107): breiter Fluss, der in Schleifen durch eine Wiesenaue fließt, mit Altarmen
+- [x] **Basaltsäulen-Küste** (v0.107): sechseckige Säulen in verschiedenen Höhen wie am Giant’s Causeway
+- [ ] **Vulkankrater-See**: erloschener Vulkan mit kreisrundem Kratersee und bewaldeten Hängen
+- [ ] **Karstlandschaft**: Kegelkarst – viele steile, bewaldete Kalkhügel aus einer flachen, grünen Ebene
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

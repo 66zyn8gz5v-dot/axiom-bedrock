@@ -957,6 +957,157 @@ function voronoiBorder(x, z, cell, seed) {
 }
 
 /**
+ * Mäander-Fluss in der Auswahl: ein breiter Fluss schlängelt sich in Schleifen in Blickrichtung durch eine flache
+ * Wiesenaue. Neben einigen Schleifen liegen abgeschnittene Altarme (sichelförmige Seen), die Ufer sind aus Sand,
+ * auf der Wiese wachsen Gras und Blumen. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{width:number, bends:number}} o width = halbe Flussbreite, bends = Stärke der Schleifen in %
+ * @param {{x:number, z:number}} dir Blickrichtung (Fließrichtung)
+ * @param {() => number} [rand]
+ */
+export function opMeander(ses, o, dir, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 5) return err(ses.player, "Die Auswahl ist zu flach – mindestens 5 Blöcke hoch.");
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const [u0, u1] = alongX ? [min.x, max.x] : [min.z, max.z];
+  const [w0, w1] = alongX ? [min.z, max.z] : [min.x, max.x];
+  const wMid = (w0 + w1) / 2;
+  const half = (w1 - w0) / 2;
+  const W = Math.max(1, o.width);
+  const amp = Math.max(0, half - W - 3) * (Math.min(100, o.bends) / 100);
+  const lam = Math.max(16, (u1 - u0) / 2);
+  const base = min.y + Math.max(3, Math.round((sy - 1) * 0.5));
+  const seed = rand() * 1000;
+  const center = (/** @type {number} */ u) => wMid + amp * Math.sin(((u - u0) / lam) * Math.PI * 2 + seed);
+  // Altarme: sichelförmige Seen außen an jeder zweiten Schleife
+  /** @type {{u:number, w:number, r:number}[]} */
+  const oxbows = [];
+  for (let k = 0; ; k++) {
+    // Scheitel der Schleifen: sin = ±1
+    const ph = (Math.PI / 2 + k * Math.PI - seed) / (Math.PI * 2);
+    const u = u0 + (ph - Math.floor(ph)) * lam + Math.floor(k / 2) * lam;
+    if (u > u1) break;
+    if (k % 2 === 1 || amp < 3) continue;
+    const side = Math.sign(Math.sin(((u - u0) / lam) * Math.PI * 2 + seed)) || 1;
+    const r = Math.max(3, lam / 6);
+    oxbows.push({ u, w: center(u) + side * (W + r + 2), r });
+  }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  const FLOWERS = ["minecraft:poppy", "minecraft:dandelion", "minecraft:oxeye_daisy", "minecraft:cornflower", "minecraft:azure_bluet"];
+  runEdit(ses.player, { label: "Mäander", region: { min, max } }, function* (es) {
+    for (let a = u0; a <= u1; a++) {
+      for (let b = w0; b <= w1; b++) {
+        const x = alongX ? a : b;
+        const z = alongX ? b : a;
+        const d = Math.abs(b - center(a));
+        let ox = Infinity;
+        for (const O of oxbows) ox = Math.min(ox, Math.abs(Math.hypot(a - O.u, b - O.w) - O.r));
+        const river = d <= W;
+        const lake = !river && ox <= 0.9 && b > w0 && b < w1;
+        const bank = !river && !lake && (d <= W + 1.5 || ox <= 1.9);
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let blk = A;
+          if (river || lake) {
+            const deep = river && d <= W * 0.5 ? 2 : 1;
+            if (y < base - deep) blk = P(y < base - deep - 2 ? "minecraft:stone" : "minecraft:dirt");
+            else if (y === base - deep) blk = P(deep === 2 ? "minecraft:gravel" : "minecraft:sand");
+            else if (y <= base) blk = P("minecraft:water");
+            else if (y === base + 1 && lake && r < 0.15) blk = P("minecraft:waterlily");
+          } else if (y < base) blk = P(base - y <= 3 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === base) blk = P(bank ? "minecraft:sand" : "minecraft:grass_block");
+          else if (y === base + 1 && !bank) {
+            if (r < 0.05) blk = P(FLOWERS[Math.floor(rand() * FLOWERS.length)]);
+            else if (r < 0.3) blk = P("minecraft:short_grass");
+          }
+          es.set(x, y, z, blk);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Basaltsäulen in der Auswahl (wie am Giant’s Causeway): dicht an dicht stehende, sechseckige Säulen aus Basalt in
+ * verschiedenen Höhen, die zur Meerseite (in Blickrichtung) hin wie eine Treppe ins Wasser abfallen. Die Auswahl wird
+ * neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{size:number}} o size = Durchmesser der Säulen
+ * @param {{x:number, z:number}} dir Blickrichtung (zum Meer hin)
+ * @param {() => number} [rand]
+ */
+export function opBasaltColumns(ses, o, dir, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 8) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 8 Blöcke hoch.");
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const sgn = (alongX ? dir.x : dir.z) >= 0 ? 1 : -1;
+  const [u0, u1] = alongX ? [min.x, max.x] : [min.z, max.z];
+  const seaY = min.y + 2;
+  const size = Math.max(1, o.size) * 0.6;
+  const salt = Math.floor(rand() * 100000);
+  /** Sechseck-Zelle (axiale Koordinaten) einer Stelle. @param {number} x @param {number} z */
+  const hex = (x, z) => {
+    const q = ((2 / 3) * x) / size;
+    const r = ((-1 / 3) * x + (Math.sqrt(3) / 3) * z) / size;
+    // Würfelkoordinaten runden
+    let rx = Math.round(q);
+    let rz = Math.round(r);
+    const ry = Math.round(-q - r);
+    const dx = Math.abs(rx - q);
+    const dz = Math.abs(rz - r);
+    const dy = Math.abs(ry + q + r);
+    if (dx > dy && dx > dz) rx = -ry - rz;
+    else if (dz > dy) rz = -rx - ry;
+    return [rx, rz];
+  };
+  const cellRand = (/** @type {number} */ i, /** @type {number} */ j) => {
+    let h = (i * 374761393 + j * 668265263 + salt * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  };
+  const basalt = BlockPermutation.resolve("minecraft:basalt");
+  let topB;
+  try {
+    topB = BlockPermutation.resolve("minecraft:polished_basalt");
+  } catch {
+    topB = basalt;
+  }
+  const W = BlockPermutation.resolve("minecraft:water");
+  const A = air();
+  runEdit(ses.player, { label: "Basaltsäulen", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const a = alongX ? x : z;
+        const u = (sgn > 0 ? a - u0 : u1 - a) / Math.max(1, u1 - u0); // 0 = Land, 1 = Meer
+        const [i, j] = hex(x, z);
+        const jitter = Math.floor(cellRand(i, j) * 3);
+        const h = Math.min(max.y - 1, seaY - 2 + Math.round((1 - u) * (sy - 6)) + jitter);
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          es.set(x, y, z, y < h ? basalt : y === h ? topB : y <= seaY ? W : A);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Salzsee in der Auswahl: weite, flache, weiße Salzebene aus Calcit mit einem Wabenmuster aus Diorit-Rippen, am Rand
  * ein Ring aus flachem Wasser über Sand und ganz außen ein schmaler Uferstreifen. Die Auswahl wird neu gefüllt.
  * @param {import("./state.js").Session} ses
