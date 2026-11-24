@@ -39,6 +39,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["stonebridge", "Steinerne Bogenbrücke (mehrere Rundbögen, Punkt A → B über einen Fluss)"],
+  ["plaza", "Dorfplatz mit Brunnen (runder gepflasterter Platz, Bänke, Laternen)"],
   ["gardens", "Hängende Gärten (Terrassenbau mit Beeten und herabhängenden Ranken)"],
   ["boathouse", "Bootshaus (auf Pfählen übers Wasser, offenes Tor zur Wasserseite – vom Ufer aus)"],
   ["henge", "Steinkreis (Ring aus großen Steinen mit Decksteinen, Mittelstein)"],
@@ -782,7 +784,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1318,6 +1320,126 @@ function hashAt(a, b, c) {
   let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * Steinerne Bogenbrücke: 1. Benutzen = Punkt A (ein Ufer), 2. Benutzen = Punkt B (anderes Ufer). Entlang der
+ * Hauptrichtung ein massiver Brückenkörper aus Muster 1 vom Grund (auch unter Wasser) bis zur Fahrbahn, mit mehreren
+ * runden Bögen (etwa alle 8 Blöcke einer) und einer Brüstung an beiden Seiten. Breite = 2 × Radius X + 1.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildStoneBridge(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.adjacent : t.pos;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, "Steinbrücke: erstes Ufer (Punkt A) gesetzt – jetzt auf das andere Ufer (Punkt B) zielen und benutzen.");
+  }
+  const A = ses.shapeA;
+  ses.shapeA = undefined;
+  const ddx = p.x - A.x;
+  const ddz = p.z - A.z;
+  const [sx, sz] = Math.abs(ddx) >= Math.abs(ddz) ? [Math.sign(ddx) || 1, 0] : [0, Math.sign(ddz) || 1];
+  const L = Math.abs(sx ? ddx : ddz);
+  if (L < 6) return err(ses.player, "Die Ufer liegen zu nah beieinander – mindestens 7 Blöcke.");
+  const W = Math.max(1, Math.min(4, c.rx));
+  const n = Math.max(1, Math.round(L / 8));
+  const span = L / n;
+  const r = Math.max(1, (span - 2) / 2);
+  const y0 = Math.max(A.y, p.y);
+  const yBase = y0 - 2 - r;
+  const stone = picker(ses.s.pattern);
+  runEdit(ses.player, { label: "Steinbrücke", symmetry: true }, function* (es) {
+    for (let u = 0; u <= L; u++) {
+      const k = Math.min(n - 1, Math.floor(u / span));
+      const uc = k * span + span / 2;
+      const inArch = (/** @type {number} */ y) => (u - uc) ** 2 / (r * r) + (y - yBase) ** 2 / (r * r) < 1 || (Math.abs(u - uc) < r && y < yBase);
+      for (let w = -W; w <= W; w++) {
+        const x = A.x + sx * u - sz * w;
+        const z = A.z + sz * u + sx * w;
+        let g = y0 - 1;
+        while (g > y0 - 40 && !isSolidId(es.id(x, g, z) ?? "minecraft:air")) g--;
+        for (let y = g + 1; y <= y0; y++) if (!inArch(y)) es.set(x, y, z, stone());
+        if (Math.abs(w) === W) es.set(x, y0 + 1, z, stone()); // Brüstung
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Dorfplatz: auf den Boden zielen. Ein runder, gepflasterter Platz (Muster 1 mit Ringen aus Muster 2), in der Mitte
+ * ein kleiner Brunnen mit Wasser, am Rand Bänke aus Treppenblöcken, die zur Mitte schauen, und vier Laternen.
+ * Über dem Platz wird Platz geschaffen. Radius X = Radius des Platzes.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildPlaza(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const g = t.hit ? t.pos.y : t.pos.y - 1;
+  const cx = t.pos.x;
+  const cz = t.pos.z;
+  const R = Math.max(5, c.rx);
+  const pave = picker(ses.s.pattern);
+  const accent = picker(ses.s.pattern2);
+  const A = air();
+  const W = BlockPermutation.resolve("minecraft:water");
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    try {
+      return BlockPermutation.resolve(id, st);
+    } catch {
+      return BlockPermutation.resolve(id);
+    }
+  };
+  const fence = P("minecraft:dark_oak_fence");
+  const lantern = P("minecraft:lantern");
+  const mat = ses.s.pattern2[0]?.id ?? "minecraft:oak_planks";
+  let stairId = stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:oak_stairs";
+  }
+  /** Bank-Stufe, deren Lehne außen ist (steigt nach außen an). @param {number} dx @param {number} dz */
+  const bench = (dx, dz) => P(stairId, { weirdo_direction: STAIR_DIRS.find(([a, b]) => a === dx && b === dz)?.[2] ?? 0, upside_down_bit: false });
+  runEdit(ses.player, { label: "Dorfplatz", symmetry: true }, function* (es) {
+    for (let dx = -R; dx <= R; dx++)
+      for (let dz = -R; dz <= R; dz++) {
+        const d = Math.hypot(dx, dz);
+        if (d > R + 0.5) continue;
+        const x = cx + dx;
+        const z = cz + dz;
+        for (let y = g + 1; y <= g + 4; y++) es.set(x, y, z, A);
+        es.set(x, g - 1, z, pave());
+        const ringAccent = Math.round(d) % 3 === 0 && d > 3;
+        if (d <= 1.5) {
+          es.set(x, g, z, W); // Brunnenbecken
+          es.set(x, g - 1, z, pave());
+        } else if (d <= 2.5) {
+          es.set(x, g, z, accent());
+          es.set(x, g + 1, z, accent()); // Brunnenrand
+        } else es.set(x, g, z, ringAccent ? accent() : pave());
+      }
+    yield;
+    // Bänke an den vier Seiten (3 lang), Lehne außen
+    const rb = R - 1;
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]])
+      for (let k = -1; k <= 1; k++) {
+        const x = cx + ox * rb + (oz ? k : 0);
+        const z = cz + oz * rb + (ox ? k : 0);
+        es.set(x, g + 1, z, bench(ox, oz));
+      }
+    // Laternen an den Diagonalen
+    const rl = Math.round((R - 1) / Math.SQRT2);
+    for (const [ox, oz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const x = cx + ox * rl;
+      const z = cz + oz * rl;
+      es.set(x, g + 1, z, fence);
+      es.set(x, g + 2, z, fence);
+      es.set(x, g + 3, z, lantern);
+    }
+  });
 }
 
 /**
@@ -2989,6 +3111,8 @@ export const shapeTool = {
     if (c.type === "boathouse") return buildBoathouse(ses, c);
     if (c.type === "henge") return buildHenge(ses, c);
     if (c.type === "gardens") return buildGardens(ses, c);
+    if (c.type === "stonebridge") return buildStoneBridge(ses, c);
+    if (c.type === "plaza") return buildPlaza(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -3044,9 +3168,9 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if ((c.type === "straight" || c.type === "aqueduct" || c.type === "tunnel" || c.type === "colonnade") && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if (["straight", "aqueduct", "tunnel", "colonnade", "stonebridge"].includes(c.type) && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater" || c.type === "greenhouse") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

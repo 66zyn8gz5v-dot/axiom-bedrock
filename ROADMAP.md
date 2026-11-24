@@ -224,8 +224,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Steinkreis (Henge)** (v0.106): Ring aus großen Steinblöcken mit Decksteinen, Mittelstein
 - [x] **Hängende Gärten (Terrassenbau)** (v0.108): gestufter Bau mit bepflanzten Terrassen und herabhängenden Ranken
 - [x] **Leuchtender Kristall** (v0.108): große Kristallform aus Amethyst mit spitzen Zacken in alle Richtungen
-- [ ] **Rundbogenbrücke aus Stein**: steinerne Bogenbrücke mit mehreren Bögen über einen Fluss zwischen zwei Punkten
-- [ ] **Dorfbrunnen-Platz**: gepflasterter runder Platz mit Brunnen in der Mitte und Bänken
+- [x] **Rundbogenbrücke aus Stein** (v0.110): steinerne Bogenbrücke mit mehreren Bögen über einen Fluss zwischen zwei Punkten
+- [x] **Dorfbrunnen-Platz** (v0.110): gepflasterter runder Platz mit Brunnen in der Mitte und Bänken
+- [ ] **Marktstände**: Reihe kleiner Stände mit bunten Stoffdächern (Wolle) und Theken
+- [ ] **Burggraben-Ring**: Wassergraben rund um eine Auswahl mit Mauer auf der Innenseite
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.110.0 – 25.11.2026 (nächtlicher Ausbau: Formen)
+- **Steinerne Bogenbrücke:** neue Form – erst ein Ufer (Punkt A), dann das andere (Punkt B) anklicken. Dazwischen
+  entsteht eine massive Brücke aus Muster 1, die vom Grund (auch unter Wasser) bis zur Fahrbahn reicht, mit mehreren
+  runden Bögen (etwa alle 8 Blöcke einer) und einer Brüstung an beiden Seiten. Radius X = halbe Breite
+- **Dorfplatz:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein runder, gepflasterter Platz aus
+  Muster 1 mit Ringen aus Muster 2, in der Mitte ein kleiner Brunnen mit Wasser, am Rand Bänke aus Treppenblöcken, die
+  zur Mitte schauen, und vier Laternen. Radius X = Radius des Platzes
+
 ## 0.109.0 – 24.11.2026 (nächtlicher Ausbau: Terraform)
 - **Vulkan mit Kratersee:** neu im Auswahl-Menü – füllt eine Box-Auswahl (mindestens 20×14×20) mit einem erloschenen,
   kegelförmigen Vulkan: im Krater ein kreisrunder, tiefer See mit Kiesgrund, ein Kraterrand aus Fels, bewaldete

@@ -3958,6 +3958,46 @@ console.log("Kristall & Hängende Gärten");
   dim.blocks.clear();
 }
 
+console.log("Steinbrücke & Dorfplatz");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("spruce_planks");
+  ses.sel = boxSel(dim.id, { x: 3, y: 60, z: -6 }, { x: 17, y: 64, z: 6 });
+  ops.opFill(ses, parsePattern("water"));
+  await drain();
+  ses.sel = undefined;
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  Object.assign(ses.s.shape, { type: "stonebridge", rx: 1, ry: 3, rz: 1 });
+  ses.shapeA = undefined;
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  check(!!ses.shapeA, "Steinbrücke: erster Klick merkt das Ufer");
+  await roundTrip("Steinbrücke", () => use("axiom:shape", { x: 20, y: 64, z: 0 }));
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 20, y: 64, z: 0 });
+  check(id(10, 65, 0) === S && id(10, 65, 1) === S && id(10, 66, 1) === S && id(10, 66, -1) === S && id(10, 66, 0) === "minecraft:air", "Steinbrücke: Fahrbahn mit Brüstung");
+  check(id(10, 62, 0) === "minecraft:water" && id(10, 64, 0) === S && id(7, 61, 0) === S && id(13, 61, 0) === S, "Steinbrücke: Bögen über dem Wasser, Pfeiler bis zum Grund");
+  await undo();
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "plaza", rx: 6, ry: 2, rz: 6 });
+  ses.s.pattern = parsePattern("cobblestone");
+  await roundTrip("Dorfplatz", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const C = "minecraft:cobblestone";
+  const SP = "minecraft:spruce_planks";
+  check(id(4, 64, 1) === C && id(0, 64, 0) === "minecraft:water" && id(2, 65, 0) === SP && id(5, 64, 3) !== "minecraft:grass_block", "Dorfplatz: Pflaster und Brunnen in der Mitte");
+  check(id(5, 65, 0) === "minecraft:spruce_stairs" && id(-5, 65, 1) === "minecraft:spruce_stairs" && id(4, 67, 4) === "minecraft:lantern" && id(4, 66, 4) === "minecraft:dark_oak_fence", "Dorfplatz: Bänke und Laternen");
+  check(dim._get(5, 65, 0).getAllStates().weirdo_direction !== dim._get(-5, 65, 0).getAllStates().weirdo_direction, "Dorfplatz: Bänke schauen zur Mitte");
+  await undo();
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
