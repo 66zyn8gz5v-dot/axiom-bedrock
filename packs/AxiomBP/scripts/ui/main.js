@@ -207,6 +207,31 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Vulkan mit Kratersee erzeugen",
+      run: async () => {
+        const c = ses.s.craterLake;
+        const r = await new Modal("Kratersee")
+          .slider("crater", "Größe des Kraters in %", 30, 100, 5, c.crater)
+          .slider("trees", "Wald an den Hängen in %", 0, 100, 10, c.trees)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opCraterLake(ses, c);
+      },
+    },
+    {
+      text: "Karstlandschaft (Kegelhügel) erzeugen",
+      run: async () => {
+        const c = ses.s.karst;
+        const r = await new Modal("Karstlandschaft").slider("hills", "Anzahl Hügel", 1, 40, 1, c.hills).show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opKarst(ses, c);
+      },
+    },
+    {
       text: "Mäander-Fluss erzeugen (fließt in Blickrichtung)",
       run: async () => {
         const c = ses.s.meander;

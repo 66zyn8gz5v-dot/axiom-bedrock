@@ -78,6 +78,8 @@ export function defaultSettings() {
     tepui: { falls: 3, trees: 50 },
     meander: { width: 3, bends: 80 },
     basalt: { size: 3 },
+    craterLake: { trees: 50, crater: 60 },
+    karst: { hills: 10 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

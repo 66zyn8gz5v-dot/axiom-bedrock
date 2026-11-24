@@ -957,6 +957,186 @@ function voronoiBorder(x, z, cell, seed) {
 }
 
 /**
+ * Kleiner Laubbaum (Stamm + runde Krone aus dauerhaften Blättern) für Landschaften in der Auswahl.
+ * @param {import("./edit.js").EditSession} es @param {import("./selection.js").Selection} sel
+ * @param {number} x @param {number} y Boden @param {number} z @param {string} kind Holzart @param {number} h Stammhöhe
+ */
+function smallTree(es, sel, x, y, z, kind, h) {
+  const log = BlockPermutation.resolve(`minecraft:${kind}_log`);
+  const leaves = BlockPermutation.resolve(`minecraft:${kind}_leaves`, { persistent_bit: true });
+  for (let k = 1; k <= h; k++) if (selContains(sel, x, y + k, z)) es.set(x, y + k, z, log);
+  for (let dx = -2; dx <= 2; dx++)
+    for (let dz = -2; dz <= 2; dz++)
+      for (let dy = -1; dy <= 1; dy++) {
+        if (Math.abs(dx) + Math.abs(dz) + Math.max(0, dy) * 2 > 3) continue;
+        const px = x + dx;
+        const py = y + h + dy;
+        const pz = z + dz;
+        if (!selContains(sel, px, py, pz)) continue;
+        if (es.id(px, py, pz) === "minecraft:air") es.set(px, py, pz, leaves);
+      }
+}
+
+/**
+ * Vulkan mit Kratersee in der Auswahl: ein erloschener, kegelförmiger Vulkan mit bewaldeten Hängen und einem
+ * kreisrunden, tiefen See im Krater, rundherum grünes Tiefland. Der Kraterrand ist aus Fels. Die Auswahl wird neu
+ * gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{trees:number, crater:number}} o trees = Wald in %, crater = Kratergröße in %
+ * @param {() => number} [rand]
+ */
+export function opCraterLake(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 14 || Math.min(sx, sz) < 20) return err(ses.player, "Die Auswahl ist zu klein – mindestens 20×14×20 Blöcke.");
+  const seed = rand() * 1000;
+  const low = min.y + 2;
+  const rimH = max.y - 6;
+  const qc = Math.max(0.15, Math.min(0.5, (o.crater / 100) * 0.5));
+  const lakeY = rimH - 2;
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  /** @type {Map<string, {h:number, q:number}>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      const q = Math.hypot((x - cx) / (sx / 2), (z - cz) / (sz / 2));
+      let h;
+      if (q < qc) h = Math.round(rimH - (rimH - lakeY + 4) * (1 - (q / qc) ** 2)); // Kraterschüssel
+      else if (q < 1) h = Math.round(low + (rimH - low) * Math.pow((1 - q) / (1 - qc), 1.3) + fbm(x / 6 + seed, 0.3, z / 6, 2) * 0.9);
+      else h = low;
+      H.set(x + "," + z, { h: Math.max(min.y + 1, Math.min(max.y - 1, h)), q });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Kratersee", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, q } = /** @type {{h:number, q:number}} */ (H.get(x + "," + z));
+        const rim = q >= qc * 0.85 && q < qc + 0.08;
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = P(h - y <= 2 && !rim && q >= qc ? "minecraft:dirt" : y > low ? (r < 0.3 ? "minecraft:tuff" : "minecraft:stone") : "minecraft:stone");
+          else if (y === h) b = P(q < qc * 0.85 ? "minecraft:gravel" : rim ? (r < 0.5 ? "minecraft:andesite" : "minecraft:stone") : "minecraft:grass_block");
+          else if (y <= lakeY && q < qc) b = P("minecraft:water");
+          else if (y === h + 1 && !rim && q >= qc && r > 0.85) b = P("minecraft:short_grass");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    // Wald an den Hängen
+    /** @type {{x:number, z:number}[]} */
+    const trees = [];
+    const tries = Math.round((sx * sz * o.trees) / 1500);
+    for (let i = 0; i < tries; i++) {
+      const x = Math.round(min.x + 2 + rand() * (sx - 5));
+      const z = Math.round(min.z + 2 + rand() * (sz - 5));
+      const c = H.get(x + "," + z);
+      if (!c || c.q < qc + 0.12 || c.q > 1.05 || c.h + 7 > max.y) continue;
+      if (!trees.every((t) => Math.abs(t.x - x) + Math.abs(t.z - z) >= 4)) continue;
+      trees.push({ x, z });
+      smallTree(es, sel, x, c.h, z, c.q < 0.6 ? "spruce" : "oak", 3 + Math.floor(rand() * 2));
+    }
+    yield;
+  });
+}
+
+/**
+ * Karstlandschaft (Kegelkarst) in der Auswahl: aus einer flachen, grünen Ebene ragen viele steile, oben bewaldete
+ * Kalkhügel auf, dazwischen Wiesen und kleine Teiche. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{hills:number}} o hills = Anzahl Hügel
+ * @param {() => number} [rand]
+ */
+export function opKarst(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sy = max.y - min.y + 1;
+  const sz = max.z - min.z + 1;
+  if (sy < 14) return err(ses.player, "Die Auswahl ist zu niedrig – mindestens 14 Blöcke hoch.");
+  const seed = rand() * 1000;
+  const base = min.y + 3;
+  const peakMax = max.y - 6;
+  /** @type {{x:number, z:number, r:number, h:number}[]} */
+  const hills = [];
+  for (let i = 0; i < Math.max(1, Math.min(40, o.hills)); i++) {
+    const r = 2.5 + rand() * 3.5;
+    hills.push({ x: min.x + r + rand() * (sx - 2 * r), z: min.z + r + rand() * (sz - 2 * r), r, h: (peakMax - base) * (0.55 + rand() * 0.45) });
+  }
+  /** @type {Map<string, {h:number, hill:boolean}>} */
+  const H = new Map();
+  for (let x = min.x; x <= max.x; x++)
+    for (let z = min.z; z <= max.z; z++) {
+      let h = base;
+      for (const K of hills) {
+        const d = Math.hypot(x - K.x, z - K.z) / K.r;
+        if (d < 1) h = Math.max(h, base + K.h * Math.sqrt(1 - d * d));
+      }
+      H.set(x + "," + z, { h: Math.round(h), hill: h > base + 1 });
+    }
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Karstlandschaft", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const { h, hill } = /** @type {{h:number, hill:boolean}} */ (H.get(x + "," + z));
+        let steep = false;
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if ((H.get(x + dx + "," + (z + dz))?.h ?? h) < h - 1) steep = true;
+        const inner = x > min.x && x < max.x && z > min.z && z < max.z;
+        const pond = inner && !hill && fbm(x / 7 + seed, 1.5, z / 7, 2) < -0.45;
+        const r = rand();
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < h) b = P(hill ? (hashCell(x, y, z) < 0.3 ? "minecraft:calcite" : "minecraft:stone") : h - y <= 2 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === h) b = P(pond ? "minecraft:water" : steep ? (r < 0.4 ? "minecraft:calcite" : "minecraft:moss_block") : "minecraft:grass_block");
+          else if (y === h + 1 && !pond && !steep && r < 0.15) b = P(r < 0.04 ? "minecraft:poppy" : "minecraft:short_grass");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+    // Bäume auf den Hügelkuppen
+    for (const K of hills) {
+      const x = Math.round(K.x);
+      const z = Math.round(K.z);
+      const c = H.get(x + "," + z);
+      if (!c || c.h + 6 > max.y) continue;
+      smallTree(es, sel, x, c.h, z, "jungle", 2 + Math.floor(rand() * 2));
+    }
+    yield;
+  });
+}
+
+/** Feste Zufallszahl 0..1 für eine Stelle. @param {number} a @param {number} b @param {number} c */
+function hashCell(a, b, c) {
+  let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
  * Mäander-Fluss in der Auswahl: ein breiter Fluss schlängelt sich in Schleifen in Blickrichtung durch eine flache
  * Wiesenaue. Neben einigen Schleifen liegen abgeschnittene Altarme (sichelförmige Seen), die Ufer sind aus Sand,
  * auf der Wiese wachsen Gras und Blumen. Die Auswahl wird neu gefüllt.

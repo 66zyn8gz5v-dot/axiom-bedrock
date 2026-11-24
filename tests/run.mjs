@@ -1581,6 +1581,58 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Kratersee & Karst");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 47, y: 85, z: 47 });
+  let seed = 83;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Kratersee", () => ops.opCraterLake(ses, { trees: 60, crater: 60 }, rnd));
+  seed = 83;
+  ops.opCraterLake(ses, { trees: 60, crater: 60 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const lakeY = 85 - 6 - 2;
+  let leak = 0;
+  let water = 0;
+  let logs = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (p.type.id === "minecraft:water") {
+      water++;
+      for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+    }
+    if (p.type.id.endsWith("_log")) logs++;
+  }
+  check(id(24, lakeY, 24) === "minecraft:water" && id(24, lakeY + 1, 24) === "minecraft:air" && water > 50 && leak === 0, "Kratersee: runder See im Krater, eingefasst (" + water + ")");
+  check(logs >= 10 && id(1, 60, 1) === "minecraft:grass_block", "Kratersee: bewaldete Hänge, Tiefland rundherum (" + logs + ")");
+  await undo();
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 58, z: 0 }, { x: 47, y: 80, z: 47 });
+  await roundTrip("Karst", () => ops.opKarst(ses, { hills: 10 }, rnd));
+  ops.opKarst(ses, { hills: 10 }, rnd);
+  await drain();
+  const top = (x, z) => {
+    let y = 80;
+    while (y > 58 && ["minecraft:air", "minecraft:jungle_leaves", "minecraft:jungle_log", "minecraft:short_grass", "minecraft:poppy"].includes(id(x, y, z))) y--;
+    return y;
+  };
+  let high = 0;
+  let flat = 0;
+  for (let x = 0; x <= 47; x += 2)
+    for (let z = 0; z <= 47; z += 2) {
+      const h = top(x, z);
+      if (h >= 70) high++;
+      if (h === 61) flat++;
+    }
+  let jl = 0;
+  for (const [, p] of dim.blocks) if (p.type.id === "minecraft:jungle_leaves") jl++;
+  check(high >= 10 && flat >= 100 && jl > 20, "Karst: steile, bewaldete Kegelhügel aus flacher Ebene (" + high + "/" + flat + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Mäander & Basaltsäulen");
 {
   dim.blocks.clear();

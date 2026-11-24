@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.109.0 – 24.11.2026 (nächtlicher Ausbau: Terraform)
+- **Vulkan mit Kratersee:** neu im Auswahl-Menü – füllt eine Box-Auswahl (mindestens 20×14×20) mit einem erloschenen,
+  kegelförmigen Vulkan: im Krater ein kreisrunder, tiefer See mit Kiesgrund, ein Kraterrand aus Fels, bewaldete
+  Hänge (oben Fichten, unten Eichen) und grünes Tiefland rundherum. Kratergröße und Wald sind einstellbar
+- **Karstlandschaft:** neu im Auswahl-Menü – aus einer flachen, grünen Ebene mit kleinen Teichen ragen viele steile
+  Kalkhügel (Kegelkarst) mit moosigen Flanken und Bäumen auf den Kuppen. Die Anzahl der Hügel ist einstellbar
+
 ## 0.108.0 – 24.11.2026 (nächtlicher Ausbau: Formen)
 - **Hängende Gärten:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein gestufter Bau aus Muster 1,
   jede Stufe zwei Blöcke schmaler. Auf jeder Terrasse liegt ein Beet aus Gras mit Blumen, Farn und Azaleen, an den
