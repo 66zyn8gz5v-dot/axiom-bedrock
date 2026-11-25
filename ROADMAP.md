@@ -228,8 +228,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Leuchtender Kristall** (v0.108): große Kristallform aus Amethyst mit spitzen Zacken in alle Richtungen
 - [x] **Rundbogenbrücke aus Stein** (v0.110): steinerne Bogenbrücke mit mehreren Bögen über einen Fluss zwischen zwei Punkten
 - [x] **Dorfbrunnen-Platz** (v0.110): gepflasterter runder Platz mit Brunnen in der Mitte und Bänken
-- [ ] **Marktstände**: Reihe kleiner Stände mit bunten Stoffdächern (Wolle) und Theken
-- [ ] **Burggraben-Ring**: Wassergraben rund um eine Auswahl mit Mauer auf der Innenseite
+- [x] **Marktstände** (v0.112): Reihe kleiner Stände mit bunten Stoffdächern (Wolle) und Theken
+- [x] **Burggraben-Ring** (v0.112): Wassergraben rund um eine Auswahl mit Mauer auf der Innenseite
+- [ ] **Leuchtturm-Laterne als eigene Form (Gartenlaterne)**: kleine Steinlaterne wie im japanischen Garten
+- [ ] **Torii-Tor**: japanisches Tor aus zwei Säulen und zwei Querbalken, oben geschwungen
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

@@ -39,6 +39,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["market", "Marktstände (Reihe kleiner Stände mit bunten Stoffdächern, zu dir)"],
+  ["moat", "Burggraben (in die Box-Auswahl: Wassergraben ringsum, Mauer innen, Tor mit Brücke zu dir)"],
   ["stonebridge", "Steinerne Bogenbrücke (mehrere Rundbögen, Punkt A → B über einen Fluss)"],
   ["plaza", "Dorfplatz mit Brunnen (runder gepflasterter Platz, Bänke, Laternen)"],
   ["gardens", "Hängende Gärten (Terrassenbau mit Beeten und herabhängenden Ranken)"],
@@ -784,7 +786,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "moat"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1320,6 +1322,107 @@ function hashAt(a, b, c) {
   let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * Marktstände: eine Reihe kleiner Stände quer vor dir. Jeder Stand hat vier Zaunpfosten, eine Theke aus Muster 1 auf
+ * deiner Seite und ein gestreiftes Stoffdach aus Wolle (jeder Stand in einer anderen Farbe mit Weiß), das nach vorn
+ * übersteht. Radius X = Anzahl Stände.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildMarket(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const n = Math.max(1, Math.min(8, c.rx));
+  const counter = picker(ses.s.pattern);
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const fence = P("minecraft:oak_fence");
+  const white = P("minecraft:white_wool");
+  const COLORS = ["red", "blue", "yellow", "green", "orange", "purple", "light_blue", "lime"];
+  const A = air();
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const sx = -d.z;
+  const sz = d.x;
+  // f > 0 = zum Spieler hin
+  const at = (/** @type {number} */ l, /** @type {number} */ f) => [base.x + sx * l - d.x * f, base.z + sz * l - d.z * f];
+  const total = n * 4 - 1;
+  const l0 = -Math.floor(total / 2);
+  runEdit(ses.player, { label: "Marktstände", symmetry: true }, function* (es) {
+    for (let k = 0; k < n; k++) {
+      const a = l0 + k * 4;
+      const color = P(`minecraft:${COLORS[k % COLORS.length]}_wool`);
+      for (let l = a; l <= a + 2; l++) {
+        for (let f = -1; f <= 1; f++) {
+          const [x, z] = at(l, f);
+          const post = (l === a || l === a + 2) && (f === -1 || f === 1);
+          for (let y = 1; y <= 2; y++) es.set(x, base.y + y, z, post ? fence : A);
+          if (!post && f === 1) es.set(x, base.y + 1, z, counter()); // Theke vorn
+        }
+        // gestreiftes Dach mit Überstand nach vorn
+        for (let f = -1; f <= 2; f++) {
+          const [x, z] = at(l, f);
+          es.set(x, base.y + 3, z, (l - a) % 2 === 0 ? color : white);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Burggraben in der Box-Auswahl: am Rand ein Uferstreifen, dahinter ringsum ein Wassergraben (3 tief), auf der
+ * Innenseite eine Mauer aus Muster 1 bis unter die Oberkante mit Zinnen. Auf deiner Seite führt eine Brücke aus
+ * Muster 2 über den Graben zu einem Tor in der Mauer. Das Innere bleibt unverändert. Radius X = Breite des Grabens.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildMoat(ses, c) {
+  const sel = ses.sel;
+  if (!sel) return err(ses.player, "Für den Burggraben erst eine Box-Auswahl um die Burg machen (vom Grund bis zur Mauerhöhe).");
+  const { min, max } = sel;
+  const W = Math.max(1, Math.min(5, c.rx));
+  const sx = max.x - min.x + 1;
+  const sz = max.z - min.z + 1;
+  if (Math.min(sx, sz) < 2 * (W + 2) + 3 || max.y - min.y < 7) return err(ses.player, "Die Auswahl ist zu klein für Graben und Mauer.");
+  const ground = min.y + 3;
+  const wall = picker(ses.s.pattern);
+  const bridge = picker(ses.s.pattern2);
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const Wt = P("minecraft:water");
+  const A = air();
+  const d = cardinal(ses.player.getViewDirection(), true);
+  // Torseite: die Seite der Auswahl, die dem Spieler zugewandt ist
+  const gateEdge = d.x > 0 ? "x0" : d.x < 0 ? "x1" : d.z > 0 ? "z0" : "z1";
+  const cxm = Math.round((min.x + max.x) / 2);
+  const czm = Math.round((min.z + max.z) / 2);
+  runEdit(ses.player, { label: "Burggraben", symmetry: true, region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const dist = Math.min(x - min.x, max.x - x, z - min.z, max.z - z);
+        if (dist > W + 1) continue;
+        const edgeDist = { x0: x - min.x, x1: max.x - x, z0: z - min.z, z1: max.z - z }[gateEdge];
+        const lateral = gateEdge[0] === "x" ? Math.abs(z - czm) : Math.abs(x - cxm);
+        const gate = lateral <= 1 && edgeDist === dist;
+        for (let y = min.y; y <= max.y; y++) {
+          let b = null;
+          if (dist === 0) b = y < ground ? P("minecraft:dirt") : y === ground ? P("minecraft:grass_block") : A; // Ufer
+          else if (dist <= W) {
+            if (y === min.y) b = wall();
+            else if (y <= ground) b = gate && y === ground ? bridge() : Wt;
+            else b = A;
+          } else {
+            // Mauer mit Zinnen
+            if (y <= ground) b = wall();
+            else if (y < max.y) b = gate && y <= ground + 3 ? A : wall();
+            else b = (x + z) % 2 === 0 ? wall() : A;
+          }
+          if (b) es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
 }
 
 /**
@@ -3113,6 +3216,8 @@ export const shapeTool = {
     if (c.type === "gardens") return buildGardens(ses, c);
     if (c.type === "stonebridge") return buildStoneBridge(ses, c);
     if (c.type === "plaza") return buildPlaza(ses, c);
+    if (c.type === "market") return buildMarket(ses, c);
+    if (c.type === "moat") return buildMoat(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -3169,8 +3274,8 @@ export const shapeTool = {
   preview(ses) {
     const c = ses.s.shape;
     if (["straight", "aqueduct", "tunnel", "colonnade", "stonebridge"].includes(c.type) && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
-    if (c.type === "temple" || c.type === "cloister" || c.type === "amphitheater" || c.type === "greenhouse") return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["temple", "cloister", "amphitheater", "greenhouse", "moat"].includes(c.type)) return; // die Auswahl ist schon sichtbar
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.112.0 – 26.11.2026 (nächtlicher Ausbau: Formen)
+- **Marktstände:** neue Form – auf den Boden zielen und benutzen. Quer vor dir entsteht eine Reihe kleiner Stände:
+  je vier Zaunpfosten, eine Theke aus Muster 1 auf deiner Seite und ein gestreiftes Stoffdach aus Wolle (jeder Stand
+  in einer anderen Farbe mit Weiß), das nach vorn übersteht. Radius X = Anzahl Stände
+- **Burggraben:** neue Form – eine Box-Auswahl um die Burg aufziehen (vom Grund bis zur Mauerhöhe), dann benutzen.
+  Ringsum entsteht ein Uferstreifen, dahinter ein drei Blöcke tiefer Wassergraben und auf der Innenseite eine Mauer
+  aus Muster 1 mit Zinnen. Auf deiner Seite führt eine Brücke aus Muster 2 über den Graben zu einem Tor. Das Innere
+  bleibt unverändert. Radius X = Breite des Grabens
+
 ## 0.111.0 – 25.11.2026 (nächtlicher Ausbau: Terraform)
 - **Eishöhle:** neu im Auswahl-Menü („Eishöhle graben“) – am besten unter der Erde oder in einem Berg eine Box-Auswahl
   aufziehen. Es entsteht eine große, unregelmäßige Höhle, deren Wände, Decke und Boden mit Packeis und Blaueis

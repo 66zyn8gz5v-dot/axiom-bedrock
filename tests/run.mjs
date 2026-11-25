@@ -4033,6 +4033,44 @@ console.log("Steinbrücke & Dorfplatz");
   dim.blocks.clear();
 }
 
+console.log("Marktstände & Burggraben");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("spruce_planks");
+  ses.s.pattern2 = parsePattern("oak_planks");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  Object.assign(ses.s.shape, { type: "market", rx: 3, ry: 2, rz: 2, anchor: "center" });
+  await roundTrip("Marktstände", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  // 3 Stände, l0 = -5: Stände bei l -5..-3, -1..1, 3..5; x = -l, Spielerseite z = -1
+  check(id(5, 66, -1) === "minecraft:oak_fence" && id(5, 67, 1) === "minecraft:oak_fence" && id(4, 66, -1) === "minecraft:spruce_planks" && id(4, 66, 0) === "minecraft:air", "Marktstände: Pfosten und Theke vorn");
+  check(id(5, 68, 0) === "minecraft:red_wool" && id(4, 68, 0) === "minecraft:white_wool" && id(1, 68, 0) === "minecraft:blue_wool" && id(-3, 68, -2) === "minecraft:yellow_wool" && id(2, 68, 0) === "minecraft:air", "Marktstände: bunte Stoffdächer mit Überstand");
+  await undo();
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 20, y: 70, z: 20 });
+  Object.assign(ses.s.shape, { type: "moat", rx: 2 });
+  await roundTrip("Burggraben", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  const S = "minecraft:stone_bricks";
+  check(id(5, 63, 1) === "minecraft:water" && id(5, 61, 2) === "minecraft:water" && id(5, 60, 1) === S && id(5, 63, 0) === "minecraft:grass_block", "Burggraben: Wassergraben mit Ufer");
+  let merlons = 0;
+  for (let x = 0; x <= 20; x++) if (id(x, 70, 3) === S) merlons++;
+  check(id(5, 65, 3) === S && id(3, 69, 10) === S && merlons >= 6 && id(10, 66, 10) === "minecraft:air", "Burggraben: Mauer innen mit Zinnen, Inneres unverändert");
+  check(id(10, 63, 1) === "minecraft:oak_planks" && id(10, 63, 2) === "minecraft:oak_planks" && id(10, 65, 3) === "minecraft:air" && id(10, 68, 3) === S && id(10, 63, 18) === "minecraft:water", "Burggraben: Brücke und Tor auf deiner Seite");
+  await undo();
+  player.view = oldView;
+  ses.sel = undefined;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
