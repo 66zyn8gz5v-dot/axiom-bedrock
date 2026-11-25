@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.111.0 – 25.11.2026 (nächtlicher Ausbau: Terraform)
+- **Eishöhle:** neu im Auswahl-Menü („Eishöhle graben“) – am besten unter der Erde oder in einem Berg eine Box-Auswahl
+  aufziehen. Es entsteht eine große, unregelmäßige Höhle, deren Wände, Decke und Boden mit Packeis und Blaueis
+  ausgekleidet sind; von der Decke hängen Eiszapfen, am Boden liegen Schneeflecken und in der tiefsten Mulde ist ein
+  See zugefroren. Die Menge der Eiszapfen ist einstellbar
+- **Blumenfelder:** neu im Auswahl-Menü – ein flaches Feld mit langen, bunten Blumenreihen in deiner Blickrichtung
+  (rote, orange, rosa und weiße Tulpen, Kornblumen, Zierlauch, Löwenzahn), jede Reihe eine Farbe, auf Wunsch mit
+  schmalen Graswegen dazwischen. Die Breite der Reihen ist einstellbar
+
 ## 0.110.0 – 25.11.2026 (nächtlicher Ausbau: Formen)
 - **Steinerne Bogenbrücke:** neue Form – erst ein Ufer (Punkt A), dann das andere (Punkt B) anklicken. Dazwischen
   entsteht eine massive Brücke aus Muster 1, die vom Grund (auch unter Wasser) bis zur Fahrbahn reicht, mit mehreren

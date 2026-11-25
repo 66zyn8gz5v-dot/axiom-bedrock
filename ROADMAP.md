@@ -155,8 +155,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Basaltsäulen-Küste** (v0.107): sechseckige Säulen in verschiedenen Höhen wie am Giant’s Causeway
 - [x] **Vulkankrater-See** (v0.109): erloschener Vulkan mit kreisrundem Kratersee und bewaldeten Hängen
 - [x] **Karstlandschaft** (v0.109): Kegelkarst – viele steile, bewaldete Kalkhügel aus einer flachen, grünen Ebene
-- [ ] **Eiszapfen-Höhle (Eishöhle)**: Höhle aus Packeis und Blaueis mit Eiszapfen und gefrorenem See
-- [ ] **Blumenfeld-Streifen**: lange, bunte Blumenreihen wie Tulpenfelder in einer Auswahl
+- [x] **Eiszapfen-Höhle (Eishöhle)** (v0.111): Höhle aus Packeis und Blaueis mit Eiszapfen und gefrorenem See
+- [x] **Blumenfeld-Streifen** (v0.111): lange, bunte Blumenreihen wie Tulpenfelder in einer Auswahl
+- [ ] **Weinberg**: Hang mit Rebenreihen (Zäune mit Blättern) quer zum Hang und Trockenmauern
+- [ ] **Lavafeld**: erkaltetes Lavafeld aus Basalt und Schwarzstein mit glühenden Rissen (Magma) in einer Auswahl
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie

@@ -978,6 +978,114 @@ function smallTree(es, sel, x, y, z, kind, h) {
 }
 
 /**
+ * Eishöhle in der Auswahl: eine große, unregelmäßige Höhle, deren Wände, Decke und Boden mit Packeis und Blaueis
+ * ausgekleidet sind. Von der Decke hängen Eiszapfen, am Boden liegen Schneeflecken, und in der tiefsten Mulde liegt ein
+ * zugefrorener See. Am besten unter der Erde oder in einem Berg benutzen.
+ * @param {import("./state.js").Session} ses
+ * @param {{icicles:number}} o icicles = Eiszapfen in %
+ * @param {() => number} [rand]
+ */
+export function opIceCave(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const d = selDims(sel);
+  if (Math.min(d.x, d.y, d.z) < 6) return err(ses.player, "Die Auswahl ist zu klein – mindestens 6×6×6 Blöcke.");
+  const c = v((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2);
+  const r = v(d.x / 2 - 1, d.y / 2 - 1, d.z / 2 - 1);
+  const seed = rand() * 1000;
+  const inCave = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => {
+    if (!selContains(sel, x, y, z)) return false;
+    const q = ((x - c.x) / r.x) ** 2 + ((y - c.y) / r.y) ** 2 + ((z - c.z) / r.z) ** 2;
+    return q + fbm(x / 6 + seed, y / 5, z / 6, 2) * 0.4 < 0.85;
+  };
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const A = air();
+  const ICE = P("minecraft:ice");
+  const PACKED = P("minecraft:packed_ice");
+  const BLUE = P("minecraft:blue_ice");
+  const SNOW = P("minecraft:snow_layer");
+  runEdit(ses.player, { label: "Eishöhle", region: { min, max } }, function* (es) {
+    let lowest = Infinity;
+    for (let x = min.x; x <= max.x; x++) for (let z = min.z; z <= max.z; z++) for (let y = min.y; y <= max.y; y++) if (inCave(x, y, z)) ((lowest = Math.min(lowest, y)), (y = max.y + 1));
+    if (lowest === Infinity) return;
+    const lakeY = lowest + 1;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++)
+        for (let y = min.y; y <= max.y; y++) {
+          if (inCave(x, y, z)) {
+            es.set(x, y, z, y <= lakeY ? ICE : A);
+            continue;
+          }
+          // Hülle: fester Block direkt an der Höhle wird zu Eis
+          const touch = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].some(([ox, oy, oz]) => inCave(x + ox, y + oy, z + oz));
+          if (touch) es.set(x, y, z, hashCell(x, y, z) < 0.35 ? BLUE : PACKED);
+        }
+      yield;
+    }
+    // Eiszapfen von der Decke, Schnee am Boden
+    const dens = Math.max(0, o.icicles) / 100;
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++)
+        for (let y = min.y; y <= max.y; y++) {
+          if (!inCave(x, y, z) || y <= lakeY) continue;
+          if (!inCave(x, y + 1, z) && rand() < dens * 0.3) {
+            let len = 1 + Math.floor(rand() * 3);
+            for (let i = 0; i < len; i++) {
+              if (!inCave(x, y - i - 1, z) || y - i - 1 <= lakeY) break;
+              es.set(x, y - i, z, hashCell(x, i, z) < 0.5 ? BLUE : ICE);
+            }
+          } else if (!inCave(x, y - 1, z) && rand() < 0.4 && es.id(x, y, z) === "minecraft:air") es.set(x, y, z, SNOW);
+        }
+      yield;
+    }
+  });
+}
+
+/**
+ * Blumenfelder in der Auswahl: ein flaches Feld mit langen, bunten Blumenreihen (Tulpen und mehr) in Blickrichtung,
+ * jede Reihe eine Farbe, auf Wunsch mit schmalen Graswegen dazwischen. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{width:number, paths:boolean}} o width = Breite einer Reihe, paths = Graswege dazwischen
+ * @param {{x:number, z:number}} dir Blickrichtung (Richtung der Reihen)
+ */
+export function opFlowerFields(ses, o, dir) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 3) return err(ses.player, "Die Auswahl ist zu flach – mindestens 3 Blöcke hoch.");
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  const base = min.y + Math.max(1, Math.round((sy - 2) * 0.5));
+  const wdt = Math.max(1, o.width);
+  const period = wdt + (o.paths ? 1 : 0);
+  const FLOWERS = ["minecraft:red_tulip", "minecraft:orange_tulip", "minecraft:pink_tulip", "minecraft:white_tulip", "minecraft:cornflower", "minecraft:allium", "minecraft:dandelion"];
+  const P = (/** @type {string} */ id) => BlockPermutation.resolve(id);
+  const A = air();
+  const grass = P("minecraft:grass_block");
+  const path = P("minecraft:grass_path");
+  runEdit(ses.player, { label: "Blumenfelder", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const w = (alongX ? z - min.z : x - min.x);
+        const row = Math.floor(w / period);
+        const isPath = o.paths && w % period === wdt;
+        const flower = P(FLOWERS[row % FLOWERS.length]);
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (y < base) b = P(base - y <= 2 ? "minecraft:dirt" : "minecraft:stone");
+          else if (y === base) b = isPath ? path : grass;
+          else if (y === base + 1 && !isPath) b = flower;
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Vulkan mit Kratersee in der Auswahl: ein erloschener, kegelförmiger Vulkan mit bewaldeten Hängen und einem
  * kreisrunden, tiefen See im Krater, rundherum grünes Tiefland. Der Kraterrand ist aus Fels. Die Auswahl wird neu
  * gefüllt.

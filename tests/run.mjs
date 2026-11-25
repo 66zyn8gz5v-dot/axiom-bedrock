@@ -1581,6 +1581,41 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Eishöhle & Blumenfelder");
+{
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 30, z: 0 }, { x: 23, y: 45, z: 23 });
+  let seed = 89;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Eishöhle", () => ops.opIceCave(ses, { icicles: 80 }, rnd));
+  seed = 89;
+  ops.opIceCave(ses, { icicles: 80 }, rnd);
+  await drain();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const n = {};
+  let outside = 0;
+  let hanging = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (x < 0 || x > 23 || y < 30 || y > 45 || z < 0 || z > 23) outside++;
+    n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+    if ((p.type.id === "minecraft:ice" || p.type.id === "minecraft:blue_ice") && id(x, y - 1, z) === "minecraft:air" && y > 36) hanging++;
+  }
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("air") > 800 && c("packed_ice") > 300 && c("blue_ice") > 100 && outside === 0, "Eishöhle: große Höhle mit Eiswänden (" + c("air") + ")");
+  check(hanging > 10 && c("ice") > 10 && c("snow_layer") > 10, "Eishöhle: Eiszapfen, gefrorener See, Schnee (" + hanging + "/" + c("ice") + ")");
+  await undo();
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 63, z: 0 }, { x: 19, y: 66, z: 11 });
+  await roundTrip("Blumenfelder", () => ops.opFlowerFields(ses, { width: 2, paths: true }, { x: 1, z: 0 }));
+  ops.opFlowerFields(ses, { width: 2, paths: true }, { x: 1, z: 0 });
+  await drain();
+  check(id(5, 65, 0) === "minecraft:red_tulip" && id(10, 65, 1) === "minecraft:red_tulip" && id(5, 64, 2) === "minecraft:grass_path" && id(5, 65, 3) === "minecraft:orange_tulip" && id(5, 65, 6) === "minecraft:pink_tulip", "Blumenfelder: bunte Reihen in Blickrichtung mit Wegen dazwischen");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Kratersee & Karst");
 {
   dim.blocks.clear();

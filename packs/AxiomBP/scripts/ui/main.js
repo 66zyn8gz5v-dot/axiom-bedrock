@@ -207,6 +207,32 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Eishöhle graben",
+      run: async () => {
+        const c = ses.s.iceCave;
+        const r = await new Modal("Eishöhle").slider("icicles", "Eiszapfen in %", 0, 100, 10, c.icicles).show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opIceCave(ses, c);
+      },
+    },
+    {
+      text: "Blumenfelder anlegen (Reihen in Blickrichtung)",
+      run: async () => {
+        const c = ses.s.flowerFields;
+        const r = await new Modal("Blumenfelder")
+          .slider("width", "Breite einer Blumenreihe", 1, 6, 1, c.width)
+          .toggle("paths", "Graswege zwischen den Reihen", c.paths)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opFlowerFields(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
       text: "Vulkan mit Kratersee erzeugen",
       run: async () => {
         const c = ses.s.craterLake;

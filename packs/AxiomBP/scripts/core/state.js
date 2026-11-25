@@ -80,6 +80,8 @@ export function defaultSettings() {
     basalt: { size: 3 },
     craterLake: { trees: 50, crater: 60 },
     karst: { hills: 10 },
+    iceCave: { icicles: 50 },
+    flowerFields: { width: 2, paths: true },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },
