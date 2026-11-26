@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.114.0 – 27.11.2026 (nächtlicher Ausbau: Formen)
+- **Gartenlaterne:** neue Form – auf den Boden zielen und benutzen. Es entsteht eine kleine Steinlaterne wie im
+  japanischen Garten: Sockel und Schaft aus Muster 1, eine Lichtkammer mit Laterne und offenen Seiten, darüber ein
+  breites Dach mit hochgezogenen Ecken und ein Knauf. Radius Y = Höhe des Schafts
+- **Torii-Tor:** neue Form – quer vor dir entsteht ein japanisches Tor zum Hindurchgehen: zwei Säulen und ein unterer
+  Querbalken (ragt über die Säulen hinaus) aus Muster 1, eine Mittelstütze und ein oberer Balken aus Muster 2,
+  dessen Enden nach oben geschwungen sind. Tipp: Muster 1 rote Wolle oder roter Beton, Muster 2 Schwarzstein.
+  Radius X = halbe Breite, Radius Y = halbe Höhe
+
 ## 0.113.0 – 26.11.2026 (nächtlicher Ausbau: Terraform)
 - **Weinberg:** neu im Auswahl-Menü – einen Hang mit der Box-Auswahl umfassen und in Richtung bergauf oder bergab
   schauen. Der Hang wird zu Terrassen mit Trockenmauern aus (bemoostem) Bruchstein an den Kanten; auf den Terrassen

@@ -232,8 +232,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Dorfbrunnen-Platz** (v0.110): gepflasterter runder Platz mit Brunnen in der Mitte und Bänken
 - [x] **Marktstände** (v0.112): Reihe kleiner Stände mit bunten Stoffdächern (Wolle) und Theken
 - [x] **Burggraben-Ring** (v0.112): Wassergraben rund um eine Auswahl mit Mauer auf der Innenseite
-- [ ] **Leuchtturm-Laterne als eigene Form (Gartenlaterne)**: kleine Steinlaterne wie im japanischen Garten
-- [ ] **Torii-Tor**: japanisches Tor aus zwei Säulen und zwei Querbalken, oben geschwungen
+- [x] **Gartenlaterne** (v0.114): kleine japanische Steinlaterne mit Lichtkammer, Dach mit hochgezogenen Ecken und Knauf
+- [x] **Torii-Tor** (v0.114): zwei Säulen, unterer Querbalken, Mittelstütze, oberer Balken mit geschwungenen Enden
+- [ ] **Japanische Brücke**: hoch gewölbte Holzbrücke (Halbkreis) mit rotem Geländer, Punkt A → B
+- [ ] **Steingarten-Becken (Tsukubai)**: flaches Steinbecken mit Wasser, Bambusrohr und Trittsteinen
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

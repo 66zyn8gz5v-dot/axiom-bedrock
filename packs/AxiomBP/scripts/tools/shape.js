@@ -39,6 +39,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["gardenlantern", "Gartenlaterne (kleine japanische Steinlaterne mit Licht, Höhe = Schaft)"],
+  ["torii", "Torii-Tor (zwei Säulen, zwei Querbalken, oben geschwungen – quer vor dir)"],
   ["market", "Marktstände (Reihe kleiner Stände mit bunten Stoffdächern, zu dir)"],
   ["moat", "Burggraben (in die Box-Auswahl: Wassergraben ringsum, Mauer innen, Tor mit Brücke zu dir)"],
   ["stonebridge", "Steinerne Bogenbrücke (mehrere Rundbögen, Punkt A → B über einen Fluss)"],
@@ -786,7 +788,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "moat"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "moat", "gardenlantern", "torii"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1322,6 +1324,89 @@ function hashAt(a, b, c) {
   let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * Gartenlaterne: kleine japanische Steinlaterne – Sockel, Schaft, Lichtkammer mit Laterne,
+ * breites Dach mit hochgezogenen Ecken und Knauf. Höhe des Schafts aus „Höhe“.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildGardenLantern(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const P = Math.max(1, Math.min(6, c.ry - 1)); // Schafthöhe
+  const stone = picker(ses.s.pattern);
+  const A = air();
+  /** @type {BlockPermutation} */
+  let light;
+  try {
+    light = BlockPermutation.resolve("minecraft:lantern", { hanging: false });
+  } catch {
+    light = BlockPermutation.resolve("minecraft:lantern");
+  }
+  runEdit(ses.player, { label: "Gartenlaterne", symmetry: true }, function* (es) {
+    const y0 = base.y;
+    // Sockel 3×3
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) es.set(base.x + dx, y0, base.z + dz, stone());
+    // Schaft
+    for (let y = 1; y <= P; y++) es.set(base.x, y0 + y, base.z, stone());
+    // Auflageplatte 3×3
+    const yp = y0 + P + 1;
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) es.set(base.x + dx, yp, base.z + dz, stone());
+    // Lichtkammer: Eckpfosten, offene Seiten, Laterne in der Mitte
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dz = -1; dz <= 1; dz++) {
+        const corner = dx !== 0 && dz !== 0;
+        es.set(base.x + dx, yp + 1, base.z + dz, dx === 0 && dz === 0 ? light : corner ? stone() : A);
+      }
+    yield;
+    // Dach 5×5 ohne Ecken, Ecken eine Lage höher (geschwungen)
+    const yr = yp + 2;
+    for (let dx = -2; dx <= 2; dx++)
+      for (let dz = -2; dz <= 2; dz++) {
+        const corner = Math.abs(dx) === 2 && Math.abs(dz) === 2;
+        es.set(base.x + dx, corner ? yr + 1 : yr, base.z + dz, stone());
+      }
+    // obere Dachlage 3×3 und Knauf
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) es.set(base.x + dx, yr + 1, base.z + dz, stone());
+    es.set(base.x, yr + 2, base.z, stone());
+  });
+}
+
+/**
+ * Torii-Tor: zwei Säulen, unterer Querbalken (ragt über die Säulen hinaus), Mittelstütze und
+ * oberer Balken mit hochgezogenen Enden. Säulen/Balken aus Muster 1, oberer Balken aus Muster 2.
+ * Das Tor steht quer zur Blickrichtung, sodass du hindurchgehst.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildTorii(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const W = Math.max(2, c.rx); // Säulen bei ±W
+  const H = Math.max(4, 2 * c.ry); // Säulenhöhe
+  const post = picker(ses.s.pattern);
+  const top = picker(ses.s.pattern2);
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const sx = -d.z;
+  const sz = d.x;
+  runEdit(ses.player, { label: "Torii-Tor", symmetry: true }, function* (es) {
+    const set = (/** @type {number} */ l, /** @type {number} */ y, /** @type {() => BlockPermutation} */ p) => es.set(base.x + sx * l, base.y + y, base.z + sz * l, p());
+    // Säulen
+    for (const l of [-W, W]) for (let y = 0; y < H; y++) set(l, y, post);
+    yield;
+    // unterer Querbalken (Nuki) ragt je 1 Block über die Säulen hinaus
+    for (let l = -W - 1; l <= W + 1; l++) set(l, H - 2, post);
+    // Mittelstütze zwischen den Balken
+    set(0, H - 1, post);
+    // oberer Balken (Kasagi): gerade Mitte, Enden geschwungen nach oben
+    for (let l = -W - 1; l <= W + 1; l++) set(l, H, top);
+    for (const s of [-1, 1]) {
+      set(s * (W + 1), H + 1, top);
+      set(s * (W + 2), H + 1, top);
+    }
+  });
 }
 
 /**
@@ -3218,6 +3303,8 @@ export const shapeTool = {
     if (c.type === "plaza") return buildPlaza(ses, c);
     if (c.type === "market") return buildMarket(ses, c);
     if (c.type === "moat") return buildMoat(ses, c);
+    if (c.type === "gardenlantern") return buildGardenLantern(ses, c);
+    if (c.type === "torii") return buildTorii(ses, c);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -3275,7 +3362,7 @@ export const shapeTool = {
     const c = ses.s.shape;
     if (["straight", "aqueduct", "tunnel", "colonnade", "stonebridge"].includes(c.type) && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (["temple", "cloister", "amphitheater", "greenhouse", "moat"].includes(c.type)) return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "gardenlantern", "torii"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

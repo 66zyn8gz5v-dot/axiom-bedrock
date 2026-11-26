@@ -4116,6 +4116,41 @@ console.log("Marktstände & Burggraben");
   dim.blocks.clear();
 }
 
+console.log("Gartenlaterne & Torii-Tor");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldP2 = ses.s.pattern2;
+  ses.s.pattern = parsePattern("stone_bricks");
+  ses.s.pattern2 = parsePattern("blackstone");
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const S = "minecraft:stone_bricks";
+  const Bk = "minecraft:blackstone";
+  Object.assign(ses.s.shape, { type: "gardenlantern", rx: 3, ry: 3, rz: 3, anchor: "center" });
+  await roundTrip("Gartenlaterne", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(1, 65, 1) === S && id(-1, 65, -1) === S && id(0, 66, 0) === S && id(0, 67, 0) === S && id(1, 66, 0) === "minecraft:air" && id(1, 68, -1) === S, "Gartenlaterne: Sockel, Schaft, Auflageplatte");
+  check(id(0, 69, 0) === "minecraft:lantern" && id(1, 69, 1) === S && id(1, 69, 0) === "minecraft:air" && id(0, 69, -1) === "minecraft:air", "Gartenlaterne: Lichtkammer mit Laterne und offenen Seiten");
+  check(id(2, 70, 0) === S && id(2, 70, 2) === "minecraft:air" && id(2, 71, 2) === S && id(-2, 71, -2) === S && id(1, 71, 1) === S && id(0, 72, 0) === S && id(0, 73, 0) === "minecraft:air", "Gartenlaterne: Dach mit hochgezogenen Ecken und Knauf");
+  await undo();
+  dim.blocks.clear();
+  Object.assign(ses.s.shape, { type: "torii", rx: 3, ry: 3, rz: 3 });
+  await roundTrip("Torii-Tor", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(3, 65, 0) === S && id(-3, 70, 0) === S && id(3, 71, 0) !== S && id(0, 66, 0) === "minecraft:air" && id(2, 67, 0) === "minecraft:air", "Torii: zwei Säulen, Durchgang frei");
+  check(id(4, 69, 0) === S && id(-4, 69, 0) === S && id(5, 69, 0) === "minecraft:air" && id(0, 70, 0) === S && id(1, 70, 0) === "minecraft:air", "Torii: unterer Querbalken und Mittelstütze");
+  check(id(0, 71, 0) === Bk && id(4, 71, 0) === Bk && id(5, 71, 0) === "minecraft:air" && id(4, 72, 0) === Bk && id(-5, 72, 0) === Bk && id(0, 72, 0) === "minecraft:air", "Torii: oberer Balken mit geschwungenen Enden");
+  check(id(3, 65, 1) === "minecraft:air" && id(0, 65, 3) === "minecraft:air", "Torii: steht quer zur Blickrichtung");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  ses.s.pattern2 = oldP2;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();
