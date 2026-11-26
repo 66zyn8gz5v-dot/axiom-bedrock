@@ -978,6 +978,108 @@ function smallTree(es, sel, x, y, z, kind, h) {
 }
 
 /**
+ * Weinberg: der Hang in der Auswahl wird zu Terrassen (Stufenhöhe einstellbar) mit Trockenmauern aus Bruchstein an
+ * den Kanten. Auf den Terrassen stehen Rebenreihen quer zum Hang (in Blickrichtung geht es bergauf oder bergab):
+ * Zaunpfosten mit Blättern, dazwischen Wege aus grober Erde.
+ * @param {import("./state.js").Session} ses
+ * @param {{step:number}} o step = Stufenhöhe
+ * @param {{x:number, z:number}} dir Blickrichtung (quer zu den Reihen)
+ */
+export function opVineyard(ses, o, dir) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const step = Math.max(1, Math.min(4, o.step));
+  const alongX = Math.abs(dir.x) >= Math.abs(dir.z);
+  /** @type {Map<string, number>} */
+  const T = new Map();
+  runEdit(ses.player, { label: "Weinberg", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++)
+      for (let z = min.z; z <= max.z; z++) {
+        const g = groundY(es, x, z, max.y, max.y - min.y);
+        if (g !== null) T.set(x + "," + z, min.y + Math.floor((g - min.y) / step) * step);
+      }
+    yield;
+    const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => BlockPermutation.resolve(id, st);
+    const A = air();
+    const fence = P("minecraft:oak_fence");
+    const vine = P("minecraft:oak_leaves", { persistent_bit: true });
+    let n = 0;
+    for (const [k, t] of T) {
+      const [x, z] = k.split(",").map(Number);
+      const lower = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oz]) => {
+        const nt = T.get(x + ox + "," + (z + oz));
+        return nt !== undefined && nt < t;
+      });
+      for (let y = max.y; y > t; y--) if (selContains(sel, x, y, z)) es.set(x, y, z, A);
+      if (lower) {
+        // Trockenmauer an der Terrassenkante
+        for (let y = t - step + 1; y <= t; y++) if (selContains(sel, x, y, z)) es.set(x, y, z, P(hashCell(x, y, z) < 0.3 ? "minecraft:mossy_cobblestone" : "minecraft:cobblestone"));
+        continue;
+      }
+      const u = alongX ? x : z;
+      const w = alongX ? z : x;
+      const row = ((u - (alongX ? min.x : min.z)) % 3 + 3) % 3 === 1;
+      es.set(x, t, z, P(row ? "minecraft:grass_block" : "minecraft:coarse_dirt"));
+      if (row && t + 2 <= max.y) {
+        es.set(x, t + 1, z, w % 4 === 0 ? fence : vine);
+        es.set(x, t + 2, z, vine);
+      }
+      if (++n % 128 === 0) yield;
+    }
+  });
+}
+
+/**
+ * Lavafeld in der Auswahl: ein erkaltetes, buckliges Lavafeld aus Basalt, Schwarzstein und glattem Basalt, durchzogen
+ * von glühenden Rissen aus Magma in einem Vieleck-Muster, dazu kleine Lavatümpel. Die Auswahl wird neu gefüllt.
+ * @param {import("./state.js").Session} ses
+ * @param {{cells:number, pools:number}} o cells = Größe der Schollen, pools = Lavatümpel in %
+ * @param {() => number} [rand]
+ */
+export function opLavaField(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sy = max.y - min.y + 1;
+  if (sy < 5) return err(ses.player, "Die Auswahl ist zu flach – mindestens 5 Blöcke hoch.");
+  const seed = rand() * 1000;
+  const base = min.y + Math.max(2, Math.round((sy - 1) * 0.4));
+  const cell = Math.max(3, o.cells);
+  const thr = o.pools <= 0 ? -Infinity : -0.7 + (Math.min(100, o.pools) / 100) * 0.5;
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id) => {
+    let p = cache.get(id);
+    if (!p) cache.set(id, (p = BlockPermutation.resolve(id)));
+    return p;
+  };
+  const A = air();
+  runEdit(ses.player, { label: "Lavafeld", region: { min, max } }, function* (es) {
+    for (let x = min.x; x <= max.x; x++) {
+      for (let z = min.z; z <= max.z; z++) {
+        const edge = x === min.x || x === max.x || z === min.z || z === max.z;
+        const h = Math.min(max.y - 1, base + Math.round((fbm(x / 7 + seed, 0.8, z / 7, 2) + 0.4) * 2));
+        const crack = voronoiBorder(x, z, cell, seed) < 0.7;
+        const pool = !edge && !crack && fbm(x / 5 + seed, 3.9, z / 5, 2) < thr;
+        const r = hashCell(x, 5, z);
+        for (let y = min.y; y <= max.y; y++) {
+          if (!selContains(sel, x, y, z)) continue;
+          let b = A;
+          if (pool) {
+            const top = base - 1;
+            b = y < top ? P("minecraft:basalt") : y === top ? P("minecraft:lava") : A;
+          } else if (y < h) b = P(y < base - 2 ? "minecraft:stone" : "minecraft:basalt");
+          else if (y === h) b = crack ? P("minecraft:magma") : P(r < 0.4 ? "minecraft:basalt" : r < 0.75 ? "minecraft:blackstone" : "minecraft:smooth_basalt");
+          es.set(x, y, z, b);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
  * Eishöhle in der Auswahl: eine große, unregelmäßige Höhle, deren Wände, Decke und Boden mit Packeis und Blaueis
  * ausgekleidet sind. Von der Decke hängen Eiszapfen, am Boden liegen Schneeflecken, und in der tiefsten Mulde liegt ein
  * zugefrorener See. Am besten unter der Erde oder in einem Berg benutzen.

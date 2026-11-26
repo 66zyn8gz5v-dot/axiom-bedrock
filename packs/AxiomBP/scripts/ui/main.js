@@ -207,6 +207,32 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Weinberg am Hang anlegen (Reihen quer zur Blickrichtung)",
+      run: async () => {
+        const c = ses.s.vineyard;
+        const r = await new Modal("Weinberg").slider("step", "Stufenhöhe der Terrassen", 1, 4, 1, c.step).show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        const d = p.getViewDirection();
+        ops.opVineyard(ses, c, { x: d.x, z: d.z });
+      },
+    },
+    {
+      text: "Lavafeld erzeugen",
+      run: async () => {
+        const c = ses.s.lavaField;
+        const r = await new Modal("Lavafeld")
+          .slider("cells", "Größe der Schollen", 3, 12, 1, c.cells)
+          .slider("pools", "Lavatümpel in %", 0, 100, 10, c.pools)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opLavaField(ses, c);
+      },
+    },
+    {
       text: "Eishöhle graben",
       run: async () => {
         const c = ses.s.iceCave;

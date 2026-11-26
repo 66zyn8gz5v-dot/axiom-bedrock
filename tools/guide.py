@@ -133,8 +133,8 @@ PAGES = [
          ("p", "Axiom-Menü → Auswahl bearbeiten:"),
          ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Glätten · Verlauf · Ausdünnen · Dach · Bogenfenster · "
                "Stapeln · Array · Verschieben · Drehen · Spiegeln · Wasser · Analysieren"),
-         ("p", "Landschaften: Inseln · Vulkan · Canyon · Kirschhain · Moor · Gletscher · Savanne · Bergsee · Pilze · Bambus · "
-               "Riff · Tundra · Heide · Sinter · Sandbank · Tepui · Salz · Mäander · Basalt · Kratersee · Karst · Eishöhle · Blumenfeld · Reis · Delta · Dünen · Mond · Höhlen · Tropfstein"),
+         ("p", "Landschaften (über 30): Inseln · Vulkan · Canyon · Moor · Gletscher · Savanne · Bergsee · Pilze · Bambus · "
+               "Riff · Tundra · Tepui · Salzsee · Mäander · Karst · Eishöhle · Blumen · Wein · Lava · Dünen · Mond …"),
          ("p", "Die Partikel zeigen dir immer, was gerade ausgewählt ist."),
          ("p", "Lasso: Mit dem Pfad Punkte setzen → „Lasso“.")],
     ),

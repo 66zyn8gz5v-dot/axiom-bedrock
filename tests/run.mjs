@@ -1581,6 +1581,51 @@ console.log("Zwiebelturm & Rippen");
   dim.blocks.clear();
 }
 
+console.log("Weinberg & Lavafeld");
+{
+  dim.blocks.clear();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const GR = BlockPermutation.resolve("minecraft:grass_block");
+  const DI = BlockPermutation.resolve("minecraft:dirt");
+  for (let x = 0; x <= 23; x++)
+    for (let z = 0; z <= 11; z++) {
+      const h = 64 + Math.floor(x / 3);
+      for (let y = 65; y < h; y++) dim._set(x, y, z, DI);
+      if (h > 64) dim._set(x, h, z, GR);
+    }
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 23, y: 80, z: 11 });
+  await roundTrip("Weinberg", () => ops.opVineyard(ses, { step: 2 }, { x: 1, z: 0 }));
+  ops.opVineyard(ses, { step: 2 }, { x: 1, z: 0 });
+  await drain();
+  const n = {};
+  for (const [, p] of dim.blocks) n[p.type.id] = (n[p.type.id] ?? 0) + 1;
+  const c = (s) => n["minecraft:" + s] ?? 0;
+  check(c("cobblestone") + c("mossy_cobblestone") > 20 && c("oak_fence") > 5 && c("oak_leaves") > 40 && c("coarse_dirt") > 20, "Weinberg: Terrassen mit Trockenmauern, Rebenreihen und Wegen (" + c("oak_leaves") + ")");
+  check(id(8, 67, 5) === "minecraft:air" || id(8, 67, 5) === "minecraft:oak_leaves" || id(8, 67, 5) === "minecraft:oak_fence", "Weinberg: Hang abgetragen");
+  await undo();
+  dim.blocks.clear();
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 31, y: 68, z: 31 });
+  let seed = 97;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  await roundTrip("Lavafeld", () => ops.opLavaField(ses, { cells: 6, pools: 60 }, rnd));
+  ops.opLavaField(ses, { cells: 6, pools: 60 }, rnd);
+  await drain();
+  const m = {};
+  let leak = 0;
+  for (const [k, p] of dim.blocks) {
+    m[p.type.id] = (m[p.type.id] ?? 0) + 1;
+    if (p.type.id !== "minecraft:lava") continue;
+    const [x, y, z] = k.split(",").map(Number);
+    for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+  }
+  const L = (s) => m["minecraft:" + s] ?? 0;
+  check(L("magma") > 100 && L("basalt") + L("blackstone") + L("smooth_basalt") > 500, "Lavafeld: Basaltschollen mit glühenden Rissen (" + L("magma") + ")");
+  check(L("lava") > 5 && leak === 0 && L("grass_block") === 0, "Lavafeld: eingefasste Lavatümpel (" + L("lava") + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
 console.log("Eishöhle & Blumenfelder");
 {
   dim.blocks.clear();

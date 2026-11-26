@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.113.0 – 26.11.2026 (nächtlicher Ausbau: Terraform)
+- **Weinberg:** neu im Auswahl-Menü – einen Hang mit der Box-Auswahl umfassen und in Richtung bergauf oder bergab
+  schauen. Der Hang wird zu Terrassen mit Trockenmauern aus (bemoostem) Bruchstein an den Kanten; auf den Terrassen
+  stehen Rebenreihen quer zum Hang – Zaunpfosten mit Blättern – und dazwischen Wege aus grober Erde. Die Stufenhöhe
+  ist einstellbar
+- **Lavafeld:** neu im Auswahl-Menü – füllt eine Box-Auswahl mit einem buckligen, erkalteten Lavafeld aus Basalt,
+  Schwarzstein und glattem Basalt, durchzogen von glühenden Rissen aus Magma in einem Vieleck-Muster, dazu kleine,
+  eingefasste Lavatümpel. Größe der Schollen und Anteil der Tümpel sind einstellbar
+
 ## 0.112.0 – 26.11.2026 (nächtlicher Ausbau: Formen)
 - **Marktstände:** neue Form – auf den Boden zielen und benutzen. Quer vor dir entsteht eine Reihe kleiner Stände:
   je vier Zaunpfosten, eine Theke aus Muster 1 auf deiner Seite und ein gestreiftes Stoffdach aus Wolle (jeder Stand

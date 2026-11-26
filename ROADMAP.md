@@ -157,8 +157,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Karstlandschaft** (v0.109): Kegelkarst – viele steile, bewaldete Kalkhügel aus einer flachen, grünen Ebene
 - [x] **Eiszapfen-Höhle (Eishöhle)** (v0.111): Höhle aus Packeis und Blaueis mit Eiszapfen und gefrorenem See
 - [x] **Blumenfeld-Streifen** (v0.111): lange, bunte Blumenreihen wie Tulpenfelder in einer Auswahl
-- [ ] **Weinberg**: Hang mit Rebenreihen (Zäune mit Blättern) quer zum Hang und Trockenmauern
-- [ ] **Lavafeld**: erkaltetes Lavafeld aus Basalt und Schwarzstein mit glühenden Rissen (Magma) in einer Auswahl
+- [x] **Weinberg** (v0.113): Hang mit Rebenreihen (Zäune mit Blättern) quer zum Hang und Trockenmauern
+- [x] **Lavafeld** (v0.113): erkaltetes Lavafeld aus Basalt und Schwarzstein mit glühenden Rissen (Magma) in einer Auswahl
+- [ ] **Sanfte Dünenküste mit Strandhafer**: Küste mit Dünengürtel, Strand und Brandung entlang der Pfad-Punkte
+- [ ] **Waldlichtung**: dichter Wald in einer Auswahl mit runder Lichtung, Pilzen und einem Teich in der Mitte
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
