@@ -4207,6 +4207,48 @@ console.log("Gartenlaterne & Torii-Tor");
   dim.blocks.clear();
 }
 
+console.log("Japanische Brücke & Tsukubai");
+{
+  dim.blocks.clear();
+  const oldP = ses.s.pattern;
+  const oldView = player.view;
+  player.view = { x: 0, y: 0, z: 1 };
+  ses.s.pattern = parsePattern("oak_planks");
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  const O = "minecraft:oak_planks";
+  Object.assign(ses.s.shape, { type: "jpbridge", rx: 1, ry: 4, rz: 1 });
+  ses.shapeA = undefined;
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  check(!!ses.shapeA, "Japanische Brücke: erster Klick merkt das Ufer");
+  await roundTrip("Japanische Brücke", () => use("axiom:shape", { x: 20, y: 64, z: 0 }));
+  await use("axiom:shape", { x: 0, y: 64, z: 0 });
+  await use("axiom:shape", { x: 20, y: 64, z: 0 });
+  check(id(10, 68, 0) === O && id(10, 67, 0) === O && id(10, 66, 0) === "minecraft:air" && id(10, 65, 0) === "minecraft:air", "Japanische Brücke: hoher Bogen, darunter frei");
+  check(id(10, 69, 1) === "minecraft:crimson_fence" && id(10, 69, -1) === "minecraft:crimson_fence" && id(10, 69, 0) === "minecraft:air" && id(0, 66, 1) === "minecraft:crimson_fence" && id(20, 66, -1) === "minecraft:crimson_fence", "Japanische Brücke: rotes Geländer, hohe Endpfosten");
+  const surf = (u) => {
+    for (let y = 75; y > 60; y--) if (id(u, y, 0) !== "minecraft:air") return y;
+    return 0;
+  };
+  let steep = 0;
+  for (let u = 0; u < 20; u++) if (Math.abs(surf(u + 1) - surf(u)) > 1) steep++;
+  check(steep === 0 && id(2, 66, 0) === "minecraft:oak_stairs" && dim._get(2, 66, 0).getAllStates().weirdo_direction === 0 && dim._get(18, 66, 0).getAllStates().weirdo_direction === 1, "Japanische Brücke: begehbar mit Treppenstufen");
+  await undo();
+  dim.blocks.clear();
+  ses.s.pattern = parsePattern("stone");
+  Object.assign(ses.s.shape, { type: "tsukubai", rx: 3, ry: 3, rz: 3 });
+  await roundTrip("Tsukubai", () => use("axiom:shape", G));
+  await use("axiom:shape", G);
+  check(id(0, 65, 0) === "minecraft:water" && id(1, 65, 1) === "minecraft:stone" && id(0, 65, -1) === "minecraft:stone" && id(0, 64, 0) === "minecraft:stone" && id(0, 66, 0) === "minecraft:air", "Tsukubai: Steinbecken mit Wasser");
+  check(id(0, 65, 3) === "minecraft:bamboo_block" && id(0, 67, 3) === "minecraft:bamboo_block" && id(0, 67, 2) === "minecraft:bamboo_block" && id(0, 67, 1) === "minecraft:bamboo_block" && id(0, 67, 0) === "minecraft:air", "Tsukubai: Bambuspfosten mit Rohr über dem Becken");
+  check(id(2, 65, 0) === "minecraft:mossy_cobblestone" && id(2, 64, 2) === "minecraft:moss_block" && id(2, 65, 2) === "minecraft:fern" && id(2, 64, -2) === "minecraft:gravel", "Tsukubai: Seitensteine, Moos mit Farn, Kies");
+  check(id(0, 64, -3) === "minecraft:stone" && id(-1, 64, -5) === "minecraft:stone" && id(0, 64, -7) === "minecraft:stone" && id(0, 64, -6) === "minecraft:grass_block", "Tsukubai: Trittsteine zu dir hin");
+  await undo();
+  player.view = oldView;
+  ses.s.pattern = oldP;
+  Object.assign(ses.s.shape, { type: "sphere", rx: 4, ry: 4, rz: 4 });
+  dim.blocks.clear();
+}
+
 console.log("Gespiegelte Kopie & Brücke");
 {
   dim.blocks.clear();

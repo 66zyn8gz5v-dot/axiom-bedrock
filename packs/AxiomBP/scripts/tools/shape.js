@@ -39,6 +39,8 @@ export const SHAPES = /** @type {[string,string][]} */ ([
   ["gate", "Burgtor (Torhaus mit Bogen, Fallgitter, zwei Türme – zu dir gedreht)"],
   ["maya", "Maya-Pyramide (Stufen, Treppen an allen 4 Seiten, Tempel oben)"],
   ["lanterndome", "Kuppel mit Laterne (Tambour mit Fensterkranz, Kuppel, Türmchen obendrauf)"],
+  ["jpbridge", "Japanische Brücke (hoch gewölbte Holzbrücke mit rotem Geländer, Punkt A → B)"],
+  ["tsukubai", "Tsukubai (Steinbecken mit Wasser, Bambusrohr, Kies und Trittsteinen)"],
   ["gardenlantern", "Gartenlaterne (kleine japanische Steinlaterne mit Licht, Höhe = Schaft)"],
   ["torii", "Torii-Tor (zwei Säulen, zwei Querbalken, oben geschwungen – quer vor dir)"],
   ["market", "Marktstände (Reihe kleiner Stände mit bunten Stoffdächern, zu dir)"],
@@ -788,7 +790,7 @@ export function shapeBetween(c, A, B) {
 }
 
 /** Formen, die sich nicht zwischen zwei Punkte legen lassen. */
-const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "moat", "gardenlantern", "torii"];
+const NO_AB = ["pillar", "disk", "spiral", "torus", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "temple", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "cloister", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "amphitheater", "colonnade", "observatory", "stepwell", "greenhouse", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "moat", "gardenlantern", "torii", "jpbridge", "tsukubai"];
 
 /**
  * Zwei-Punkte-Modus: 1. Benutzen = Punkt A, 2. Benutzen = Punkt B und bauen.
@@ -1324,6 +1326,144 @@ function hashAt(a, b, c) {
   let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * Japanische Brücke (Taikobashi): 1. Benutzen = Punkt A (ein Ufer), 2. Benutzen = Punkt B (anderes Ufer). Eine hoch
+ * gewölbte Holzbrücke aus Muster 1 entlang der Hauptrichtung; der Belag steigt wie ein Bogen an und fällt wieder ab
+ * (höchstens 1 Block pro Schritt, Treppenstufen machen ihn begehbar). Darunter bleibt der Bogen frei. Rotes Geländer
+ * (Karmesin-Zaun) an beiden Seiten mit höheren Pfosten an den Enden. Breite = 2 × Radius X + 1, Radius Y = Bogenhöhe.
+ * @param {import("../core/state.js").Session} ses
+ * @param {import("../core/state.js").Settings["shape"]} c
+ */
+function buildJapaneseBridge(ses, c) {
+  const t = targetOrAir(ses.player, ses.s);
+  const p = t.hit ? t.adjacent : t.pos;
+  if (!ses.shapeA) {
+    ses.shapeA = p;
+    return msg(ses.player, "Japanische Brücke: erstes Ufer (Punkt A) gesetzt – jetzt auf das andere Ufer (Punkt B) zielen und benutzen.");
+  }
+  const A = ses.shapeA;
+  ses.shapeA = undefined;
+  const ddx = p.x - A.x;
+  const ddz = p.z - A.z;
+  const [sx, sz] = Math.abs(ddx) >= Math.abs(ddz) ? [Math.sign(ddx) || 1, 0] : [0, Math.sign(ddz) || 1];
+  const L = Math.abs(sx ? ddx : ddz);
+  if (L < 6) return err(ses.player, "Die Ufer liegen zu nah beieinander – mindestens 7 Blöcke.");
+  const W = Math.max(1, Math.min(3, c.rx));
+  // Steigung höchstens 1 pro Block: Hm · π / L ≤ 1
+  const Hm = Math.max(2, Math.min(c.ry, Math.floor(L / Math.PI)));
+  const base = Math.max(A.y, p.y) - 1;
+  const top = (/** @type {number} */ u) => base + Math.round(Hm * Math.sin((Math.PI * u) / L));
+  const deck = picker(ses.s.pattern);
+  const mat = ses.s.pattern[0]?.id ?? "minecraft:oak_planks";
+  let stairId = mat.endsWith("_planks") ? mat.replace(/_planks$/, "_stairs") : stairFor(mat);
+  try {
+    BlockPermutation.resolve(stairId);
+  } catch {
+    stairId = "minecraft:oak_stairs";
+  }
+  const stair = (/** @type {number} */ dx, /** @type {number} */ dz) => {
+    const dir = STAIR_DIRS.find(([a, b]) => a === dx && b === dz)?.[2] ?? 0;
+    try {
+      return BlockPermutation.resolve(stairId, { weirdo_direction: dir, upside_down_bit: false });
+    } catch {
+      return BlockPermutation.resolve(stairId);
+    }
+  };
+  /** @type {BlockPermutation} */
+  let fence;
+  try {
+    fence = BlockPermutation.resolve("minecraft:crimson_fence");
+  } catch {
+    fence = BlockPermutation.resolve("minecraft:oak_fence");
+  }
+  const Air = air();
+  runEdit(ses.player, { label: "Japanische Brücke", symmetry: true }, function* (es) {
+    for (let u = 0; u <= L; u++) {
+      const y = top(u);
+      const up = u < L && top(u + 1) > y; // nächster Block höher → Stufe Richtung B
+      const down = u > 0 && top(u - 1) > y; // vorheriger Block höher → Stufe Richtung A
+      for (let w = -W; w <= W; w++) {
+        const x = A.x + sx * u - sz * w;
+        const z = A.z + sz * u + sx * w;
+        // Belag zwei Blöcke dick, an den Enden bis zum Boden
+        es.set(x, y, z, deck());
+        if (y - 1 > base || u === 0 || u === L) es.set(x, y - 1, z, deck());
+        if (u === 0 || u === L) {
+          let g = y - 2;
+          while (g > y - 12 && !isSolidId(es.id(x, g, z) ?? "minecraft:air")) es.set(x, g--, z, deck());
+        }
+        if (Math.abs(w) === W) {
+          // Geländer; an den Enden höhere Pfosten
+          es.set(x, y + 1, z, fence);
+          if (u === 0 || u === L) es.set(x, y + 2, z, fence);
+        } else {
+          let b = Air;
+          if (up) b = stair(sx, sz);
+          else if (down) b = stair(-sx, -sz);
+          es.set(x, y + 1, z, b);
+          es.set(x, y + 2, z, Air);
+        }
+      }
+      yield;
+    }
+  });
+}
+
+/**
+ * Tsukubai (japanisches Steinbecken): auf den Boden zielen. Ein flaches Steinbecken aus Muster 1 mit Wasser in der
+ * Mitte, zwei bemooste Seitensteine, dahinter ein Bambuspfosten mit Rohr, das über das Becken ragt, ringsum Kies,
+ * Moos mit Farnen und eine Reihe Trittsteine zu dir hin.
+ * @param {import("../core/state.js").Session} ses
+ */
+function buildTsukubai(ses) {
+  const t = targetOrAir(ses.player, ses.s);
+  const base = t.hit ? t.adjacent : t.pos;
+  const g = base.y - 1;
+  const d = cardinal(ses.player.getViewDirection(), true);
+  const stone = picker(ses.s.pattern);
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    try {
+      return BlockPermutation.resolve(id, st);
+    } catch {
+      return BlockPermutation.resolve(id);
+    }
+  };
+  const sx = -d.z;
+  const sz = d.x;
+  // l = seitlich, f = zum Spieler hin
+  const at = (/** @type {number} */ l, /** @type {number} */ f) => [base.x + sx * l - d.x * f, base.z + sz * l - d.z * f];
+  const axis = d.x !== 0 ? "x" : "z";
+  runEdit(ses.player, { label: "Tsukubai", symmetry: true }, function* (es) {
+    const put = (/** @type {number} */ l, /** @type {number} */ f, /** @type {number} */ y, /** @type {BlockPermutation} */ b) => {
+      const [x, z] = at(l, f);
+      es.set(x, y, z, b);
+    };
+    // Kiesbett ringsum
+    for (let l = -3; l <= 3; l++) for (let f = -4; f <= 3; f++) if (Math.hypot(l, f + 0.5) <= 3.6) put(l, f, g, P("minecraft:gravel"));
+    // Becken 3×3 mit Wasser in der Mitte
+    for (let l = -1; l <= 1; l++)
+      for (let f = -1; f <= 1; f++) {
+        put(l, f, g, stone());
+        put(l, f, base.y, l === 0 && f === 0 ? P("minecraft:water") : stone());
+      }
+    // bemooste Seitensteine
+    put(-2, 0, base.y, P("minecraft:mossy_cobblestone"));
+    put(2, 0, base.y, P("minecraft:mossy_cobblestone"));
+    // Moos mit Farnen hinten seitlich
+    for (const l of [-2, 2]) {
+      put(l, -2, g, P("minecraft:moss_block"));
+      put(l, -2, base.y, P("minecraft:fern"));
+    }
+    yield;
+    // Bambuspfosten hinter dem Becken, Rohr ragt über den Beckenrand
+    for (let y = 0; y < 3; y++) put(0, -3, base.y + y, P("minecraft:bamboo_block", { pillar_axis: "y" }));
+    put(0, -2, base.y + 2, P("minecraft:bamboo_block", { pillar_axis: axis }));
+    put(0, -1, base.y + 2, P("minecraft:bamboo_block", { pillar_axis: axis }));
+    // Trittsteine zu dir hin (bündig im Boden)
+    for (const [l, f] of [[0, 3], [1, 5], [0, 7]]) put(l, f, g, stone());
+  });
 }
 
 /**
@@ -3305,6 +3445,8 @@ export const shapeTool = {
     if (c.type === "moat") return buildMoat(ses, c);
     if (c.type === "gardenlantern") return buildGardenLantern(ses, c);
     if (c.type === "torii") return buildTorii(ses, c);
+    if (c.type === "jpbridge") return buildJapaneseBridge(ses, c);
+    if (c.type === "tsukubai") return buildTsukubai(ses);
     if (c.type === "lanterndome") return buildLanternDome(ses, c);
     if (c.type === "maya") return buildMaya(ses, c);
     if (c.type === "gate") return buildGate(ses, c);
@@ -3360,9 +3502,9 @@ export const shapeTool = {
   },
   preview(ses) {
     const c = ses.s.shape;
-    if (["straight", "aqueduct", "tunnel", "colonnade", "stonebridge"].includes(c.type) && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
+    if (["straight", "aqueduct", "tunnel", "colonnade", "stonebridge", "jpbridge"].includes(c.type) && ses.shapeA) markBlock(ses.player, "axiom:pos1", ses.shapeA);
     if (["temple", "cloister", "amphitheater", "greenhouse", "moat"].includes(c.type)) return; // die Auswahl ist schon sichtbar
-    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "gardenlantern", "torii"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
+    if (["pillar", "winding", "tower", "lighthouse", "well", "windmill", "straight", "pavilion", "lanterndome", "maya", "gate", "pagoda", "aqueduct", "portal", "chandelier", "fountain", "outstair", "pantheon", "tunnel", "keep", "waterwheel", "campanile", "triumph", "colonnade", "observatory", "stepwell", "adcolumn", "drawbridge", "wellhouse", "ruin", "boathouse", "henge", "gardens", "stonebridge", "plaza", "market", "gardenlantern", "torii", "jpbridge", "tsukubai"].includes(c.type)) return markBlock(ses.player, "axiom:marker", center(ses));
     if (c.anchor === "sel") return; // die Auswahl ist schon sichtbar
     if (c.anchor === "ab") {
       // Punkt A und Linie zum Blickziel

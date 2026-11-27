@@ -236,8 +236,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Burggraben-Ring** (v0.112): Wassergraben rund um eine Auswahl mit Mauer auf der Innenseite
 - [x] **Gartenlaterne** (v0.114): kleine japanische Steinlaterne mit Lichtkammer, Dach mit hochgezogenen Ecken und Knauf
 - [x] **Torii-Tor** (v0.114): zwei Säulen, unterer Querbalken, Mittelstütze, oberer Balken mit geschwungenen Enden
-- [ ] **Japanische Brücke**: hoch gewölbte Holzbrücke (Halbkreis) mit rotem Geländer, Punkt A → B
-- [ ] **Steingarten-Becken (Tsukubai)**: flaches Steinbecken mit Wasser, Bambusrohr und Trittsteinen
+- [x] **Japanische Brücke** (v0.116): hoch gewölbte, begehbare Holzbrücke mit rotem Geländer, Punkt A → B
+- [x] **Tsukubai** (v0.116): Steinbecken mit Wasser, Bambusrohr, Kies, Moos und Trittsteinen
+- [ ] **Teehaus**: kleines japanisches Haus auf Stelzen mit Veranda, Schiebetüren (Birkenholz/Papier-Optik) und geschwungenem Dach
+- [ ] **Zen-Steingarten**: in eine Box-Auswahl geharkter Kies (Streifenmuster) mit einzelnen Felsen und Moosinseln
 - [x] **Treppenturm mit Außentreppe** (v0.86): runder Turm, um den außen eine Treppe nach oben läuft
 
 ### Sonstiges

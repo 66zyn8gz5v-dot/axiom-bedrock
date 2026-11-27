@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.116.0 – 28.11.2026 (nächtlicher Ausbau: Formen)
+- **Japanische Brücke:** neue Form – erst auf ein Ufer zielen und benutzen (Punkt A), dann auf das andere (Punkt B).
+  Es entsteht eine hoch gewölbte Holzbrücke aus Muster 1, die wie ein Bogen ansteigt und wieder abfällt. Treppenstufen
+  machen sie begehbar, darunter bleibt der Bogen frei. Ein rotes Geländer (Karmesin-Zaun) mit hohen Pfosten an den
+  Enden läuft an beiden Seiten. Radius X = halbe Breite, Radius Y = Bogenhöhe
+- **Tsukubai:** neue Form – auf den Boden zielen und benutzen. Es entsteht ein japanisches Steinbecken aus Muster 1
+  mit Wasser, zwei bemoosten Seitensteinen, einem Bambuspfosten, dessen Rohr über das Becken ragt, einem Kiesbett,
+  Moos mit Farnen und drei Trittsteinen zu dir hin. Passt gut zu Gartenlaterne und Torii-Tor
+
 ## 0.115.0 – 27.11.2026 (nächtlicher Ausbau: Terraform)
 - **Dünenküste:** neuer Stil im Pfad-Menü „Küste entlang der Punkte“. Hinter dem flachen Sandstrand entsteht ein
   Gürtel aus Sandhügeln mit Strandhafer und vereinzelten toten Büschen, der zum Land hin sanft in die Wiese übergeht.
