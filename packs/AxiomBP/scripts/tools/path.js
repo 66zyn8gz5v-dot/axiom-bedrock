@@ -762,7 +762,7 @@ export const pathTool = {
         },
       },
       {
-        text: "Küste entlang der Punkte (Strand oder Klippe)",
+        text: "Küste entlang der Punkte (Strand, Klippe oder Dünen)",
         run: async () => {
           if (ses.pathPoints.length < 2) return err(ses.player, "Mindestens 2 Punkte setzen.");
           const c = ses.s.coast;
@@ -782,11 +782,12 @@ export const pathTool = {
               [
                 ["beach", "Sandstrand (flach)"],
                 ["cliff", "Felsklippe (steil)"],
+                ["dunes", "Dünenküste mit Strandhafer"],
               ],
               c.style
             )
             .slider("width", "Breite des Meeres-Streifens", 3, 24, 1, c.width)
-            .slider("cliff", "Klippenhöhe über dem Wasser", 3, 20, 1, c.cliff)
+            .slider("cliff", "Klippenhöhe über dem Wasser (Dünen: doppelte Dünenhöhe)", 3, 20, 1, c.cliff)
             .show(ses.player);
           if (!r) return;
           Object.assign(c, r);

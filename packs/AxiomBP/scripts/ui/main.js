@@ -219,6 +219,21 @@ export async function selectionMenu(ses) {
       },
     },
     {
+      text: "Waldlichtung anlegen (Wald mit Lichtung und Teich)",
+      run: async () => {
+        const c = ses.s.forestClearing;
+        const r = await new Modal("Waldlichtung")
+          .slider("clearing", "Größe der Lichtung in %", 20, 80, 5, c.clearing)
+          .slider("pond", "Teich in der Mitte (Radius, 0 = keiner)", 0, 8, 1, c.pond)
+          .slider("density", "Walddichte in %", 30, 100, 10, c.density)
+          .show(p);
+        if (!r) return;
+        Object.assign(c, r);
+        markDirty(ses);
+        ops.opForestClearing(ses, c);
+      },
+    },
+    {
       text: "Lavafeld erzeugen",
       run: async () => {
         const c = ses.s.lavaField;

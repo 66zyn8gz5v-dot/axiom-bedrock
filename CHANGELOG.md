@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.115.0 – 27.11.2026 (nächtlicher Ausbau: Terraform)
+- **Dünenküste:** neuer Stil im Pfad-Menü „Küste entlang der Punkte“. Hinter dem flachen Sandstrand entsteht ein
+  Gürtel aus Sandhügeln mit Strandhafer und vereinzelten toten Büschen, der zum Land hin sanft in die Wiese übergeht.
+  Die Dünenhöhe ist die halbe „Klippenhöhe“
+- **Waldlichtung:** neu im Auswahl-Menü – auf dem vorhandenen Boden wächst ein dichter Wald aus Eichen, Birken und
+  ein paar Fichten mit Farnen, Pilzen und Podsol. In der Mitte bleibt eine runde Lichtung mit Gras und Blumen frei,
+  am Rand wachsen Pilze, in der Mitte liegt ein Teich mit Seerosen. Lichtung, Teich und Walddichte sind einstellbar
+
 ## 0.114.0 – 27.11.2026 (nächtlicher Ausbau: Formen)
 - **Gartenlaterne:** neue Form – auf den Boden zielen und benutzen. Es entsteht eine kleine Steinlaterne wie im
   japanischen Garten: Sockel und Schaft aus Muster 1, eine Lichtkammer mit Laterne und offenen Seiten, darüber ein

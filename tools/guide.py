@@ -134,7 +134,7 @@ PAGES = [
          ("p", "Füllen · Ersetzen · Leeren · Wände · Aushöhlen · Glätten · Verlauf · Ausdünnen · Dach · Bogenfenster · "
                "Stapeln · Array · Verschieben · Drehen · Spiegeln · Wasser · Analysieren"),
          ("p", "Landschaften (über 30): Inseln · Vulkan · Canyon · Moor · Gletscher · Savanne · Bergsee · Pilze · Bambus · "
-               "Riff · Tundra · Tepui · Salzsee · Mäander · Karst · Eishöhle · Blumen · Wein · Lava · Dünen · Mond …"),
+               "Riff · Tundra · Salzsee · Mäander · Karst · Eishöhle · Blumen · Wein · Lava · Dünen · Lichtung …"),
          ("p", "Die Partikel zeigen dir immer, was gerade ausgewählt ist."),
          ("p", "Lasso: Mit dem Pfad Punkte setzen → „Lasso“.")],
     ),
@@ -177,7 +177,7 @@ PAGES = [
     (
         [("h", "6. Pfad & Co."),
          ("tool", "path", "Pfad", "Benutzen setzt Punkte. Schleichen + Benutzen zum Bauen."),
-         ("p", "Daraus wird: Straße · Brücke · Fluss · Kaskade · Küste · Steilküste · Fjord · Lavaspalte · Klamm · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole · Steg"),
+         ("p", "Daraus wird: Straße · Brücke · Fluss · Kaskade · Küste & Dünen · Steilküste · Fjord · Lavaspalte · Klamm · Felsbrücke · Hügel · Bogengang · Stadtmauer · Hängebrücke · Mole · Steg"),
          ("img", "bridge")],
         [("h", "Text & Pixel-Art"),
          ("tool", "text", "Text", "Schreibt Wörter aus Blöcken – an die Wand oder auf den Boden."),

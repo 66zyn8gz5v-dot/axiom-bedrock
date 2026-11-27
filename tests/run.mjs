@@ -1431,6 +1431,26 @@ console.log("Küste");
   check(id(0, 64, -4) === "minecraft:water" && id(0, 64, 4) !== "minecraft:water", "Küste: Meer links");
   check(["minecraft:stone", "minecraft:andesite", "minecraft:cobblestone"].includes(id(0, 69, 1)) && id(0, 70, 2) === "minecraft:grass_block", "Küste: Felsklippe mit Wiese oben");
   await undo();
+  await roundTrip("Dünenküste", () => coast(ses, { width: 10, side: "right", style: "dunes", cliff: 6 }));
+  coast(ses, { width: 10, side: "right", style: "dunes", cliff: 6 });
+  await drain();
+  check(id(0, 64, 4) === "minecraft:water" && id(0, 63, 1) === "minecraft:sand" && id(0, 65, -2) === "minecraft:sand", "Dünenküste: Wasser, flacher Strand");
+  let duneTop = 0;
+  let grass = 0;
+  let wet = 0;
+  for (let x = -10; x <= 10; x++)
+    for (let z = -14; z <= -1; z++) {
+      for (let y = 64; y <= 72; y++) {
+        const b = id(x, y, z);
+        if (b === "minecraft:sand" && z <= -5 && y >= 66) duneTop = Math.max(duneTop, y);
+        if (b === "minecraft:short_grass" || b === "minecraft:deadbush") grass++;
+        if (b === "minecraft:water") wet++;
+      }
+    }
+  check(duneTop >= 67 && duneTop <= 69, "Dünenküste: Dünengürtel hinter dem Strand (" + duneTop + ")");
+  check(grass >= 5 && wet === 0, "Dünenküste: Strandhafer auf den Dünen, Land bleibt trocken (" + grass + ")");
+  check(id(0, 64, -16) === "minecraft:grass_block" && id(0, 65, -16) === "minecraft:air" && id(0, 64, -13) !== "minecraft:air", "Dünenküste: geht in die Wiese über");
+  await undo();
   ses.pathPoints = [];
   dim.blocks.clear();
 }
@@ -1621,6 +1641,42 @@ console.log("Weinberg & Lavafeld");
   const L = (s) => m["minecraft:" + s] ?? 0;
   check(L("magma") > 100 && L("basalt") + L("blackstone") + L("smooth_basalt") > 500, "Lavafeld: Basaltschollen mit glühenden Rissen (" + L("magma") + ")");
   check(L("lava") > 5 && leak === 0 && L("grass_block") === 0, "Lavafeld: eingefasste Lavatümpel (" + L("lava") + ")");
+  await undo();
+  ses.sel = undefined;
+  dim.blocks.clear();
+}
+
+console.log("Waldlichtung");
+{
+  dim.blocks.clear();
+  const id = (x, y, z) => dim._get(x, y, z).type.id;
+  let seed = 41;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  ses.sel = undefined;
+  ops.opForestClearing(ses, { clearing: 45, pond: 3, density: 80 }, rnd);
+  check(player.messages.at(-1).includes("Auswahl"), "Waldlichtung: ohne Auswahl kommt ein Hinweis");
+  ses.sel = boxSel(dim.id, { x: 0, y: 60, z: 0 }, { x: 31, y: 75, z: 31 });
+  dim.blocks.clear();
+  await roundTrip("Waldlichtung", () => ops.opForestClearing(ses, { clearing: 45, pond: 3, density: 80 }, rnd));
+  ops.opForestClearing(ses, { clearing: 45, pond: 3, density: 80 }, rnd);
+  await drain();
+  const m = {};
+  let inner = 0;
+  let leak = 0;
+  let outside = 0;
+  for (const [k, p] of dim.blocks) {
+    const [x, y, z] = k.split(",").map(Number);
+    m[p.type.id] = (m[p.type.id] ?? 0) + 1;
+    if (x < 0 || x > 31 || z < 0 || z > 31 || y > 75) outside++;
+    if (/_log$/.test(p.type.id) && Math.hypot(x - 15.5, z - 15.5) < 5.5) inner++;
+    if (p.type.id === "minecraft:water") for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (id(x + ox, y, z + oz) === "minecraft:air") leak++;
+  }
+  const L = (s) => m["minecraft:" + s] ?? 0;
+  check(L("oak_log") + L("birch_log") + L("spruce_log") > 150 && L("oak_leaves") + L("birch_leaves") > 300, "Waldlichtung: dichter Wald (" + (L("oak_log") + L("birch_log")) + ")");
+  check(inner === 0 && id(15, 65, 15) !== "minecraft:oak_log", "Waldlichtung: Lichtung in der Mitte bleibt frei");
+  check(L("water") >= 20 && leak === 0 && id(15, 64, 15) === "minecraft:water", "Waldlichtung: dichter Teich in der Mitte (" + L("water") + ")");
+  check(L("fern") > 20 && L("podzol") + L("coarse_dirt") > 20 && L("brown_mushroom") + L("red_mushroom") > 3 && L("short_grass") > 8, "Waldlichtung: Farne, Pilze, Gras und Waldboden " + JSON.stringify([L("fern"), L("podzol"), L("coarse_dirt"), L("brown_mushroom"), L("red_mushroom"), L("short_grass")]));
+  check(outside === 0, "Waldlichtung: nur in der Auswahl");
   await undo();
   ses.sel = undefined;
   dim.blocks.clear();

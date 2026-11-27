@@ -1031,6 +1031,135 @@ export function opVineyard(ses, o, dir) {
 }
 
 /**
+ * Waldlichtung in der Auswahl: auf dem vorhandenen Boden wächst ein dichter Wald (Eichen, Birken, ein paar Fichten)
+ * mit Farnen, Pilzen und Podsol am Boden. In der Mitte bleibt eine runde, leicht ausgefranste Lichtung mit Gras und
+ * Blumen, am Rand der Lichtung stehen Pilze, in der Mitte liegt ein kleiner Teich mit Seerosen.
+ * @param {import("./state.js").Session} ses
+ * @param {{clearing:number, pond:number, density:number}} o clearing = Lichtung in % der Auswahl, pond = Teich-Radius (0 = kein Teich), density = Walddichte in %
+ * @param {() => number} [rand]
+ */
+export function opForestClearing(ses, o, rand = Math.random) {
+  const sel = need(ses);
+  if (!sel) return;
+  const { min, max } = sel;
+  const sx = max.x - min.x + 1;
+  const sz = max.z - min.z + 1;
+  if (sx < 12 || sz < 12) return err(ses.player, "Die Auswahl ist zu klein – mindestens 12 × 12 Blöcke.");
+  const cx = (min.x + max.x) / 2;
+  const cz = (min.z + max.z) / 2;
+  const R = (Math.min(sx, sz) / 2) * Math.max(0.15, Math.min(0.85, o.clearing / 100));
+  const Pr = Math.max(0, Math.min(Math.floor(R) - 2, o.pond));
+  const seed = rand() * 6.28;
+  const edge = (/** @type {number} */ x, /** @type {number} */ z) => R * (0.85 + 0.15 * Math.sin(3 * Math.atan2(z - cz, x - cx) + seed));
+  /** @type {Map<string, BlockPermutation>} */
+  const cache = new Map();
+  const P = (/** @type {string} */ id, /** @type {Record<string, any>} */ st = {}) => {
+    const k = id + JSON.stringify(st);
+    let p = cache.get(k);
+    if (!p) {
+      try {
+        p = BlockPermutation.resolve(id, st);
+      } catch {
+        p = BlockPermutation.resolve(id);
+      }
+      cache.set(k, p);
+    }
+    return p;
+  };
+  const A = air();
+  const FLOWERS = ["minecraft:poppy", "minecraft:dandelion", "minecraft:oxeye_daisy", "minecraft:azure_bluet", "minecraft:cornflower"];
+  runEdit(ses.player, { label: "Waldlichtung", region: { min, max } }, function* (es) {
+    /** @type {Map<string, number>} */
+    const G = new Map();
+    for (let x = min.x; x <= max.x; x++)
+      for (let z = min.z; z <= max.z; z++) {
+        const g = groundY(es, x, z, max.y, max.y - min.y);
+        if (g !== null && g < max.y) G.set(x + "," + z, g);
+      }
+    yield;
+    const put = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, /** @type {BlockPermutation} */ b) => {
+      if (selContains(sel, x, y, z)) es.set(x, y, z, b);
+    };
+    const free = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => es.id(x, y, z) === "minecraft:air";
+    // Teich in der Mitte: Wasserspiegel = tiefster Boden im Teichbereich, Ufer ringsum dicht
+    if (Pr > 0) {
+      let level = Infinity;
+      for (const [k, g] of G) {
+        const [x, z] = k.split(",").map(Number);
+        if (Math.hypot(x - cx, z - cz) <= Pr + 1) level = Math.min(level, g);
+      }
+      if (level < Infinity && level - 2 > min.y) {
+        for (const [k, g] of G) {
+          const [x, z] = k.split(",").map(Number);
+          const d = Math.hypot(x - cx, z - cz);
+          if (d <= Pr) {
+            const depth = d < Pr - 1 ? 2 : 1;
+            for (let y = g; y > level; y--) put(x, y, z, A);
+            for (let y = level - depth + 1; y <= level; y++) put(x, y, z, P("minecraft:water"));
+            put(x, level - depth, z, P(rand() < 0.5 ? "minecraft:clay" : "minecraft:dirt"));
+            if (d < Pr - 1 && rand() < 0.12) put(x, level + 1, z, P("minecraft:waterlily"));
+            G.set(k, -Infinity); // Teich: nichts darauf pflanzen
+          } else if (d <= Pr + 1.5) {
+            // Ufer: Boden auf Wasserhöhe abtragen bzw. auffüllen, damit nichts ausläuft
+            for (let y = g; y > level; y--) put(x, y, z, A);
+            for (let y = g + 1; y < level; y++) put(x, y, z, P("minecraft:dirt"));
+            put(x, level, z, P("minecraft:grass_block"));
+            if (level - 1 > g) put(x, level - 1, z, P("minecraft:dirt"));
+            G.set(k, level);
+          }
+        }
+      }
+      yield;
+    }
+    // Boden: Lichtung mit Gras und Blumen, Wald mit Podsol, Farnen und Pilzen
+    let n = 0;
+    for (const [k, g] of G) {
+      if (g === -Infinity) continue;
+      const [x, z] = k.split(",").map(Number);
+      const d = Math.hypot(x - cx, z - cz);
+      const e = edge(x, z);
+      const top = es.id(x, g, z);
+      const soil = /^minecraft:(grass_block|dirt|podzol|coarse_dirt)$/.test(top);
+      const r = rand();
+      if (d < e) {
+        if (soil) put(x, g, z, P("minecraft:grass_block"));
+        if (!free(x, g + 1, z) || !soil || d <= Pr + 1.5) continue;
+        if (d > e * 0.75 && r < 0.1) put(x, g + 1, z, P(r < 0.04 ? "minecraft:red_mushroom" : "minecraft:brown_mushroom"));
+        else if (r < 0.18) put(x, g + 1, z, P(FLOWERS[Math.floor(rand() * FLOWERS.length)]));
+        else if (r < 0.45) put(x, g + 1, z, P("minecraft:short_grass"));
+      } else {
+        if (soil && r < 0.25) put(x, g, z, P(r < 0.15 ? "minecraft:podzol" : "minecraft:coarse_dirt"));
+        if (!free(x, g + 1, z) || !soil) continue;
+        const q = rand();
+        if (q < 0.2) put(x, g + 1, z, P("minecraft:fern"));
+        else if (q < 0.24) put(x, g + 1, z, P(q < 0.22 ? "minecraft:brown_mushroom" : "minecraft:red_mushroom"));
+      }
+      if (++n % 256 === 0) yield;
+    }
+    yield;
+    // Bäume auf einem verwackelten Raster, nur außerhalb der Lichtung
+    const step = 3;
+    for (let gx = min.x + 1; gx <= max.x - 1; gx += step)
+      for (let gz = min.z + 1; gz <= max.z - 1; gz += step) {
+        if (rand() * 100 >= o.density) continue;
+        const x = Math.min(max.x - 1, gx + Math.floor(rand() * 2));
+        const z = Math.min(max.z - 1, gz + Math.floor(rand() * 2));
+        if (Math.hypot(x - cx, z - cz) < edge(x, z) + 1.5) continue;
+        const g = G.get(x + "," + z);
+        if (g === undefined || g === -Infinity) continue;
+        if (!/^minecraft:(grass_block|dirt|podzol|coarse_dirt)$/.test(es.id(x, g, z))) continue;
+        const kr = rand();
+        const kind = kr < 0.55 ? "oak" : kr < 0.85 ? "birch" : "spruce";
+        const h = 4 + Math.floor(rand() * 3);
+        if (g + h + 1 > max.y) continue;
+        put(x, g + 1, z, A); // Farn/Pilz am Stamm weg
+        smallTree(es, sel, x, g, z, kind, h);
+        if (++n % 16 === 0) yield;
+      }
+  });
+}
+
+/**
  * Lavafeld in der Auswahl: ein erkaltetes, buckliges Lavafeld aus Basalt, Schwarzstein und glattem Basalt, durchzogen
  * von glühenden Rissen aus Magma in einem Vieleck-Muster, dazu kleine Lavatümpel. Die Auswahl wird neu gefüllt.
  * @param {import("./state.js").Session} ses

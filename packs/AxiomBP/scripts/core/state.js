@@ -84,6 +84,7 @@ export function defaultSettings() {
     flowerFields: { width: 2, paths: true },
     vineyard: { step: 2 },
     lavaField: { cells: 6, pools: 30 },
+    forestClearing: { clearing: 45, pond: 3, density: 80 },
     landscape: { scale: 32, relief: 80, sea: 30, octaves: 4 },
     paste: { air: true, rotation: 0, mirror: "None", entities: false, offsetY: 0 },
     bulldozer: { radius: 0 },

@@ -958,7 +958,8 @@ function lake(ses, t) {
 
 /**
  * Küste entlang der Pfad-Punkte: die Punkte sind die Uferlinie. Auf der Meeresseite wird das Wasser nach außen
- * tiefer (Sand, weiter draußen Kies), auf der Landseite entsteht ein flacher Sandstrand oder eine Felsklippe.
+ * tiefer (Sand, weiter draußen Kies), auf der Landseite entsteht ein flacher Sandstrand, eine Felsklippe oder
+ * ein Strand mit Dünengürtel (Sandhügel mit Strandhafer).
  * @param {import("../core/state.js").Session} ses
  * @param {{width:number, side:string, style:string, cliff:number}} o
  */
@@ -967,7 +968,10 @@ export function coast(ses, o) {
   const samples = samplePath(ses.pathPoints, true);
   const sea = Math.round(samples.reduce((a, p) => a + p.y, 0) / samples.length) - 1;
   const W = Math.max(3, o.width);
-  const beach = o.style === "cliff" ? 2 : 4;
+  const DW = 8; // Breite des Dünengürtels hinter dem Strand
+  const beach = o.style === "cliff" ? 2 : o.style === "dunes" ? 4 + DW : 4;
+  const duneH = Math.max(2, Math.min(8, Math.ceil(o.cliff / 2)));
+  const seed = Math.random() * 6.28;
   const sign = o.side === "left" ? -1 : 1;
   const xs = samples.map((p) => p.x);
   const zs = samples.map((p) => p.z);
@@ -1014,6 +1018,23 @@ export function coast(ses, o) {
           const h = Math.max(g, sea + Math.max(3, o.cliff));
           for (let y = g; y < h; y++) es.set(x, y, z, permOf(rockId(x, y, z)));
           es.set(x, h, z, permOf(s > -1.5 ? rockId(x, h, z) : NATURAL.test(top) ? "minecraft:grass_block" : top));
+        } else if (o.style === "dunes" && -s > 4) {
+          // Dünengürtel hinter dem Strand: Sandhügel, die zum Land hin in den alten Boden übergehen,
+          // oben Strandhafer (Gras) und vereinzelt tote Büsche
+          const u = Math.min(1, (-s - 4) / DW);
+          const vary = 0.65 + 0.35 * Math.sin(0.4 * x + seed) * Math.cos(0.4 * z + seed);
+          const hump = Math.round(duneH * Math.sin(Math.PI * u) * vary);
+          const h = Math.round(sea + 2 + (g - (sea + 2)) * u) + hump;
+          for (let y = g; y > h; y--) es.set(x, y, z, A);
+          const topId = u > 0.9 && hump === 0 && NATURAL.test(top) ? top : "minecraft:sand";
+          for (let y = Math.min(g, h) + 1; y <= h; y++) es.set(x, y, z, permOf(y === h ? topId : "minecraft:sand"));
+          if (h <= g && NATURAL.test(es.id(x, h, z))) es.set(x, h, z, permOf(topId));
+          if (NATURAL.test(es.id(x, h - 1, z))) es.set(x, h - 1, z, permOf("minecraft:sandstone"));
+          const r = hash01(x, z, 11);
+          if (hump >= 1 && es.id(x, h + 1, z) === "minecraft:air") {
+            if (r < 0.32) es.set(x, h + 1, z, permOf("minecraft:short_grass"));
+            else if (r < 0.36) es.set(x, h + 1, z, permOf("minecraft:deadbush"));
+          }
         } else {
           // Strand: flach aus dem Wasser ansteigend, Sand oben, Sandstein darunter
           const h = sea + Math.ceil(-s / 2);

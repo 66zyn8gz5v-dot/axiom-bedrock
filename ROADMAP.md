@@ -159,8 +159,10 @@ Zwei Ausbau-Runden pro Nacht: 23 Uhr Terraform, 0 Uhr Formen. Die Punkte werden 
 - [x] **Blumenfeld-Streifen** (v0.111): lange, bunte Blumenreihen wie Tulpenfelder in einer Auswahl
 - [x] **Weinberg** (v0.113): Hang mit Rebenreihen (Zäune mit Blättern) quer zum Hang und Trockenmauern
 - [x] **Lavafeld** (v0.113): erkaltetes Lavafeld aus Basalt und Schwarzstein mit glühenden Rissen (Magma) in einer Auswahl
-- [ ] **Sanfte Dünenküste mit Strandhafer**: Küste mit Dünengürtel, Strand und Brandung entlang der Pfad-Punkte
-- [ ] **Waldlichtung**: dichter Wald in einer Auswahl mit runder Lichtung, Pilzen und einem Teich in der Mitte
+- [x] **Dünenküste mit Strandhafer** (v0.115): neuer Küsten-Stil – Strand mit Dünengürtel und Strandhafer
+- [x] **Waldlichtung** (v0.115): dichter Wald in einer Auswahl mit runder Lichtung, Pilzen und Teich in der Mitte
+- [ ] **Bachtal mit Trittsteinen**: flacher Bach entlang der Pfad-Punkte mit Kieselufer, Trittsteinen und Schilf (Zuckerrohr)
+- [ ] **Herbstwald**: Wald in einer Auswahl mit bunten Laubkronen (orange/rot/gelb), Laubteppich und umgefallenen Stämmen
 
 ### Formen (Figuren) vertiefen
 - [x] **Vorschau vor dem Setzen** (v0.20): Partikel-Umriss der Form am Blickziel, erst der nächste Klick setzt sie
